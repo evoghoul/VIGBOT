@@ -1,12 +1,12 @@
 services:
   db:
     image: postgres:15-alpine
-    container_name: student_helpdesk_db
+    container_name: vigbot_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: student_helpdesk
+      POSTGRES_DB: vigbot
     ports:
       - "5432:5432"
     volumes:
@@ -22,7 +22,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: student_helpdesk_backend
+    container_name: vigbot_backend
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -33,7 +33,7 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.7-flash}
-      - SECRET_KEY=production-secret-key-agent65-student-helpdesk
+      - SECRET_KEY=production-secret-key-vigbot
       - FRONTEND_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
     depends_on:
       db:

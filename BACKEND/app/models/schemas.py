@@ -124,7 +124,7 @@ class MessageResponse(BaseModel):
     sender_role: str
     content: str
     category: Optional[str] = None
-    source_agent: Optional[str] = "Agent 65"
+    source_agent: Optional[str] = "VIGBOT"
     citations: List[Citation] = Field(default_factory=list)
     structured_card: Optional[StructuredCard] = None
     is_distress: bool = False
@@ -132,6 +132,7 @@ class MessageResponse(BaseModel):
     llm_provider: Optional[str] = "local"
     model_used: Optional[str] = None
     used_fallback: bool = False
+    routed_by: Optional[str] = None
     created_at: datetime
 
 class ConversationCreate(BaseModel):

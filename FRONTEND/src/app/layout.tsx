@@ -13,19 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Student Helpdesk • Agent 65 | Unified University Command Center",
+  title: "VIGBOT | Unified University Command Center",
   description:
     "Single point of access for authenticated students to personal institutional records, attendance telemetry, examinations, fees, curriculum, and student services.",
   openGraph: {
-    title: "Student Helpdesk • Agent 65",
+    title: "VIGBOT",
     description: "Unified University Command Center for institutional records and services.",
     url: "https://helpdesk.university.edu",
-    siteName: "Student Helpdesk",
+    siteName: "VIGBOT",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Student Helpdesk • Agent 65",
+    title: "VIGBOT",
     description: "Unified University Command Center for institutional records and services.",
   },
 };

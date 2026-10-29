@@ -4,7 +4,7 @@ import json
 import random
 import uuid
 
-db_path = os.path.abspath(r'C:\StudentHelpdesk\database\student_helpdesk.db')
+db_path = os.path.abspath(r'database\vigbot.db')
 conn = sqlite3.connect(db_path)
 cur = conn.cursor()
 

@@ -4,10 +4,10 @@ from typing import List, Union, Any
 import os
 import json
 
-DEFAULT_INSECURE_SECRET = "agent65-super-secret-production-key-change-in-prod-12345"
+DEFAULT_INSECURE_SECRET = "vigbot-super-secret-production-key-change-in-prod-12345"
 
 class Settings(BaseSettings):
-    APP_NAME: str = "Agent 65: Student Helpdesk API"
+    APP_NAME: str = "VIGBOT API"
     APP_VERSION: str = "1.0.0"
     API_V1_PREFIX: str = "/api/v1"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
@@ -17,17 +17,23 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
-    # Database: Default to persistent SQLite database at database/student_helpdesk.db
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///database/student_helpdesk.db")
+    # Database: Default to persistent SQLite database at database/vigbot.db
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///database/vigbot.db" if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))) else "sqlite:///database/vigbot.db")
     USE_IN_MEMORY_DB: bool = os.getenv("USE_IN_MEMORY_DB", "false").lower() in ("true", "1", "yes")
     
     # LLM Provider Configuration (Primary: Gemini)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
     
     # LLM Fallback Provider (Groq)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+    
+    # ML Intent Classifier Configuration (Default: True in Production)
+    USE_INTENT_CLASSIFIER: bool = os.getenv("USE_INTENT_CLASSIFIER", "true").lower() in ("true", "1", "yes")
+    ALLOW_PIPELINE_TEST_MODEL: bool = os.getenv("ALLOW_PIPELINE_TEST_MODEL", "false").lower() in ("true", "1", "yes")
+    INTENT_MODEL_PATH: str = os.getenv("INTENT_MODEL_PATH", "artifacts/intent_model.joblib")
+    INTENT_CONFIG_PATH: str = os.getenv("INTENT_CONFIG_PATH", "artifacts/intent_config.json")
     
     # CORS
     FRONTEND_ORIGINS: Union[List[str], str] = [

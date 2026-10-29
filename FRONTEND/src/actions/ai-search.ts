@@ -50,7 +50,7 @@ export async function askAiKnowledgeBase(query: string) {
           success: true, 
           answer: (bestMatch as any).answer, 
           category: (bestMatch as any).category,
-          source: "Agent 65 (Knowledge Base Database)"
+          source: "VIGBOT (Knowledge Base Database)"
       };
     }
     

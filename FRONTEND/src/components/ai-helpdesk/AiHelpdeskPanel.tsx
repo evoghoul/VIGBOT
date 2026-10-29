@@ -488,6 +488,127 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       );
     }
 
+    if (card.type === "hostel") {
+      const data = (card.data || {}) as Record<string, unknown>;
+      return (
+        <div className="mt-3 rounded-lg border border-blue-200 bg-blue-50/50 p-4 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge variant="primary" className="whitespace-normal text-left">{card.badge || "Hostel Resident Portal"}</Badge>
+            <span className="text-xs font-bold text-blue-950">{card.title}</span>
+          </div>
+          <p className="text-xs text-blue-900/90 mb-2 font-medium">{card.subtitle}</p>
+          <div className="rounded-lg bg-card p-2.5 border border-blue-100 text-xs text-slate-700 space-y-1 mb-3">
+            {Boolean(data.curfew) && <div><strong>Curfew:</strong> {String(data.curfew)}</div>}
+            {Boolean(data.messTimings) && <div><strong>Mess Timings:</strong> {String(data.messTimings)}</div>}
+            {Boolean(data.outingPass) && <div><strong>Outing Pass:</strong> {String(data.outingPass)}</div>}
+            {Boolean(data.wardenContact) && <div><strong>Warden Desk:</strong> {String(data.wardenContact)}</div>}
+          </div>
+          <button
+            onClick={() => onOpenServiceModal("Hostel Outing Pass")}
+            className="flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 transition-colors shadow-xs cursor-pointer"
+          >
+            <span>{card.actionLabel || "Apply Outing Pass"}</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      );
+    }
+
+    if (card.type === "transport") {
+      const data = (card.data || {}) as Record<string, unknown>;
+      const routes = Array.isArray(data.routes) ? data.routes : [];
+      return (
+        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge variant="success" className="whitespace-normal text-left">{card.badge || "Active Fleet"}</Badge>
+            <span className="text-xs font-bold text-emerald-950">{card.title}</span>
+          </div>
+          <p className="text-xs text-emerald-900/90 mb-2 font-medium">{card.subtitle}</p>
+          <div className="rounded-lg bg-card p-2.5 border border-emerald-100 text-xs text-slate-700 space-y-1 mb-3">
+            {routes.length > 0 && (
+              <div>
+                <strong>Active Bus Routes:</strong>
+                <ul className="list-disc list-inside mt-0.5 space-y-0.5 text-slate-600">
+                  {routes.map((r, i) => <li key={i}>{String(r)}</li>)}
+                </ul>
+              </div>
+            )}
+            {Boolean(data.deskLocation) && <div><strong>Transport Desk:</strong> {String(data.deskLocation)}</div>}
+            {Boolean(data.contact) && <div><strong>Contact:</strong> {String(data.contact)}</div>}
+          </div>
+          <button
+            onClick={() => onOpenServiceModal("Bus Pass Endorsement")}
+            className="flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
+          >
+            <span>{card.actionLabel || "Request Bus Pass"}</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      );
+    }
+
+    if (card.type === "circulars") {
+      const data = (card.data || {}) as Record<string, unknown>;
+      const notices = Array.isArray(data.latestNotices) ? data.latestNotices : [];
+      return (
+        <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50/50 p-4 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge variant="info" className="whitespace-normal text-left">{card.badge || "Official Notices"}</Badge>
+            <span className="text-xs font-bold text-cyan-950">{card.title}</span>
+          </div>
+          <p className="text-xs text-cyan-900/90 mb-2 font-medium">{card.subtitle}</p>
+          {notices.length > 0 && (
+            <div className="rounded-lg bg-card p-2.5 border border-cyan-100 text-xs text-slate-700 space-y-1.5 mb-3">
+              {notices.map((n: any, i: number) => (
+                <div key={i} className="border-b border-slate-100 pb-1 last:border-0 last:pb-0">
+                  <div className="font-semibold text-slate-900">{n.title}</div>
+                  <div className="text-[11px] text-muted-foreground">Ref: {n.ref} {n.date ? `| Issued: ${n.date}` : ""}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => onNavigateTab("circulars")}
+            className="flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold bg-cyan-700 hover:bg-cyan-800 transition-colors shadow-xs cursor-pointer"
+          >
+            <span>{t.navCirculars || "View Circulars"}</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      );
+    }
+
+    if (card.type === "events") {
+      const data = (card.data || {}) as Record<string, unknown>;
+      const festivals = Array.isArray(data.festivals) ? data.festivals : [];
+      return (
+        <div className="mt-3 rounded-lg border border-purple-200 bg-purple-50/50 p-4 shadow-xs">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <Badge variant="primary" className="whitespace-normal text-left bg-purple-600 text-white">{card.badge || "Campus Highlights"}</Badge>
+            <span className="text-xs font-bold text-purple-950">{card.title}</span>
+          </div>
+          <p className="text-xs text-purple-900/90 mb-2 font-medium">{card.subtitle}</p>
+          {festivals.length > 0 && (
+            <div className="rounded-lg bg-card p-2.5 border border-purple-100 text-xs text-slate-700 space-y-1.5 mb-3">
+              {festivals.map((f: any, i: number) => (
+                <div key={i} className="flex justify-between items-center text-xs">
+                  <span className="font-semibold text-slate-900">{f.name || f.title}</span>
+                  <span className="text-[11px] text-purple-700 font-medium">{f.type || f.venue}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => onNavigateTab("calendar")}
+            className="flex items-center gap-1 rounded-lg text-white px-3 py-1.5 text-xs font-semibold bg-purple-600 hover:bg-purple-700 transition-colors shadow-xs cursor-pointer"
+          >
+            <span>{card.actionLabel || "View Events Calendar"}</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -512,16 +633,16 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
       {effectiveVariant === "side" ? (
         /* Side Panel Header: 2 clean rows to prevent any overlap */
         <div className="border-b border-slate-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white px-3.5 py-3 shrink-0 space-y-2.5">
-          {/* Row 1: Bot + Title + Agent 65 | Maximize + Close */}
+          {/* Row 1: Bot + Title + VIGBOT | Maximize + Close */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xs">
                 <Bot className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex items-center gap-1.5 truncate">
-                <h2 className="text-sm font-bold text-foreground truncate">{t.studentHelpdesk || "Student Helpdesk"}</h2>
+                <h2 className="text-sm font-bold text-foreground truncate">{t.studentHelpdesk || "VIGBOT"}</h2>
                 <Badge variant="primary" className="text-xs px-1.5 py-0 bg-blue-600 text-white shrink-0">
-                  Agent 65
+                  AI
                 </Badge>
               </div>
             </div>
@@ -596,10 +717,10 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-sm sm:text-base font-bold text-foreground truncate">
-                    Student Helpdesk
+                    VIGBOT
                   </h2>
                   <Badge variant="primary" className="bg-blue-600 text-white font-semibold">
-                    Agent 65
+                    AI
                   </Badge>
                   <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-sm font-medium text-emerald-700">
                     <ShieldCheck className="h-3 w-3 text-emerald-600" />
@@ -744,46 +865,77 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   renderStructuredCard(turn.responseMeta.structuredCard)
                 )}
 
-                {/* Thumbs Feedback & 8B Local AI Training Controls */}
+                {/* Thumbs Feedback & Architecture Telemetry Badge */}
                 {!isUser && (
                   <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] text-slate-400 font-medium">Helpful?</span>
+                    <div className="flex items-center gap-2">
+                      {/* Live routed_by Telemetry Badge & Verifier Trigger */}
                       <button
-                        onClick={() => handleFeedback(index, "up", turn)}
-                        disabled={feedbackSubmitting[index]}
-                        title="Thumbs up: Store this conversation to train the local 8B model"
+                        type="button"
+                        onClick={() => setVerifyingTurn(turn)}
+                        title="Click to inspect live inference tier, privacy redaction and model verification"
                         className={cn(
-                          "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer",
-                          feedbackState[index] === "up"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold"
-                            : "hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200"
+                          "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all border cursor-pointer",
+                          turn.responseMeta?.routed_by === "gemini"
+                            ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                            : turn.responseMeta?.routed_by === "classifier" || turn.responseMeta?.routed_by === "classifier_pipeline_test"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                            : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
                         )}
                       >
-                        <ThumbsUp className={cn("h-3 w-3", feedbackState[index] === "up" && "fill-emerald-600 text-emerald-600")} />
-                        <span>👍</span>
+                        <Cpu className="h-3 w-3" />
+                        <span>
+                          {(() => {
+                            const rBy = turn.responseMeta?.routed_by;
+                            const modelId = turn.responseMeta?.model_used || "Cloud LLM";
+                            if (rBy === "rules") return "Tier 1: Deterministic Guardrail & Rules";
+                            if (rBy === "classifier" || rBy === "classifier_pipeline_test") return "Tier 2: Local ML Intent Classifier (TF-IDF + LR)";
+                            if (rBy === "gemini" || rBy === "groq" || turn.responseMeta?.llm_provider === "gemini" || turn.responseMeta?.llm_provider === "groq") {
+                              return `Tier 3: Cloud LLM Fallback (${modelId}, PII-Redacted)`;
+                            }
+                            return "Tier 1: Deterministic Guardrail & Rules";
+                          })()}
+                        </span>
                       </button>
 
-                      <button
-                        onClick={() => handleFeedback(index, "down", turn)}
-                        disabled={feedbackSubmitting[index]}
-                        title="Thumbs down: Mark response as not helpful"
-                        className={cn(
-                          "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer",
-                          feedbackState[index] === "down"
-                            ? "bg-rose-100 text-rose-800 border border-rose-300 font-semibold"
-                            : "hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200"
-                        )}
-                      >
-                        <ThumbsDown className={cn("h-3 w-3", feedbackState[index] === "down" && "fill-rose-600 text-rose-600")} />
-                        <span>👎</span>
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] text-slate-400 font-medium">Helpful?</span>
+                        <button
+                          onClick={() => handleFeedback(index, "up", turn)}
+                          disabled={feedbackSubmitting[index]}
+                          title="Thumbs up: Helpful response"
+                          className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer",
+                            feedbackState[index] === "up"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold"
+                              : "hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200"
+                          )}
+                        >
+                          <ThumbsUp className={cn("h-3 w-3", feedbackState[index] === "up" && "fill-emerald-600 text-emerald-600")} />
+                          <span>👍</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleFeedback(index, "down", turn)}
+                          disabled={feedbackSubmitting[index]}
+                          title="Thumbs down: Mark response as not helpful"
+                          className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium transition-all cursor-pointer",
+                            feedbackState[index] === "down"
+                              ? "bg-rose-100 text-rose-800 border border-rose-300 font-semibold"
+                              : "hover:bg-slate-100 text-slate-500 hover:text-slate-800 border border-slate-200"
+                          )}
+                        >
+                          <ThumbsDown className={cn("h-3 w-3", feedbackState[index] === "down" && "fill-rose-600 text-rose-600")} />
+                          <span>👎</span>
+                        </button>
+                      </div>
                     </div>
 
                     {feedbackState[index] === "up" && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full animate-in fade-in duration-200">
                         <Check className="h-2.5 w-2.5 text-emerald-600" />
-                        Saved for 8B Training
+                        Feedback recorded
                       </span>
                     )}
                     {feedbackState[index] === "down" && (
@@ -947,9 +1099,18 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
             <div className="p-5 space-y-3.5 text-xs">
               {/* Active Model Pill */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                <span className="font-medium text-slate-500">Active AI Model:</span>
+                <span className="font-medium text-slate-500">Active Routing Tier:</span>
                 <span className="font-bold text-slate-900 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-mono text-[11px]">
-                  {verifyingTurn.responseMeta?.model_used?.trim() || "agent65-8b:latest"}
+                  {(() => {
+                    const r = verifyingTurn.responseMeta?.routed_by;
+                    const mId = verifyingTurn.responseMeta?.model_used || "Cloud LLM";
+                    if (r === "rules") return "Tier 1: Deterministic Guardrail & Rules";
+                    if (r === "classifier" || r === "classifier_pipeline_test") return "Tier 2: Local ML Intent Classifier (TF-IDF + LR)";
+                    if (r === "gemini" || r === "groq" || verifyingTurn.responseMeta?.llm_provider === "gemini" || verifyingTurn.responseMeta?.llm_provider === "groq") {
+                      return `Tier 3: Cloud LLM Fallback (${mId}, PII-Redacted)`;
+                    }
+                    return "Tier 1: Deterministic Guardrail & Rules";
+                  })()}
                 </span>
               </div>
 
@@ -960,14 +1121,13 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   <div className="font-bold text-slate-800 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     {(() => {
-                      const runtimeModel = verifyingTurn.responseMeta?.model_used || "";
-                      const lower = runtimeModel.toLowerCase();
-                      if (verifyingTurn.responseMeta?.llm_provider === "cloud") return "Cloud API Fallback";
-                      if (["deterministic-fallback", "rules", "rules engine only", "database-direct"].includes(lower)) {
-                        return "Deterministic Rules Engine";
+                      const rBy = verifyingTurn.responseMeta?.routed_by;
+                      const modelId = verifyingTurn.responseMeta?.model_used || "Cloud LLM";
+                      if (rBy === "rules") return "Deterministic Rules & Guardrails";
+                      if (rBy === "classifier" || rBy === "classifier_pipeline_test") return "Local CPU Scikit-Learn";
+                      if (rBy === "gemini" || rBy === "groq" || verifyingTurn.responseMeta?.llm_provider === "cloud" || verifyingTurn.responseMeta?.llm_provider === "gemini" || verifyingTurn.responseMeta?.llm_provider === "groq") {
+                        return `${modelId} Cloud (PII-Redacted)`;
                       }
-                      if (lower.includes("3b")) return "Ollama Local (3B Fast Edge)";
-                      if (lower.includes("8b") || lower.includes("agent65")) return "Ollama Local (8B Tier 1)";
                       return "Deterministic Rules Engine";
                     })()}
                   </div>
@@ -977,28 +1137,34 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   <div className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Security & Privacy</div>
                   <div className="font-bold text-emerald-700 flex items-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>RLS Protected</span>
+                    <span>PII-Redacted & RLS</span>
                   </div>
                 </div>
               </div>
 
-              {/* RLS Authorization Details */}
+              {/* RLS & Privacy Redaction Details */}
               <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-slate-700 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-semibold text-blue-950">Authorized Student:</span>
                   <span className="font-mono font-bold text-blue-800">{student.id}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-semibold text-blue-950">Verification Status:</span>
+                  <span className="font-semibold text-blue-950">Cloud Privacy Redaction:</span>
                   <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
-                    <Check className="h-3 w-3 text-emerald-600" /> Output Verified Authentic
+                    <Check className="h-3 w-3 text-emerald-600" /> Student PII (Name/Roll No) Anonymized
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-blue-950">Database Isolation:</span>
+                  <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
+                    <Check className="h-3 w-3 text-emerald-600" /> Active Session Token Enforced
                   </span>
                 </div>
               </div>
 
               {/* Explanation note */}
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                This response was processed through the Agent 65 fine-tuned model pipeline with zero-hallucination guardrails and encrypted student record isolation.
+                This response was processed through the VIGBOT Hybrid 3-Tier Architecture. Student PII (Name and Roll Number) is stripped and replaced with anonymized placeholders prior to any Tier 3 Cloud LLM fallback.
               </p>
             </div>
 

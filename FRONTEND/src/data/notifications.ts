@@ -20,7 +20,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
     priority: "urgent",
     read: false,
     actionHref: "#attendance",
-    sourceAgent: "Agent 11 (Attendance)",
+    sourceAgent: "Attendance System",
   },
   {
     id: "NOTIF-02",
@@ -31,7 +31,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
     priority: "high",
     read: false,
     actionHref: "#examinations",
-    sourceAgent: "Agent 30 (Examinations)",
+    sourceAgent: "Examination Hub",
   },
   {
     id: "NOTIF-03",
@@ -42,7 +42,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
     priority: "normal",
     read: false,
     actionHref: "#services",
-    sourceAgent: "Agent 46 (Services)",
+    sourceAgent: "Student Services",
   },
   {
     id: "NOTIF-04",
@@ -53,7 +53,7 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
     priority: "normal",
     read: true,
     actionHref: "#circulars",
-    sourceAgent: "Agent 55 (Circulars)",
+    sourceAgent: "Circulars",
   },
   {
     id: "NOTIF-05",
@@ -64,6 +64,6 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
     priority: "normal",
     read: true,
     actionHref: "#circulars",
-    sourceAgent: "Agent 55 (Circulars)",
+    sourceAgent: "Circulars",
   },
 ];

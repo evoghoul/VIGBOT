@@ -389,10 +389,10 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-foreground">
-                  {t.studentHelpdesk || "Student Helpdesk"}
+                  {t.studentHelpdesk || "VIGBOT"}
                 </span>
                 <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 border border-blue-200">
-                  Agent 65 · {is3DEnabled ? "3D" : "2D"}
+                  VIGBOT · {is3DEnabled ? "3D" : "2D"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -472,7 +472,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                     {/* Header meta */}
                     <div className="flex items-center gap-2 border-b border-slate-200/60 pb-1.5 text-[11px] text-muted-foreground">
                       <span className="font-semibold text-blue-700">
-                        {meta?.sourceAgent || "Agent 65 Core"}
+                        {meta?.sourceAgent || "VIGBOT Core"}
                       </span>
                       <span>•</span>
                       <span className="flex items-center gap-1 text-emerald-700 font-medium">
@@ -495,7 +495,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                           scrollToSection("features");
                         }}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-xs font-semibold shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer no-underline"
-                        title="Explore Agent 65 Features"
+                        title="Explore VIGBOT Features"
                       >
                         <Sparkles className="h-3.5 w-3.5" />
                         <span>Features</span>
@@ -507,7 +507,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                           scrollToSection("how-it-works");
                         }}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 hover:text-blue-600 text-slate-700 px-3 py-1.5 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer no-underline dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
-                        title="See How Agent 65 Works"
+                        title="See How VIGBOT Works"
                       >
                         <Compass className="h-3.5 w-3.5 text-blue-500" />
                         <span>How It Works</span>
@@ -526,7 +526,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                       </a>
                     </div>
 
-                    {/* Thumbs Feedback Controls for 8B Local AI Training */}
+                    {/* Thumbs Feedback Controls */}
                     <div className="mt-2 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1">
                         <span className="text-[10px] text-muted-foreground font-medium">Helpful?</span>
@@ -539,7 +539,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                               ? "bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold"
                               : "hover:bg-slate-200/70 text-slate-500 border border-slate-200"
                           }`}
-                          title="Thumbs up: Store this conversation to train the local 8B model"
+                          title="Thumbs up: Helpful response"
                         >
                           <ThumbsUp className={`h-2.5 w-2.5 ${feedbackState[idx] === "up" ? "fill-emerald-600 text-emerald-600" : ""}`} />
                           <span>👍</span>
@@ -563,7 +563,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                       {feedbackState[idx] === "up" && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full animate-in fade-in duration-200">
                           <Check className="h-2.5 w-2.5 text-emerald-600" />
-                          Saved for 8B Training
+                          Feedback recorded
                         </span>
                       )}
                       {feedbackState[idx] === "down" && (
@@ -582,7 +582,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
           {isTyping && (
             <div className="flex items-start" style={{ transform: is3DEnabled ? "translateZ(25px)" : "none" }}>
               <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-slate-200/80 bg-slate-50 px-4 py-2.5 text-xs text-muted-foreground shadow-sm">
-                <span className="font-semibold text-blue-600">Agent 65</span>
+                <span className="font-semibold text-blue-600">VIGBOT</span>
                 <span>is querying institutional records...</span>
                 <span className="flex gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-bounce" />
@@ -614,7 +614,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
-              placeholder="Ask Agent 65 anything (attendance, exams, fees, policies)..."
+              placeholder="Ask VIGBOT anything (attendance, exams, fees, policies)..."
               disabled={isTyping}
               className="w-full rounded-xl border border-slate-200 bg-muted/30 py-2 pl-3 pr-16 text-xs text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
             />
@@ -644,28 +644,28 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
           className="grid grid-cols-3 gap-2 border-t border-slate-100 bg-slate-50/80 p-3 text-center"
           style={{ transform: is3DEnabled ? "translateZ(40px)" : "none", transformStyle: is3DEnabled ? "preserve-3d" : "flat" }}
         >
-          {/* 1. 100% Offline 8B AI */}
+          {/* 1. Hybrid 3-Tier AI */}
           <button
             type="button"
-            onClick={() => handleSend("Tell me about the offline 8B AI model")}
+            onClick={() => handleSend("Tell me about the 3-tier hybrid AI architecture")}
             className={`group rounded-xl p-2.5 transition-all text-left flex flex-col justify-between shadow-xs cursor-pointer ${
               activeCapability === "offline"
                 ? "bg-blue-100/90 border-2 border-blue-500 ring-2 ring-blue-400/20 scale-[1.02]"
                 : "bg-blue-50/80 hover:bg-blue-100/70 border border-blue-100 hover:scale-[1.02]"
             }`}
-            title="Click to learn about the offline 8B AI model"
+            title="Click to learn about the 3-tier hybrid AI architecture"
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg font-black text-blue-900">100%</span>
+              <span className="text-lg font-black text-blue-900">3-Tier</span>
               <Cpu className="h-3.5 w-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
             </div>
             <div className="mt-1">
-              <div className="text-[11px] font-bold text-blue-800 leading-tight">Offline 8B AI</div>
-              <div className="text-[9px] text-blue-600/80 font-medium truncate">Zero cloud leakage</div>
+              <div className="text-[11px] font-bold text-blue-800 leading-tight">Hybrid 3-Tier AI</div>
+              <div className="text-[9px] text-blue-600/80 font-medium truncate">Local ML + Grounded LLM</div>
             </div>
           </button>
 
-          {/* 2. Row-Level Security */}
+          {/* 2. Row-Level Security & PII Redaction */}
           <button
             type="button"
             onClick={() => handleSend("How does Row-Level Security protect my data?")}
@@ -674,7 +674,7 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                 ? "bg-emerald-100/90 border-2 border-emerald-500 ring-2 ring-emerald-400/20 scale-[1.02]"
                 : "bg-emerald-50/80 hover:bg-emerald-100/70 border border-emerald-100 hover:scale-[1.02]"
             }`}
-            title="Click to learn about deterministic Row-Level Security"
+            title="Click to learn about deterministic Row-Level Security and PII redaction"
           >
             <div className="flex items-center justify-between">
               <span className="text-lg font-black text-emerald-900">0%</span>
@@ -682,28 +682,28 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
             </div>
             <div className="mt-1">
               <div className="text-[11px] font-bold text-emerald-800 leading-tight">Data Leakage</div>
-              <div className="text-[9px] text-emerald-600/80 font-medium truncate">Deterministic RLS</div>
+              <div className="text-[9px] text-emerald-600/80 font-medium truncate">PII-Redacted & RLAC Guarded</div>
             </div>
           </button>
 
-          {/* 3. Federated Campus Agents */}
+          {/* 3. Campus Intents & Domain Modules */}
           <button
             type="button"
-            onClick={() => handleSend("What are the 12 specialized agents?")}
+            onClick={() => handleSend("What are the 18 campus intents & domain modules?")}
             className={`group rounded-xl p-2.5 transition-all text-left flex flex-col justify-between shadow-xs cursor-pointer ${
               activeCapability === "agents"
                 ? "bg-indigo-100/90 border-2 border-indigo-500 ring-2 ring-indigo-400/20 scale-[1.02]"
                 : "bg-indigo-50/80 hover:bg-indigo-100/70 border border-indigo-100 hover:scale-[1.02]"
             }`}
-            title="Click to view the 12 federated institutional agents"
+            title="Click to view the 18 campus intents & specialized domain modules"
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg font-black text-indigo-900">12</span>
+              <span className="text-lg font-black text-indigo-900">18</span>
               <Zap className="h-3.5 w-3.5 text-indigo-600 group-hover:scale-110 transition-transform" />
             </div>
             <div className="mt-1">
-              <div className="text-[11px] font-bold text-indigo-800 leading-tight">Campus Agents</div>
-              <div className="text-[9px] text-indigo-600/80 font-medium truncate">Federated system</div>
+              <div className="text-[11px] font-bold text-indigo-800 leading-tight">Campus Intents</div>
+              <div className="text-[9px] text-indigo-600/80 font-medium truncate">18 ML & Domain Modules</div>
             </div>
           </button>
         </div>
@@ -760,13 +760,13 @@ export const InteractiveLivePreview: React.FC<InteractiveLivePreviewProps> = ({
                 </span>
               </p>
               <p>
-                Agent 65 enforces mathematical data isolation. Responses only
+                VIGBOT enforces mathematical data isolation. Responses only
                 contain records verified against your authenticated student token.
               </p>
             </div>
             <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-muted-foreground">
               <span>Token: VFSTR-SEC-2026</span>
-              <span className="text-emerald-600 font-semibold">0% Leakage</span>
+              <span className="text-emerald-600 font-semibold">PII-Redacted & RLAC Guarded</span>
             </div>
           </div>
         )}

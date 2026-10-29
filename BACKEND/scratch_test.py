@@ -1,5 +1,5 @@
 import psycopg
-conn = psycopg.connect('postgresql://postgres:postgrespassword@localhost:5432/student_helpdesk')
+conn = psycopg.connect('postgresql://postgres:postgrespassword@localhost:5432/vigbot')
 cur = conn.cursor()
 try:
     cur.execute("SELECT pg_get_serial_sequence('studentlife_club_application', 'id')")

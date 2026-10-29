@@ -7,7 +7,7 @@ notebook = {
             "cell_type": "markdown",
             "metadata": {},
             "source": [
-                "# Agent 65 Fine-tuning with Unsloth\n",
+                "# VIGBOT Fine-tuning with Unsloth\n",
                 "\n",
                 "This notebook fine-tunes Llama 3 on the custom university FAQ dataset generated from `generate_training_data.py`. \n",
                 "It uses [Unsloth](https://github.com/unslothai/unsloth) for 2x faster training and less VRAM usage. It's designed to be run on Google Colab (free T4 GPU)."
@@ -212,7 +212,7 @@ notebook = {
     "nbformat_minor": 4
 }
 
-out_path = r"C:\StudentHelpdesk\train_model_colab.ipynb"
+out_path = r"train_model_colab.ipynb"
 with open(out_path, "w", encoding="utf-8") as f:
     json.dump(notebook, f, indent=2)
 

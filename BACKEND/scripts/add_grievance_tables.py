@@ -1,7 +1,7 @@
 import sqlite3
 
 def add_tables():
-    db_path = r"C:\StudentHelpdesk\database\student_helpdesk.db"
+    db_path = r"database\vigbot.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     

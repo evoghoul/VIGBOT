@@ -1,7 +1,7 @@
 
 /**
- * API Client for connecting Frontend to Agent 65 FastAPI Backend.
- * Uses NEXT_PUBLIC_BACKEND_URL or defaults to the deployed Agent 65 API.
+ * API Client for connecting Frontend to VIGBOT FastAPI Backend.
+ * Uses NEXT_PUBLIC_BACKEND_URL or defaults to the deployed VIGBOT API.
  */
 
 const ACTIVE_BACKEND_BASE_URL = "/api/v1";
@@ -9,7 +9,7 @@ const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/
 
 // Bypass Vercel's 10s Serverless timeout by calling Render directly from the client.
 // Vercel's rewrites are subject to a strict 10s timeout, causing the fallback to trigger.
-const BACKEND_BASE_URL = configuredBackendUrl || "https://agent65-api.onrender.com/api/v1";
+const BACKEND_BASE_URL = configuredBackendUrl || "https://vigbot-api.onrender.com/api/v1";
 export interface BackendTokenResponse {
   access_token: string;
   token_type: string;
@@ -59,30 +59,31 @@ export interface BackendMessageResponse {
   llm_provider?: string;
   model_used?: string;
   used_fallback?: boolean;
+  routed_by?: "rules" | "classifier" | "gemini" | "classifier_pipeline_test" | string | null;
   created_at: string;
 }
 
-class Agent65ApiClient {
+class VigbotApiClient {
   private token: string | null = null;
   private activeConversationId: string | null = null;
 
   constructor() {
     if (typeof window !== "undefined") {
-      this.token = localStorage.getItem("agent65_token");
-      this.activeConversationId = localStorage.getItem("agent65_conv_id");
+      this.token = (localStorage.getItem("vigbot_token") || localStorage.getItem("agent65_token"));
+      this.activeConversationId = (localStorage.getItem("vigbot_conv_id") || localStorage.getItem("agent65_conv_id"));
     }
   }
 
   setToken(token: string) {
     this.token = token;
     if (typeof window !== "undefined") {
-      localStorage.setItem("agent65_token", token);
+      localStorage.setItem("vigbot_token", token);
     }
   }
 
   getToken(): string | null {
     if (!this.token && typeof window !== "undefined") {
-      this.token = localStorage.getItem("agent65_token");
+      this.token = (localStorage.getItem("vigbot_token") || localStorage.getItem("agent65_token"));
     }
     return this.token;
   }
@@ -104,8 +105,8 @@ class Agent65ApiClient {
       // Reset active conversation ID so the new student gets their own conversation
       this.activeConversationId = null;
       if (typeof window !== "undefined") {
-        localStorage.removeItem("agent65_conv_id");
-        localStorage.setItem("agent65_active_student", data.roll_no || username.toUpperCase().trim());
+        localStorage.removeItem("vigbot_conv_id"); localStorage.removeItem("agent65_conv_id");
+        localStorage.setItem("vigbot_active_student", data.roll_no || username.toUpperCase().trim());
       }
       return data;
     } catch (e: unknown) {
@@ -118,16 +119,16 @@ class Agent65ApiClient {
     this.token = null;
     this.activeConversationId = null;
     if (typeof window !== "undefined") {
-      localStorage.removeItem("agent65_token");
-      localStorage.removeItem("agent65_conv_id");
-      localStorage.removeItem("agent65_active_student");
+      localStorage.removeItem("vigbot_token"); localStorage.removeItem("agent65_token");
+      localStorage.removeItem("vigbot_conv_id"); localStorage.removeItem("agent65_conv_id");
+      localStorage.removeItem("vigbot_active_student"); localStorage.removeItem("agent65_active_student");
     }
   }
 
   async ensureAuthenticated(): Promise<string | null> {
     let token = this.getToken();
     if (!token) {
-      const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
+      const savedRoll = typeof window !== "undefined" ? (localStorage.getItem("vigbot_active_student") || localStorage.getItem("agent65_active_student")) : null;
       if (savedRoll) {
         // Use correct password format for the demo
         const defaultPwd = "aman@" + savedRoll;
@@ -146,19 +147,17 @@ class Agent65ApiClient {
     try {
       let resp = await fetch(`${BACKEND_BASE_URL}/me`, {
         headers: { 
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true" 
+          Authorization: `Bearer ${token}` 
         },
       });
       if (resp.status === 401) {
         this.token = null;
-        if (typeof window !== "undefined") localStorage.removeItem("agent65_token");
+        if (typeof window !== "undefined") localStorage.removeItem("vigbot_token"); localStorage.removeItem("agent65_token");
         token = await this.ensureAuthenticated();
         if (token) {
           resp = await fetch(`${BACKEND_BASE_URL}/me`, {
             headers: { 
-              Authorization: `Bearer ${token}`,
-              "ngrok-skip-browser-warning": "true" 
+              Authorization: `Bearer ${token}` 
             },
           });
         }
@@ -176,19 +175,17 @@ class Agent65ApiClient {
     try {
       let resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
         headers: { 
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true" 
+          Authorization: `Bearer ${token}` 
         },
       });
       if (resp.status === 401) {
         this.token = null;
-        if (typeof window !== "undefined") localStorage.removeItem("agent65_token");
+        if (typeof window !== "undefined") localStorage.removeItem("vigbot_token"); localStorage.removeItem("agent65_token");
         token = await this.ensureAuthenticated();
         if (token) {
           resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
             headers: { 
-              Authorization: `Bearer ${token}`,
-              "ngrok-skip-browser-warning": "true" 
+              Authorization: `Bearer ${token}` 
             },
           });
         }
@@ -210,8 +207,7 @@ class Agent65ApiClient {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true"
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({ title: "Helpdesk Session" }),
         });
@@ -219,7 +215,7 @@ class Agent65ApiClient {
           const conv = await resp.json();
           this.activeConversationId = conv.conversation_id;
           if (typeof window !== "undefined") {
-            localStorage.setItem("agent65_conv_id", conv.conversation_id);
+            localStorage.setItem("vigbot_conv_id", conv.conversation_id);
           }
           return conv.conversation_id;
         }
@@ -239,7 +235,7 @@ class Agent65ApiClient {
     let convId = await this.getOrCreateConversation();
 
     if (!token || convId === "local-conversation-session") {
-      const savedRoll = typeof window !== "undefined" ? localStorage.getItem("agent65_active_student") : null;
+      const savedRoll = typeof window !== "undefined" ? (localStorage.getItem("vigbot_active_student") || localStorage.getItem("agent65_active_student")) : null;
       if (savedRoll) {
         const defaultPwd = "aman@" + savedRoll;
         token = await this.login(savedRoll, defaultPwd).then((t) => t?.access_token || null);
@@ -257,8 +253,7 @@ class Agent65ApiClient {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true"
+            Authorization: `Bearer ${token}`
           },
             body: JSON.stringify({ content, language, selected_model: selectedModel }),
         }
@@ -266,12 +261,12 @@ class Agent65ApiClient {
 
       // Self-healing: if session or conversation expired/reset on backend (404/401)
       if (resp.status === 404 || resp.status === 401) {
-        console.info("[Agent65] Stale conversation or token detected, auto-healing with fresh session...");
+        console.info("[VIGBOT] Stale conversation or token detected, auto-healing with fresh session...");
         this.activeConversationId = null;
         if (resp.status === 401) this.token = null;
         if (typeof window !== "undefined") {
-          localStorage.removeItem("agent65_conv_id");
-          if (resp.status === 401) localStorage.removeItem("agent65_token");
+          localStorage.removeItem("vigbot_conv_id"); localStorage.removeItem("agent65_conv_id");
+          if (resp.status === 401) localStorage.removeItem("vigbot_token"); localStorage.removeItem("agent65_token");
         }
         token = await this.ensureAuthenticated();
         convId = await this.getOrCreateConversation(true);
@@ -282,8 +277,7 @@ class Agent65ApiClient {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-              "ngrok-skip-browser-warning": "true"
+              Authorization: `Bearer ${token}`
             },
             body: JSON.stringify({ content, language, selected_model: selectedModel }),
           }
@@ -292,12 +286,12 @@ class Agent65ApiClient {
 
       if (!resp.ok) {
         const errorBody = await resp.text().catch(() => "");
-        console.error(`[Agent65] Backend returned HTTP ${resp.status}`, errorBody);
+        console.error(`[VIGBOT] Backend returned HTTP ${resp.status}`, errorBody);
         return null;
       }
       return await resp.json();
     } catch (e) {
-      console.warn("[Agent65] Backend call failed:", e);
+      console.warn("[VIGBOT] Backend call failed:", e);
       return null;
     }
   }
@@ -310,22 +304,20 @@ class Agent65ApiClient {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true"
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ category, title, description }),
       });
       if (resp.status === 401) {
         this.token = null;
-        if (typeof window !== "undefined") localStorage.removeItem("agent65_token");
+        if (typeof window !== "undefined") localStorage.removeItem("vigbot_token"); localStorage.removeItem("agent65_token");
         token = await this.ensureAuthenticated();
         if (token) {
           resp = await fetch(`${BACKEND_BASE_URL}/service-requests`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-              "ngrok-skip-browser-warning": "true"
+              Authorization: `Bearer ${token}`
             },
             body: JSON.stringify({ category, title, description }),
           });
@@ -357,8 +349,7 @@ class Agent65ApiClient {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "true"
+            Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
             rating,
@@ -372,10 +363,10 @@ class Agent65ApiClient {
         return await resp.json();
       }
     } catch (e) {
-      console.warn("[Agent65] Feedback submission failed:", e);
+      console.warn("[VIGBOT] Feedback submission failed:", e);
     }
     return null;
   }
 }
 
-export const apiClient = new Agent65ApiClient();
+export const apiClient = new VigbotApiClient();

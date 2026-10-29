@@ -1,12 +1,12 @@
 @echo off
 echo ==============================================================================
 echo   VIGNAN FOUNDATION FOR SCIENCE, TECHNOLOGY AND RESEARCH (VFSTR)
-echo   Agent 65 Student Helpdesk - PostgreSQL Docker Setup
+echo   VIGBOT - PostgreSQL Docker Setup
 echo ==============================================================================
 echo.
 
 echo [1/3] Starting PostgreSQL 16 container...
-docker run -d --name student_helpdesk_db -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=student_helpdesk postgres:16
+docker run -d --name vigbot_db -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=vigbot postgres:16
 
 echo.
 echo [2/3] Waiting for PostgreSQL service to be ready...
@@ -19,6 +19,6 @@ python init_db.py
 echo.
 echo ==============================================================================
 echo   PostgreSQL database setup complete!
-echo   Connection URL: postgresql://postgres:postgres@localhost:5432/student_helpdesk
+echo   Connection URL: postgresql://postgres:postgres@localhost:5432/vigbot
 echo ==============================================================================
 pause

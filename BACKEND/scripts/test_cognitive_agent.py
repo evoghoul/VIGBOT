@@ -6,7 +6,7 @@ BASE_URL = "http://localhost:8000/api/v1"
 
 def run_tests():
     print("==================================================")
-    print("Testing Autonomous Cognitive Agent 65 Backend API")
+    print("Testing Autonomous Cognitive VIGBOT Backend API")
     print("==================================================")
 
     # 1. Login as Asha Reddy
@@ -46,7 +46,7 @@ def run_tests():
             "expected_card_type": None
         },
         {
-            "name": "TEST 4: Service Request (Agent 46 Bonafide Certificate)",
+            "name": "TEST 4: Service Request (Bonafide Certificate)",
             "query": "Please apply for a bonafide certificate for my education loan",
             "expected_card_type": "service"
         },

@@ -1,12 +1,12 @@
 """
 Patch script to ensure faculty table and student advisor columns exist and are populated
-in database/student_helpdesk.db
+in database/vigbot.db
 """
 
 import sqlite3
 import os
 
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
 
 FACULTY_RECORDS = [
     (

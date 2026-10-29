@@ -15,7 +15,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== "undefined") {
-      const savedLang = localStorage.getItem("agent65_lang") as Language;
+      const savedLang = (localStorage.getItem("vigbot_lang") || localStorage.getItem("agent65_lang")) as Language;
       if (savedLang && savedLang in TRANSLATIONS) {
         return savedLang;
       }
@@ -26,7 +26,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     if (typeof window !== "undefined") {
-      localStorage.setItem("agent65_lang", lang);
+      localStorage.setItem("vigbot_lang", lang);
     }
   };
 
@@ -45,7 +45,7 @@ export const useLanguage = (): LanguageContextType => {
   if (!context) {
     return {
       language: "en",
-      setLanguage: () => {},
+      setLanguage: () => { },
       t: TRANSLATIONS.en,
       tDynamic: (text) => tDynamicHelper(text, "en"),
     };

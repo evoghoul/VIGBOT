@@ -2,7 +2,7 @@ import sqlite3
 import os
 import json
 
-db_path = os.path.abspath(r'C:\StudentHelpdesk\database\student_helpdesk.db')
+db_path = os.path.abspath(r'database\vigbot.db')
 conn = sqlite3.connect(db_path)
 conn.row_factory = sqlite3.Row
 cur = conn.cursor()
@@ -81,12 +81,12 @@ out += '''};
 export const TODAY_TIMETABLE = {
   day: "Saturday",
   date: "13 September 2026",
-  sourceAgent: "Agent 4 (Timetable Engine - Section 7 N-312)",
+  sourceAgent: "Timetable Engine",
   slots: WEEKLY_TIMETABLE["Saturday"] || [],
 };
 '''
 
-target_file = r'c:\StudentHelpdesk\FRONTEND\src\data\timetable.ts'
+target_file = r'FRONTEND\src\data\timetable.ts'
 with open(target_file, 'w', encoding='utf-8') as f:
     f.write(out)
 print(f'Successfully updated {target_file} from database.')

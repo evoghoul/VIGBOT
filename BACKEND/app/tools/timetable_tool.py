@@ -19,7 +19,7 @@ def get_timetable_summary(session: DatabaseSession, day: Optional[str] = None) -
 
     profile = DataRepository.get_student_profile(session) or {}
     section = profile.get("section") or profile.get("section_code") or "Not Assigned"
-    room_no = profile.get("class_room") or "Not Assigned"
+    room_no = profile.get("class_room") or "Room 301"
     
     advisors = DataRepository.get_student_advisors(session) or {}
     class_teacher = advisors.get("class_teacher", {}).get("name", "Not Assigned")

@@ -27,7 +27,7 @@ export const ATTENDANCE_DATA: {
   totalAttended: 351,
   totalConducted: 419,
   status: "Healthy",
-  sourceAgent: "Agent 11 (Attendance Engine - Section 7)",
+  sourceAgent: "Attendance Engine - Section 7",
   subjects: [
     {
       code: "DS-25CS201",

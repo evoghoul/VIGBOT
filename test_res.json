@@ -1,7 +1,7 @@
 {
   "category": "PERSONAL_DATA",
   "topic": "Library Circulation Records",
-  "source_agent": "Agent 25 (Library System) [CLOUD ACCELERATED: Groq Cloud]",
+  "source_agent": "(Library System) [CLOUD ACCELERATED: Groq Cloud]",
   "content": "I checked the official university records and found that there are no library records or issued books associated with your student profile.  \nIf you're looking for the titles *MHP* and *Zest*, they don't appear in the current library catalog for your account. You might want to check the university's online catalog or contact the library desk for further assistance.",
   "citations": [
     {

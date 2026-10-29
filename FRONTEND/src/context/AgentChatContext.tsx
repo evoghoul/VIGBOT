@@ -62,7 +62,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { language } = useLanguage();
 
   const buildInitialGreeting = React.useCallback((s: typeof student, lang: string = "en"): ConversationTurn => {
-    let content = `Hello ${s.name}! I am your **Student Helpdesk Agent (Agent 65)**.\n\nI have securely authenticated your identity (**${s.id}**) and connected to your academic records. You can ask me anything about your **attendance**, **examination dates**, **marks**, **fees**, **curriculum progress**, or **university policies**.\n\nHow can I support your university journey today?`;
+    let content = `Hello ${s.name}! I am **VIGBOT**, your AI university assistant.\n\nI have securely authenticated your identity (**${s.id}**) and connected to your academic records. You can ask me anything about your **attendance**, **examination dates**, **marks**, **fees**, **curriculum progress**, or **university policies**.\n\nHow can I support your university journey today?`;
     let followUps = [
       "What is my attendance in Digital Logic design?",
       "When is my next exam?",
@@ -71,7 +71,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     ];
 
     if (lang === "te") {
-      content = `నమస్కారం ${s.name}! నేను మీ **స్టూడెంట్ హెల్ప్‌డెస్క్ ఏజెంట్ (Agent 65)**.\n\nమీ గుర్తింపును (**${s.id}**) విజయవంతంగా ధృవీకరించాను. మీ **హాజరు**, **పరీక్షల షెడ్యూల్**, **మార్కులు**, **ఫీజులు**, లేదా **విశ్వవిద్యాలయ విధానాల** గురించి నన్ను ఏదైనా అడగవచ్చు.\n\nఈ రోజు నేను మీకు ఎలా సహాయపడగలను?`;
+      content = `నమస్కారం ${s.name}! నేను మీ **VIGBOT** (విశ్వవిద్యాలయ AI సహాయకుడు).\n\nమీ గుర్తింపును (**${s.id}**) విజయవంతంగా ధృవీకరించాను. మీ **హాజరు**, **పరీక్షల షెడ్యూల్**, **మార్కులు**, **ఫీజులు**, లేదా **విశ్వవిద్యాలయ విధానాల** గురించి నన్ను ఏదైనా అడగవచ్చు.\n\nఈ రోజు నేను మీకు ఎలా సహాయపడగలను?`;
       followUps = [
         "డిజిటల్ లాజిక్ డిజైన్‌లో నా హాజరు ఎంత?",
         "నా తదుపరి పరీక్ష ఎప్పుడు?",
@@ -79,7 +79,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         "డిగ్రీ పూర్తి కావడానికి ఇంకా ఎన్ని క్రెడిట్లు కావాలి?",
       ];
     } else if (lang === "hi") {
-      content = `नमस्ते ${s.name}! मैं आपका **छात्र हेल्पडेस्क एजेंट (Agent 65)** हूँ।\n\nमैंने आपकी पहचान (**${s.id}**) सुरक्षित रूप से प्रमाणित कर ली है। आप मुझसे अपनी **उपस्थिति**, **परीक्षा तिथियों**, **अंकों**, **फीस स्थिति** या **विश्वविद्यालय नीतियों** के बारे में कुछ भी पूछ सकते हैं।\n\nआज मैं आपकी क्या सहायता कर सकता हूँ?`;
+      content = `नमस्ते ${s.name}! मैं आपका **VIGBOT** (विश्वविद्यालय AI सहायक) हूँ।\n\nमैंने आपकी पहचान (**${s.id}**) सुरक्षित रूप से प्रमाणित कर ली है। आप मुझसे अपनी **उपस्थिति**, **परीक्षा तिथियों**, **अंकों**, **फीस स्थिति** या **विश्वविद्यालय नीतियों** के बारे में कुछ भी पूछ सकते हैं।\n\nआज मैं आपकी क्या सहायता कर सकता हूँ?`;
       followUps = [
         "डिजिटल लॉजिक डिज़ाइन में मेरी उपस्थिति कितनी है?",
         "मेरी अगली परीक्षा कब है?",
@@ -94,7 +94,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       responseMeta: {
         text: "",
         category: "PERSONAL_DATA",
-        sourceAgent: lang === "te" ? "ఏజెంట్ 65 (స్టూడెంట్ హెల్ప్‌డెస్క్)" : lang === "hi" ? "एजेंट 65 (छात्र हेल्पडेस्क)" : "Agent 65 (Student Helpdesk)",
+        sourceAgent: "VIGBOT",
         authorizedFor: s.id,
         isDistress: false,
         suggestedFollowUps: followUps,
@@ -168,7 +168,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const normalizeModelName = (rawModel?: string | null, selectedModel: "3B" | "8B" = "8B") => {
     const modelName = rawModel?.trim();
     if (!modelName || modelName === "database-direct") {
-      return selectedModel === "3B" ? "agent65-3b:latest" : "agent65-8b:latest";
+      return "hybrid-3tier";
     }
 
     return modelName;
@@ -227,7 +227,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                   responseMeta: {
                     text: backendResp.content,
                     category: categoryStr as QueryCategory,
-                    sourceAgent: backendResp.source_agent || "Agent 65 (Live FastAPI Backend)",
+                    sourceAgent: backendResp.source_agent || "VIGBOT (Live FastAPI Backend)",
                     authorizedFor: student.id,
                     isDistress: backendResp.is_distress,
                     structuredCard: backendResp.structured_card as StructuredCardData,
@@ -235,6 +235,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     llm_provider: backendResp.llm_provider || "local",
                     model_used: normalizeModelName(backendResp.model_used, model),
                     used_fallback: backendResp.used_fallback ?? false,
+                    routed_by: backendResp.routed_by ?? "rules",
                     redirect_path: mappedRedirectPath,
                   },
                 },
@@ -268,12 +269,13 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             responseMeta: {
               text: dbSearch.answer as string,
               category: (dbSearch.category as QueryCategory) || "INSTITUTIONAL_INFO",
-              sourceAgent: dbSearch.source as string || "Agent 65 (Knowledge Base)",
+              sourceAgent: dbSearch.source as string || "VIGBOT (Knowledge Base)",
               authorizedFor: student.id,
               isDistress: false,
               llm_provider: "local",
               model_used: "Database Knowledge Base",
               used_fallback: true,
+              routed_by: "rules",
             },
           },
         ]);
@@ -305,10 +307,11 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           content: response.text,
           responseMeta: {
             ...response,
-            sourceAgent: "Agent 65 [Deterministic Institution Rules]",
+            sourceAgent: "VIGBOT [Deterministic Institution Rules]",
             llm_provider: "local",
             model_used: "Rules Engine Only",
             used_fallback: true,
+            routed_by: "rules",
             redirect_path: localMappedRedirectPath,
           },
         },
@@ -350,7 +353,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
     } catch (err: unknown) {
-      console.warn("[Agent65 Speech] Microphone access denied or not found:", err);
+      console.warn("[VIGBOT Speech] Microphone access denied or not found:", err);
       alert(
         language === "hi"
           ? "माइक्रोफ़ोन अनुमति नहीं मिली। कृपया ब्राउज़र URL बार में माइक आइकॉन पर क्लिक करके 'Allow' करें।"
@@ -413,7 +416,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.warn("[Agent65 Speech] Recognition event error:", event.error);
+        console.warn("[VIGBOT Speech] Recognition event error:", event.error);
 
         // DO NOT stop on "no-speech" — student is just pausing before speaking
         if (event.error === "no-speech") {
@@ -447,7 +450,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       recognition.start();
     } catch (err) {
-      console.error("[Agent65 Speech] Failed to start speech recognition:", err);
+      console.error("[VIGBOT Speech] Failed to start speech recognition:", err);
       stopListening();
     }
   };

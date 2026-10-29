@@ -4,9 +4,9 @@ from app.tools.distress_tool import detect_distress, silent_mock_alert_counselor
 from app.agent.nlu_engine import NLUEngine
 from app.agent.llm_client import LLMClient
 
-class Agent65Orchestrator:
+class VIGBOTOrchestrator:
     """
-    Agent 65: Student Helpdesk Agent Orchestrator.
+    VIGBOT Orchestrator.
     Fulfills all 10 workflow steps and non-negotiable security guardrails:
     1. Authenticated student identity boundary (Session-bound RLS).
     2. Real-time cognitive Intent Classification & Entity Extraction.
@@ -14,9 +14,9 @@ class Agent65Orchestrator:
     4. Actionable answers with recovery math, formulas, and deadlines.
     5. Multi-turn context preservation.
     6. Multilingual support.
-    7. Service request actions (Agent 46).
+    7. Service request actions.
     8. Human administrative escalations (Step 8).
-    9. Mandatory distress detection & crisis routing (Agent 66).
+    9. Mandatory distress detection & crisis routing.
     10. Privacy-safe aggregated query pattern analytics.
     """
 
@@ -58,7 +58,7 @@ class Agent65Orchestrator:
 
             # ---------------- 6. PERSIST AGENT RESPONSE IN DB ----------------
             agent_msg = DataRepository.add_message(session, conversation_id, {
-                "sender_role": "AGENT_65",
+                "sender_role": "VIGBOT",
                 "content": crisis_response["text"],
                 "category": crisis_response["category"],
                 "source_agent": crisis_response["source_agent"],
@@ -70,7 +70,7 @@ class Agent65Orchestrator:
             return {
                 "message_id": agent_msg["message_id"],
                 "conversation_id": conversation_id,
-                "sender_role": "AGENT_65",
+                "sender_role": "VIGBOT",
                 "content": crisis_response["text"],
                 "category": crisis_response["category"],
                 "source_agent": crisis_response["source_agent"],
@@ -81,6 +81,7 @@ class Agent65Orchestrator:
                 "llm_provider": "system",
                 "model_used": "rules",
                 "used_fallback": False,
+                "routed_by": "rules",
                 "created_at": agent_msg["created_at"]
             }
 
@@ -123,10 +124,10 @@ class Agent65Orchestrator:
         # ---------------- 6. PERSIST AGENT RESPONSE IN DB ----------------
         clean_content = LLMClient.clean_latex_formatting(nlu_result.get("content", ""))
         agent_msg = DataRepository.add_message(session, conversation_id, {
-            "sender_role": "AGENT_65",
+            "sender_role": "VIGBOT",
             "content": clean_content,
             "category": nlu_result.get("category", "GENERAL"),
-            "source_agent": nlu_result.get("source_agent", "Agent 65"),
+            "source_agent": nlu_result.get("source_agent", "VIGBOT"),
             "citations": nlu_result.get("citations", []),
             "structured_card": nlu_result.get("structured_card"),
             "is_distress": False
@@ -135,10 +136,10 @@ class Agent65Orchestrator:
         return {
             "message_id": agent_msg["message_id"],
             "conversation_id": conversation_id,
-            "sender_role": "AGENT_65",
+            "sender_role": "VIGBOT",
             "content": clean_content,
             "category": nlu_result.get("category", "GENERAL"),
-            "source_agent": nlu_result.get("source_agent", "Agent 65"),
+            "source_agent": nlu_result.get("source_agent", "VIGBOT"),
             "citations": nlu_result.get("citations", []),
             "structured_card": nlu_result.get("structured_card"),
             "is_distress": False,
@@ -146,5 +147,10 @@ class Agent65Orchestrator:
             "llm_provider": nlu_result.get("llm_provider", "local"),
             "model_used": nlu_result.get("model_used", "unknown"),
             "used_fallback": nlu_result.get("used_fallback", False),
+            "routed_by": nlu_result.get("routed_by", "rules"),
             "created_at": agent_msg["created_at"]
         }
+
+
+VigbotOrchestrator = VIGBOTOrchestrator
+Agent65Orchestrator = VIGBOTOrchestrator

@@ -5,7 +5,7 @@ import os
 
 STUDENT_ID = "251FA04E13"
 
-db_path = os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db")
+db_path = os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db")
 conn = sqlite3.connect(db_path)
 c = conn.cursor()
 
@@ -135,8 +135,8 @@ def seed():
     c.executemany("INSERT INTO studentlife_club (club_id, name, category, description, theme_color) VALUES (?, ?, ?, ?, ?)", clubs)
     
     club_members = [
-        ("MEM_1", "CLUB_AI", "Agent 65", "Member", "Active contributor since Sem 2", STUDENT_ID),
-        ("MEM_2", "CLUB_CODE", "Agent 65", "Co-Lead", "Organizes weekly contests", STUDENT_ID),
+        ("MEM_1", "CLUB_AI", "VIGBOT", "Member", "Active contributor since Sem 2", STUDENT_ID),
+        ("MEM_2", "CLUB_CODE", "VIGBOT", "Co-Lead", "Organizes weekly contests", STUDENT_ID),
         ("MEM_3", "CLUB_DRAMA", "Other Student", "Member", "Active actor", "OTHER_STU")
     ]
     c.executemany("INSERT INTO studentlife_club_member (member_id, club_id, member_name, role, details, student_id) VALUES (?, ?, ?, ?, ?, ?)", club_members)
@@ -148,7 +148,7 @@ def seed():
     c.executemany("INSERT INTO studentlife_club_joining_step (step_id, club_id, step_order, title, description) VALUES (?, ?, ?, ?, ?)", club_steps)
 
     club_apps = [
-        ("CLUB_MUSIC", "Agent 65", "Pending", delta(-1), None, STUDENT_ID),
+        ("CLUB_MUSIC", "VIGBOT", "Pending", delta(-1), None, STUDENT_ID),
         ("CLUB_DRAMA", "Other Student", "Pending", delta(-2), None, "OTHER_STU")
     ]
     try:

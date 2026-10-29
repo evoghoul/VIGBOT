@@ -1,6 +1,6 @@
-# Student Helpdesk · Agent 65
+# VIGBOT
 
-An AI-powered student helpdesk dashboard — a single place for students to check attendance, marks, exams, fees, timetable, and university policies, and to ask an AI assistant about any of it in plain language.
+An AI-powered university assistant — a single place for students to check attendance, marks, exams, fees, timetable, and university policies, and to ask an AI assistant about any of it in plain language.
 
 Built with [Next.js](https://nextjs.org) 16, React 19, TypeScript, Tailwind CSS v4, and [shadcn/ui](https://ui.shadcn.com).
 
@@ -91,11 +91,17 @@ src/
     sidebar/, header/  App navigation shell
     attendance/, marks/, fees/, timetable/, examinations/, curriculum/,
     policies/, circulars/, calendar/, services/   One folder per dashboard screen
-  data/           Mock/sample data the dashboard reads from (no real backend yet)
-  lib/            Shared utilities and the AI response engine (src/lib/ai-engine.ts)
+  data/           Static reference structures and offline fallback data
+  lib/            Shared utilities, API client (api-client.ts), and fallback intelligence engine (ai-engine.ts)
+  context/        Student authentication, RLS session state, and agent chat context
 ```
 
-The app currently authenticates with a demo student profile and reads from static mock data in `src/data/` — there's no real backend or database wired up yet.
+The frontend connects directly to the FastAPI backend (`http://localhost:8000/api/v1`) with full Row-Level Security (RLS) enforcement, 18 ML campus intents, and live `routed_by` telemetry (Tier 1 Rules, Tier 2 Local ML Classifier, Tier 3 PII-Redacted Gemini 3.5 Flash). If the backend is unreachable, it gracefully falls back to local deterministic rule evaluation.
+
+### Statutory Attendance Policy
+- **75% Mandatory Attendance**: Required for regular End-Semester Examination clearance.
+- **65%–74.9% Medical Condonation**: Permitted upon approval by Dean (Academics) on verified medical grounds.
+- **<65% Severe Detention**: Student is debarred and receives an 'F-Detained' grade.
 
 ## Design system
 

@@ -20,10 +20,10 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=(
-        "Backend service for **Agent 65: Student Helpdesk Agent**.\n\n"
+        "Backend service for **VIGBOT**.\n\n"
         "Provides authenticated, row-level secured access to student profiles, attendance, "
         "timetable, marks, examination schedules, fee demands, institutional policies, "
-        "and administrative service requests with mid-conversation distress routing to Agent 66."
+        "and administrative service requests with mid-conversation distress routing to Emergency Counseling."
     ),
     docs_url="/docs",
     redoc_url="/redoc",
@@ -144,7 +144,7 @@ async def health_check():
     groq_active = _usable_secret(groq_key) or _usable_secret(cloud_key) or _usable_secret(gemini_key)
     return {
         "status": "healthy",
-        "agent": "Agent 65 (Student Helpdesk Agent)",
+        "agent": "VIGBOT (VIGBOT Agent)",
         "version": settings.APP_VERSION,
         "llm_provider": "groq",
         "gemini_configured": _usable_secret(gemini_key),

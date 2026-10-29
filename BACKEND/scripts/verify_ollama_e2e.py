@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agent 65: Ollama End-to-End Diagnostic & Verification Tool.
+VIGBOT: Ollama End-to-End Diagnostic & Verification Tool.
 Verifies that inference actually reaches the local Ollama daemon rather than
 silently falling back to deterministic templates or mock responses.
 """
@@ -23,11 +23,11 @@ for suffix in ["/api/chat", "/api/generate", "/api/tags"]:
         raw_url = raw_url[:-len(suffix)]
 OLLAMA_URL = raw_url.rstrip("/")
 
-PREFERRED_MODELS = ["agent65-8b:latest", "agent65-8b", "agent65:latest", "llama3.2:3b", "llama3.1:8b"]
+PREFERRED_MODELS = ["vigbot-8b:latest", "vigbot-8b", "vigbot:latest", "llama3.2:3b", "llama3.1:8b"]
 
 def test_ollama_connection():
     print("=" * 65)
-    print("  AGENT 65: OLLAMA END-TO-END VERIFICATION & BENCHMARK")
+    print("  VIGBOT: OLLAMA END-TO-END VERIFICATION & BENCHMARK")
     print("=" * 65)
     
     # 1. Check Daemon
@@ -65,9 +65,9 @@ def test_ollama_connection():
 
     if not target_model:
         print(f"\n[2/4] Model Selection FAILED:")
-        print(f"[FAIL] None of the approved Agent 65 models {PREFERRED_MODELS} are installed in Ollama.")
+        print(f"[FAIL] None of the approved VIGBOT models {PREFERRED_MODELS} are installed in Ollama.")
         print(f"    Available models in Ollama: {models}")
-        print(f"    Action: Run 'ollama create agent65-8b:latest -f ...' or 'ollama pull llama3.2:3b'.")
+        print(f"    Action: Run 'ollama create vigbot-8b:latest -f ...' or 'ollama pull llama3.2:3b'.")
         return False
 
     print(f"\n[2/4] Selected Approved Model: '{target_model}'")
@@ -83,7 +83,7 @@ def test_ollama_connection():
             {
                 "role": "system",
                 "content": (
-                    "You are Agent 65, an autonomous student helpdesk AI for Vignan University.\n"
+                    "You are VIGBOT, an autonomous VIGBOT AI for Vignan University.\n"
                     "Verified Institutional Records & Academic Regulations:\n"
                     "• Academic Regulations Clause 4.2: The minimum attendance percentage required for end-semester examinations is 75%.\n"
                     "• Condonation of attendance shortage between 65% and 75% may be granted on valid medical grounds with Dean approval.\n"

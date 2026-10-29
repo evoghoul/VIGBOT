@@ -1,17 +1,17 @@
-# Agent 65: Student Helpdesk Backend & AI Agent
+# VIGBOT Backend & AI Service
 
-This backend service powers **Agent 65: Student Helpdesk Agent** (Group 13 Student Support Agents). It provides authenticated students with a single, secure conversational interface to query their academic records, attendance, timetable, continuous internal marks, examination schedules, fee demands, and approved institutional policies.
+This backend service powers **VIGBOT** (Group 13 Student Support Agents). It provides authenticated students with a single, secure conversational interface to query their academic records, attendance, timetable, continuous internal marks, examination schedules, fee demands, and approved institutional policies.
 
 ---
 
 ## Key Features & Problem Statement Compliance
 
 - **Strict Data-Layer Row-Level Security (RLS):** Student session context (`SET LOCAL app.student_id = '<uuid>'`) is enforced at the database layer. A student is technically incapable of viewing another student's records under any prompt phrasing or injection.
-- **Zero API Key Operation:** The backend runs out-of-the-box with `LLM_PROVIDER=mock` (built-in intelligent evaluation engine) and supports offline local models (`LLM_PROVIDER=local` via Ollama). No paid API keys are needed.
-- **Mandatory Step 9 Distress Guardrail:** Every message is evaluated for distress, self-harm, or safety concerns before any routine processing. Any detected crisis immediately halts academic queries, writes an urgent alert to `confidential.crisis_escalation` (feeding **Agent 66**), and provides 24/7 counseling contacts.
+- **Hybrid 3-Tier Execution:** Tier 1: Deterministic security guardrails & fast database rules; Tier 2: Sub-millisecond CPU TF-IDF + Logistic Regression Intent Classifier; Tier 3: Cloud LLM fallback (Google Gemini gemini-3.5-flash / Groq) with automatic student PII redaction. Local mock mode (`LLM_PROVIDER=mock`) is fully supported for offline development and CI testing without external API keys.
+- **Mandatory Step 9 Distress Guardrail (Crisis Intervention):** Every message is evaluated for distress, self-harm, or safety concerns before any routine processing. Any detected crisis immediately halts academic queries, writes an urgent alert to `confidential.crisis_escalation` (feeding **Agent 66**), and provides 24/7 counseling contacts.
 - **Actionable Attendance Guidance:** Answers report the exact attendance percentage, classes attended/held, classes needed to reach 75%, condonation cut-off deadlines, and recovery feasibility.
 - **Official Policy Citations:** Answers on academic rules cite the exact Regulation title, Clause number, and Effective Date (Agents 53 & 55).
-- **Service Request Ticketing (Agent 46):** Generates formal service requests for Bonafide Certificates, Transcripts, Transit Bus Passes, Mentor Meetings, and Student Grievances with tracking IDs (e.g. `SR-2026-0001`).
+- **Service Request Ticketing :** Generates formal service requests for Bonafide Certificates, Transcripts, Transit Bus Passes, Mentor Meetings, and Student Grievances with tracking IDs (e.g. `SR-2026-0001`).
 - **Privacy-Safe Daily Analytics (Step 10):** Daily query analytics aggregate query counts, topics, and escalation rates **without storing student identities or raw chat text**.
 
 ---
@@ -22,13 +22,13 @@ This backend service powers **Agent 65: Student Helpdesk Agent** (Group 13 Stude
 All 12 acceptance tests validate the entire Problem Statement without needing any external database or API key:
 
 ```powershell
-cd c:\StudentHelpdesk\backend
+cd BACKEND
 .\.venv\Scripts\python -m pytest -v
 ```
 
 ### 2. Start the Backend API Server
 ```powershell
-cd c:\StudentHelpdesk\backend
+cd BACKEND
 .\.venv\Scripts\python -m uvicorn app.main:app --reload --port 8000
 ```
 

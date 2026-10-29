@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agent 65 Fine-Tuning Script: The Stove & Recipe.
+VIGBOT Fine-Tuning Script: The Stove & Recipe.
 Fine-tunes Llama-3.2-3B-Instruct (or Mistral-7B) using QLoRA (4-bit LoRA) with Hugging Face TRL & PEFT.
 Produces a domain-adapted conversational model tailored for university student advisory.
 
@@ -17,14 +17,14 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Fine-tune Llama 3.1 8B / 3.2 3B for Agent 65")
+    parser = argparse.ArgumentParser(description="Fine-tune Llama 3.1 8B / 3.2 3B for VIGBOT")
     parser.add_argument(
         "--model_name",
         type=str,
         default="meta-llama/Meta-Llama-3.1-8B-Instruct",
         help="Base model to fine-tune (e.g. meta-llama/Meta-Llama-3.1-8B-Instruct or meta-llama/Llama-3.2-3B-Instruct)"
     )
-    clean_dir = os.path.join(os.path.dirname(__file__), "..", "data", "clean_agent65")
+    clean_dir = os.path.join(os.path.dirname(__file__), "..", "data", "clean_vigbot")
     default_train = os.path.join(clean_dir, "train_data.jsonl") if os.path.exists(clean_dir) else os.path.join(os.path.dirname(__file__), "..", "data", "train_data.jsonl")
     default_val = os.path.join(clean_dir, "val_data.jsonl") if os.path.exists(clean_dir) else os.path.join(os.path.dirname(__file__), "..", "data", "val_data.jsonl")
 
@@ -43,7 +43,7 @@ def parse_args():
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="./agent65_lora",
+        default="./vigbot_lora",
         help="Directory to save the fine-tuned LoRA adapter"
     )
     parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
@@ -57,7 +57,7 @@ def main():
     args = parse_args()
 
     print("=" * 70)
-    print("  AGENT 65: FINE-TUNING LLAMA 3.2 (3B) / MISTRAL (7B) VIA QLORA")
+    print("  VIGBOT: FINE-TUNING LLAMA 3.2 (3B) / MISTRAL (7B) VIA QLORA")
     print("=" * 70)
     print(f"[*] Base Model:       {args.model_name}")
     print(f"[*] Training Data:    {args.data_path}")
@@ -83,13 +83,13 @@ def main():
         print("Please install training dependencies:")
         print("    pip install torch transformers peft trl bitsandbytes accelerate datasets")
         print("\nNote: Fine-tuning requires an Nvidia GPU (CUDA). For free GPU training, use the provided")
-        print("Google Colab notebook: backend/scripts/train_agent65.ipynb")
+        print("Google Colab notebook: backend/scripts/train_vigbot.ipynb")
         return
 
     # Check CUDA availability
     if not torch.cuda.is_available():
         print("\n[!] WARNING: CUDA is not available. Fine-tuning on CPU is prohibitively slow.")
-        print("[!] For fast, free training (< 25 min), run `train_agent65.ipynb` on Google Colab (Free T4 GPU).")
+        print("[!] For fast, free training (< 25 min), run `train_vigbot.ipynb` on Google Colab (Free T4 GPU).")
         response = input("Do you wish to continue on CPU anyway? (y/N): ")
         if response.lower() != "y":
             print("Aborted.")
@@ -211,7 +211,7 @@ def main():
     print("\n" + "=" * 70)
     print("  NEXT STEPS FOR LOCAL OLLAMA DEPLOYMENT:")
     print("  1. Merge LoRA weights into base model (or export directly to GGUF)")
-    print("  2. Create Ollama model: ollama create agent65 -f backend/models/Modelfile.agent65")
+    print("  2. Create Ollama model: ollama create vigbot -f backend/models/Modelfile.vigbot")
     print("=" * 70)
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ export const CIRCULARS_DATA: CircularItem[] = [
     priority: "Urgent",
     shortDescription: "The official timetable for End-Semester Theory & Practical examinations is officially published. Hall ticket distribution begins 12 Sep.",
     issuedBy: "Office of the Controller of Examinations",
-    sourceAgent: "Agent 55 (Circulars)",
+    sourceAgent: "Circulars",
     actionRequired: "Download hall ticket from Exams tab by 14 Sep.",
   },
   {
@@ -34,7 +34,7 @@ export const CIRCULARS_DATA: CircularItem[] = [
     priority: "High",
     shortDescription: "Pre-registration for upcoming Semester 6 open and professional electives closes on 25 September 2026. Late fee applies thereafter.",
     issuedBy: "Dean of Academic Affairs",
-    sourceAgent: "Agent 55 (Circulars)",
+    sourceAgent: "Circulars",
     actionRequired: "Finalize elective choices with your Faculty Mentor.",
   },
   {
@@ -44,9 +44,9 @@ export const CIRCULARS_DATA: CircularItem[] = [
     category: "Academics",
     date: "28 Aug 2026",
     priority: "Urgent",
-    shortDescription: "Mid-term attendance records verified. Students falling below 70% threshold are instructed to meet respective course instructors immediately.",
+    shortDescription: "Mid-term attendance records verified. Students falling below 75% threshold are instructed to meet respective course instructors immediately.",
     issuedBy: "Dean of Student Affairs",
-    sourceAgent: "Agent 55 (Circulars)",
+    sourceAgent: "Circulars",
     actionRequired: "Check Attendance view for targeted consecutive class recovery.",
   },
   {
@@ -58,7 +58,7 @@ export const CIRCULARS_DATA: CircularItem[] = [
     priority: "Normal",
     shortDescription: "New institutional guidelines on ethical artificial intelligence citation standards for computer science laboratory deliverables.",
     issuedBy: "Academic Senate Board",
-    sourceAgent: "Agent 55 (Circulars)",
+    sourceAgent: "Circulars",
   },
   {
     id: "CIR-2026-092",
@@ -69,6 +69,6 @@ export const CIRCULARS_DATA: CircularItem[] = [
     priority: "Normal",
     shortDescription: "The university administrative offices and academic departments will remain closed from 02 Oct to 06 Oct 2026.",
     issuedBy: "Registrar Secretariat",
-    sourceAgent: "Agent 55 (Circulars)",
+    sourceAgent: "Circulars",
   },
 ];

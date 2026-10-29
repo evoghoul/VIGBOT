@@ -1,4 +1,4 @@
-﻿nlu_path = r'C:\StudentHelpdesk\BACKEND\app\agent\nlu_engine.py'
+﻿nlu_path = r'BACKEND\app\agent\nlu_engine.py'
 with open(nlu_path, 'r', encoding='utf-8') as f:
     code = f.read()
 

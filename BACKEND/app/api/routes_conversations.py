@@ -18,7 +18,7 @@ from app.models.schemas import (
 )
 from app.database import DataRepository, DatabaseSession
 from app.security import get_current_student
-from app.agent.orchestrator import Agent65Orchestrator
+from app.agent.orchestrator import VIGBOTOrchestrator
 
 router = APIRouter(prefix="/conversations", tags=["Conversations & Helpdesk Chat"])
 
@@ -66,7 +66,7 @@ async def send_message(
         raise HTTPException(status_code=404, detail="Conversation not found or access denied.")
 
     try:
-        agent_response = Agent65Orchestrator.process_message(
+        agent_response = VIGBOTOrchestrator.process_message(
             session=session,
             conversation_id=conversation_id,
             user_message=msg.content,
@@ -74,19 +74,19 @@ async def send_message(
             selected_model=msg.selected_model or "8B"
         )
     except Exception as exc:
-        logger.exception("Agent 65 message processing failed for conversation %s", conversation_id)
+        logger.exception("VIGBOT message processing failed for conversation %s", conversation_id)
         # Return a graceful fallback response instead of a 500 crash
         import uuid, datetime
         fallback_response = {
             "message_id": f"msg-err-{uuid.uuid4().hex[:8]}",
             "conversation_id": conversation_id,
-            "sender_role": "AGENT_65",
+            "sender_role": "VIGBOT",
             "content": (
                 "I'm sorry, I ran into a temporary issue processing your request. "
                 "Please try again in a moment. If the problem persists, try refreshing the page."
             ),
             "category": "GENERAL",
-            "source_agent": "Agent 65 (Error Recovery)",
+            "source_agent": "VIGBOT (Error Recovery)",
             "citations": [],
             "structured_card": None,
             "is_distress": False,
@@ -94,6 +94,7 @@ async def send_message(
             "llm_provider": "fallback",
             "model_used": "error-recovery",
             "used_fallback": True,
+            "routed_by": "rules",
             "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
         }
         return MessageResponse(**fallback_response)
@@ -129,7 +130,7 @@ async def submit_message_feedback(
             student_name = student_profile.get("full_name", "Student") if student_profile else "Student"
 
             system_content = (
-                f"You are Agent 65, an exceptionally intelligent, empathetic, and knowledgeable university student helpdesk AI "
+                f"You are VIGBOT, an exceptionally intelligent, empathetic, and knowledgeable university AI assistant "
                 f"running locally with zero external API keys, grounded in official university records. "
                 f"Student profile: {student_name}."
             )
@@ -210,6 +211,6 @@ async def submit_message_feedback(
             status="success",
             saved_for_training=False,
             rating=fb.rating,
-            message="Feedback recorded. Thank you for helping improve Agent 65."
+            message="Feedback recorded. Thank you for helping improve VIGBOT."
         )
 

@@ -94,7 +94,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
                 <Cpu className="h-3.5 w-3.5 text-violet-600" />
-                <span>12 Federated Institutional Agents</span>
+                <span>12 Domain Modules & 18 ML Intents</span>
               </div>
             </div>
 
@@ -105,7 +105,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-700 transition-all cursor-pointer group"
               >
                 <Sparkles className="h-4 w-4" />
-                <span>{t.askButton || "Ask Student Helpdesk"}</span>
+                <span>{t.askButton || "Ask VIGBOT"}</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </button>
 
@@ -134,7 +134,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <Bot className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-foreground">AGENT 65 CORE</h4>
+                      <h4 className="text-xs font-bold text-foreground">VIGBOT CORE</h4>
                       <p className="text-xs text-muted-foreground">{t.autonomousContextEngine || "Autonomous Context Engine"}</p>
                     </div>
                   </div>
@@ -173,7 +173,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       </span>
                       <span className="font-medium text-foreground">{t.realTimeWellbeing || "Real-time Well-being"}</span>
                     </div>
-                    <span className="font-mono text-sm text-emerald-600 font-semibold">{t.agent66Monitored || "Agent 66 Monitored"}</span>
+                    <span className="font-mono text-sm text-emerald-600 font-semibold">{t.agent66Monitored || "24/7 Monitored"}</span>
                   </div>
                 </div>
 

@@ -29,7 +29,9 @@ def get_db_connection():
             except Exception:
                 pass
 
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+    db_vigbot = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
+    db_fallback = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
+    db_path = db_vigbot if os.path.exists(db_vigbot) else db_fallback
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("""
@@ -424,7 +426,7 @@ class DataRepository:
         structured_card = json.dumps(message_data.get("structured_card")) if message_data.get("structured_card") else None
         
         query = "INSERT INTO messages (message_id, conversation_id, sender_role, content, category, source_agent, citations, structured_card, is_distress, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        DataRepository._execute_insert(query, (msg_id, conversation_id, message_data.get("sender_role", "STUDENT"), message_data.get("content"), message_data.get("category"), message_data.get("source_agent", "Agent 65"), citations, structured_card, 1 if message_data.get("is_distress") else 0, now))
+        DataRepository._execute_insert(query, (msg_id, conversation_id, message_data.get("sender_role", "STUDENT"), message_data.get("content"), message_data.get("category"), message_data.get("source_agent", "VIGBOT"), citations, structured_card, 1 if message_data.get("is_distress") else 0, now))
         
         DataRepository._execute_insert("UPDATE conversations SET updated_at = ? WHERE conversation_id = ?", (now, conversation_id))
         
@@ -447,7 +449,7 @@ class DataRepository:
         sla = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
         
         query = "INSERT INTO service_requests (service_request_id, request_no, student_id, category, title, description, priority, status, assigned_office, sla_due_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        DataRepository._execute_insert(query, (req_id, req_no, session.student_id, data["category"], data["title"], data["description"], data.get("priority", "NORMAL"), "SUBMITTED", "Registrar Student Affairs (Agent 46)", sla, now, now))
+        DataRepository._execute_insert(query, (req_id, req_no, session.student_id, data["category"], data["title"], data["description"], data.get("priority", "NORMAL"), "SUBMITTED", "Registrar Student Affairs", sla, now, now))
         
         res = DataRepository._execute_query("SELECT * FROM service_requests WHERE service_request_id = ?", (req_id,))
         return res[0] if res else None
@@ -573,7 +575,7 @@ class DataRepository:
         esc_id = f"esc-{uuid.uuid4().hex[:8]}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         query = "INSERT INTO crisis_escalations (crisis_escalation_id, student_id, student_name, roll_no, detected_at, detected_by, trigger_snippet, escalated_to, channel_used, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        DataRepository._execute_insert(query, (esc_id, session.student_id, student_info.get("full_name"), student_info.get("roll_no"), now, "Agent 65 Distress Guardrail", trigger_phrase, "Agent 66 (24/7 Student Wellbeing Helpline & On-duty Counselor)", "PRIORITY_INTERNAL_DISPATCH", "PAGE_SENT"))
+        DataRepository._execute_insert(query, (esc_id, session.student_id, student_info.get("full_name"), student_info.get("roll_no"), now, "VIGBOT Distress Guardrail", trigger_phrase, "24/7 Student Wellbeing Helpline & On-duty Counselor", "PRIORITY_INTERNAL_DISPATCH", "PAGE_SENT"))
         
         res = DataRepository._execute_query("SELECT * FROM crisis_escalations WHERE crisis_escalation_id = ?", (esc_id,))
         return res[0] if res else None

@@ -5,7 +5,7 @@ export const mockGrievances = [
 ];
 
 export const mockClubApps = [
-  { id: 6, club_id: "CLUB_MUSIC", student_name: "Agent 65", status: "Approved", timestamp: "2026-09-17T16:20:00.052421", withdrawal_reason: null },
+  { id: 6, club_id: "CLUB_MUSIC", student_name: "VIGBOT", status: "Approved", timestamp: "2026-09-17T16:20:00.052421", withdrawal_reason: null },
   { id: 7, club_id: "CLUB_DRAMA", student_name: "Other Student", status: "Approved", timestamp: "2026-09-16T16:20:00.052421", withdrawal_reason: null }
 ];
 

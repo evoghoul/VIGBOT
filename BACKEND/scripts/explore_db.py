@@ -1,6 +1,6 @@
 """
 Interactive Database Explorer & RLS Verifier for Evaluators
-Target Database: student_helpdesk.db (SQLite) / PostgreSQL
+Target Database: vigbot.db (SQLite) / PostgreSQL
 University: Vignan Foundation for Science, Technology and Research (VFSTR)
 """
 
@@ -15,13 +15,13 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
 
 def print_banner():
     print("=" * 80)
     print("  VIGNAN FOUNDATION FOR SCIENCE, TECHNOLOGY AND RESEARCH (VFSTR)")
     print("  DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING - SECTION 7")
-    print("  Agent 65 Student Helpdesk - Institutional Database Explorer")
+    print("  VIGBOT VIGBOT - Institutional Database Explorer")
     print("=" * 80)
 
 def show_summary(conn):
@@ -35,7 +35,7 @@ def show_summary(conn):
         ("fees", "Semester Fee Ledger"),
         ("policies", "Approved Academic Policies"),
         ("circulars", "Official Dean/HOD Circulars"),
-        ("service_requests", "Agent 46 Service Tickets"),
+        ("service_requests", "Service Request Tickets"),
         ("timetable", "Section 7 Master Routine"),
         ("exams", "Examinations Schedule")
     ]
@@ -57,7 +57,7 @@ def show_top_and_at_risk(conn):
     for r in cur.fetchall():
         print(f"   [STAR] {r[0]} | {r[1]:<32} | CGPA: {r[2]:.2f} | Attendance: {r[3]}%")
 
-    print("\n[!] Agent 11 Attendance Shortfall Risk Flags (<75% attendance):")
+    print("\n[!] Attendance Shortfall Risk Flags (<75% attendance):")
     cur.execute("SELECT roll_no, full_name, cgpa, overall_attendance_pct FROM students WHERE overall_attendance_pct < 75.0 ORDER BY overall_attendance_pct ASC LIMIT 5")
     for r in cur.fetchall():
         print(f"   [FLAG] {r[0]} | {r[1]:<32} | Attendance: {r[3]}% | Status: SHORTFALL_WARNING")

@@ -13,7 +13,7 @@ if hasattr(sys.stderr, "reconfigure"):
 import sqlite3
 import math
 
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
 
 # 69 Authenticated Students of VFSTR CSE Section 8 (Room N-313, Class Teacher: Dr. T.R. Rajesh)
 # Format: (RegdNo, Name, Att_DS, Att_DBMSIS, Att_OOPTJ, Att_DLDES, Att_AI, Att_DMS, Att_DSL, Att_DBMSL, Att_OOPTJL, Att_DWAV, Att_Lib, Att_Coun, Total_Att)

@@ -22,7 +22,7 @@ def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> 
     student_profile = DataRepository.get_student_profile(session) or {}
     student_name = student_profile.get("full_name", "Student")
     
-    # Write emergency crisis record into confidential schema (feeds Agent 66)
+    # Write emergency crisis record into confidential schema (feeds Crisis Escalation)
     escalation_record = DataRepository.log_crisis_escalation(
         session=session,
         trigger_phrase=trigger_message,
@@ -43,7 +43,7 @@ def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> 
         f"📞 **National Tele-MANAS Mental Health Helpline:** 14416 (Toll-Free, 24/7)\n"
         f"📞 **Vandrevala Foundation Helpline:** +91-9999-666-555\n"
         f"🏢 **Student Wellness Center:** Room 102, Student Activity Building (Open 24 Hours)\n\n"
-        f"A confidential, high-priority notification has been sent to our Student Wellbeing Counselor (Agent 66), "
+        f"A confidential, high-priority notification has been sent to our Student Wellbeing Counselor, "
         f"who is standing by to assist you."
     )
 
@@ -67,14 +67,14 @@ def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> 
         "text": text,
         "is_distress": True,
         "category": "DISTRESS_SUPPORT",
-        "source_agent": "Agent 66 (Distress Escalation & Counseling)",
+        "source_agent": "Distress Escalation & Counseling",
         "structured_card": card_data
     }
 
 def silent_mock_alert_counselor(session: DatabaseSession, trigger_message: str) -> None:
     student_profile = DataRepository.get_student_profile(session) or {}
     
-    # Write emergency crisis record into confidential schema (feeds Agent 66)
+    # Write emergency crisis record into confidential schema (feeds Crisis Escalation)
     DataRepository.log_crisis_escalation(
         session=session,
         trigger_phrase=trigger_message,

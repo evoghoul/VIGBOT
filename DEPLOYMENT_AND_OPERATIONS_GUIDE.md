@@ -1,269 +1,147 @@
-# Agent 65: Deployment and Hybrid Operations Guide
+# VIGBOT: Deployment and Operations Guide
 
-> **Zero Cost (₹0) | No Credit Card Required | Laptop-Off Auto Fallback | 100% Data Preserved**
+> **Production Deployment | Hybrid 3-Tier Architecture | Privacy-Preserving Cloud Fallback**
 
-This guide is split into two parts:
+This guide provides operational and deployment procedures for the **VIGBOT** platform:
 
-1. **Deployment:** Put the frontend, backend, database, and fallback model online.
-2. **Daily operations:** Use the custom local model when the laptop is on and restart it after the laptop is turned back on.
-
-## Contents
-
-- [Direct answer](#-pehle-aapke-sawaal-ka-direct-jawab)
-- [Part 1: Deployment](#-part-1-step-by-step-deployment-guide-beginner-friendly)
-- [Part 2: Daily operations](#-part-2-daily-operations-guide-laptop-bandchalu-hone-par-kya-karein)
-- [Provider verification](#-how-to-check-which-model-answered)
-- [Final checklist](#-summary-checklist)
+1. **System Architecture:** Hybrid 3-tier routing (Rules -> Local Classifier -> Gemini 2.5 Flash).
+2. **Production Deployment:** Hosting the Next.js frontend on Vercel, the FastAPI backend on Render / Docker, and PostgreSQL on Neon.
+3. **Database Migration:** Migrating the seeded SQLite database (70 student records) to PostgreSQL.
+4. **Operations & Monitoring:** Checking system health, privacy logs, and routing tiers.
 
 ---
 
-## ⚡ Pehle Aapke Sawaal Ka Direct Jawab:
-### *"Kya aisa ho sakta hai ki jab mera laptop band ho toh deployed website automatically API wale model pe shift ho jaaye??"*
+## 1. System Architecture
 
-**Haan! 100% YES! Aur ye feature aapke backend me pehle se hi coded aur active hai.**
-
-Aapka backend `BACKEND/app/agent/local_llm.py` ek **3-Tier Cascade Architecture** use karta hai:
+VIGBOT operates on a **3-Tier Hybrid Intelligence Stack** designed for low latency, deterministic accuracy on university policies, and robust fallback for open-ended queries:
 
 ```
                   ┌─────────────────────────────────────┐
-                  │   Student Asks Question on Website  │
+                  │   Student Submits Query to API      │
                   └──────────────────┬──────────────────┘
                                      │
                                      ▼
-                    ┌─────────────────────────────────┐
-                    │  Tier 1: Try Local Laptop Model │
-                    │     (agent65-8b via Tunnel)     │
-                    └────────────────┬────────────────┘
-                                     │
-                 ┌───────────────────┴───────────────────┐
-                 │                                       │
-        [Laptop is ON & Tunnel Up]            [Laptop is OFF / Asleep / Closed]
-                 │                                       │
-                 ▼                                       ▼
-        ✅ Local 8B Model                      ⏱️ 4-second connect timeout
-       answers on your CPU/GPU                (Connection fails safely)
-                                                         │
-                                                         ▼
-                                              ┌───────────────────────┐
-                                              │  Tier 2: Groq Cloud   │
-                                              │  (Llama 3.3 70B / 8B) │
-                                              └──────────┬────────────┘
-                                                         │
-                                              [If Groq limit reached]
-                                                         │
-                                                         ▼
-                                              ┌───────────────────────┐
-                                              │  Tier 2b: Gemini Free │
-                                              │    (Gemini 3.6 Flash) │
-                                              └──────────┬────────────┘
-                                                         │
-                                              [If Internet API fails]
-                                                         │
-                                                         ▼
-                                              ┌───────────────────────┐
-                                              │  Tier 3: Deterministic│
-                                              │  NLU Rule Engine      │
-                                              └───────────────────────┘
+                  ┌─────────────────────────────────────┐
+                  │  Tier 1: Deterministic Guardrails   │
+                  │  - Distress Safety Interceptor      │
+                  │  - Domain Rule Handlers (Academic)  │
+                  └──────────────────┬──────────────────┘
+                                     │ (unmatched / dynamic)
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │  Tier 2: Local ML Intent Classifier │
+                  │  - CPU TF-IDF + Logistic Regression │
+                  │  - 18 Intent Categories             │
+                  │  - High Confidence Threshold Match  │
+                  └──────────────────┬──────────────────┘
+                                     │ (below threshold / unclassified)
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │  Tier 3: Cloud LLM Fallback         │
+                  │  - Google Gemini 2.5 Flash          │
+                  │  - PII-Redacted Context Anonymizer  │
+                  │  - Grounded Academic Guidelines     │
+                  └─────────────────────────────────────┘
 ```
 
-* **Jab Laptop ON hoga:** Render backend aapke laptop ke Cloudflare Tunnel se connect karega aur aapka **custom local `agent65-8b` model** answer karega!
-* **Jab Laptop OFF hoga:** Render 4 second me samajh jayega ki laptop offline hai, aur bina kisi error ke **automatically Groq Cloud Llama-3.3-70B** par switch hokar 1 second me answer de dega!
-* **Student ko kabhi error ya broken page nahi dikhega.**
+### Core Components
+* **Tier 1 (Deterministic Guardrails):**
+  - **Distress Interceptor:** Immediate keyword detection for self-harm or distress; triggers Emergency Counseling emergency counseling protocol without invoking cloud LLMs.
+  - **Academic Domain Rules:** Deterministic calculations for attendance deficit (mandatory 75% threshold, medical condonation 65%–75%), fee balances, credit audits, and timetable lookup.
+  - **Row-Level Security (RLS):** Student data access strictly isolated by authenticated user session.
+* **Tier 2 (Local ML Intent Classifier):**
+  - Fast, zero-GPU-overhead TF-IDF vectorizer + Logistic Regression classifier.
+  - Classifies student intent into one of 18 domain intents and triggers domain specific data fetching.
+* **Tier 3 (Cloud LLM Fallback):**
+  - Uses `gemini-2.5-flash` via Google GenAI SDK.
+  - **Privacy Enforcement:** Student PII (name, roll number, student ID) is automatically redacted and replaced with `[Authenticated Student]` prior to transmitting prompts to cloud endpoints.
 
 ---
 
-# 📚 PART 1: Step-by-Step Deployment Guide (Beginner-Friendly)
+## 2. Production Deployment Guide
 
-Agar aapne pehle kabhi deploy nahi kiya hai, toh ghabraiye mat. Bas neeche diye gaye steps ko ek-ek karke follow kijiye:
-
----
-
-### Step 1: Create a Free Neon PostgreSQL Database
-Aapka SQLite data (`student_helpdesk.db`) render par restart hone par delete ho sakta hai, isliye hum Neon use karte hain jo permanent hai aur bilkul free hai.
-
-1. Website open karein: **[https://neon.tech](https://neon.tech)**
-2. **Sign Up with GitHub** par click karein (koi credit card nahi maangta).
-3. Ek naya project banayein:
-   * **Project Name**: `agent65`
-   * **Region**: *AWS Asia (Singapore)* ya *US East (Ohio)*
-   * **Postgres Version**: 16 ya 17 (default rehne dein)
-4. Project bante hi dashboard par aapko **Connection string** dikhegi:
-   ```
-   postgresql://neondb_owner:npg_xxxxxx@ep-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-   ```
-5. Is connection string ko copy karke Notepad me save kar lijiye.
-
----
-
-### Step 2: Migrate Local Student Data to Neon
-Hamne aapke liye ek automated script `BACKEND/scripts/migrate_sqlite_to_postgres.py` bana diya hai jo aapke 141 students, Section 8, timetable, marks, exams sabhi ko 10 second me Neon me upload kar dega:
-
-1. Apne laptop par terminal / PowerShell open karein aur run karein:
-   ```powershell
-   BACKEND\.venv\Scripts\python.exe BACKEND/scripts/migrate_sqlite_to_postgres.py "AAPKI_NEON_POSTGRES_URL"
-   ```
-2. Terminal par output aayega:
-   ```
-   [OK] All PostgreSQL tables verified/created.
-   -> Migrating faculty (17 records)... [OK: 17 rows inserted]
-   -> Migrating students (141 records)... [OK: 141 rows inserted]
-   -> Migrating attendance (977 records)... [OK: 977 rows inserted]
-   -> Migrating timetable (4944 records)... [OK: 4944 rows inserted]
-   [SUCCESS] All student data migrated to Neon!
-   ```
-Ab aapka pura database Cloud par safe aur permanent save ho chuka hai!
-
----
-
-### Step 3: Get a Free Groq API Key
-Ye key tab kaam aayegi jab aapka laptop band hoga taaki website tab bhi smart answer de sake:
-
-1. Open karein: **[https://console.groq.com/keys](https://console.groq.com/keys)**
-2. Sign in with Google / GitHub.
-3. **Create API Key** par click karein, naam dein `agent65-cloud`, aur key copy karke Notepad me save karein (starts with `gsk_...`).
-
----
-
-### Step 4: Deploy the FastAPI Backend on Render
-
-1. Open karein: **[https://render.com](https://render.com)** aur **Sign In with GitHub**.
-2. Dashboard par click karein: **New +** ➔ **Web Service**.
-3. **Build and deploy from a Git repository** select karein aur apna repo choose karein:
-   `evoghoul/Student-Helpdesk-Agent`
-4. Form me ye exact settings bharein:
-   * **Name**: `agent65-api`
-   * **Region**: Singapore ya Frankfurt
-   * **Branch**: `main`
-   * **Root Directory**: `BACKEND` ⚠️ *(Bohat zaroori hai! Kyunki Dockerfile BACKEND folder me hai)*
-   * **Runtime**: `Docker`
-   * **Instance Type**: `Free`
-5. Scroll down to **Environment Variables** aur **Add Environment Variable** par click karke ye 5 variables add karein:
-
-| Key | Value |
-| :--- | :--- |
-| `DATABASE_URL` | `postgresql://...` *(Aapki Neon wali connection string)* |
-| `LLM_PROVIDER` | `local` *(Toh pehle laptop ko try karega, fir Groq ko)* |
-| `GROQ_API_KEY` | `gsk_...` *(Aapki Groq API key)* |
-| `GEMINI_API_KEY` | *(Optional: Aapki Gemini key if available)* |
-| `FRONTEND_ORIGINS` | `["https://YOUR-VERCEL-APP.vercel.app"]` |
-| `LOCAL_MODEL_URL` | `https://YOUR-TUNNEL-URL` |
-
-6. Click **Deploy Web Service**.
-7. Render 3-5 minute me Docker image build karega. Jab deployment complete ho jaye, Render aapko ek URL dega:
-   ```
-   https://student-helpdesk-agent.onrender.com
-   ```
-8. Browser me check karein:
-   `https://student-helpdesk-agent.onrender.com/health`
-   Aapko dikhega: `{"status": "healthy", "agent": "Agent 65..."}`
-
----
-
-### Step 5: Deploy the Next.js Frontend on Vercel
-
-1. Open karein: **[https://vercel.com](https://vercel.com)** aur **Sign In with GitHub**.
-2. Click **Add New...** ➔ **Project**.
-3. Apna repository import karein (`Student-Helpdesk-Agent`).
-4. Configure Project settings:
-   * **Root Directory**: Click *Edit* aur select karein `FRONTEND`.
-   * **Framework Preset**: `Next.js` (automatically detect ho jayega).
-5. Open **Environment Variables** section aur add karein:
-   * **Name**: `NEXT_PUBLIC_BACKEND_URL`
-   * **Value**: `https://student-helpdesk-agent.onrender.com/api/v1`
-   *(Dhayan dein: aakhri me `/api/v1` lagana hai!)*
-6. Click **Deploy**.
-7. 2 minute me aapki website live ho jayegi aur aapko link mil jayega:
-   ```
-   https://agent65-student-helpdesk.vercel.app
-   ```
-
----
-
-### Step 6: Connect Frontend and Backend with CORS
-
-1. Render dashboard me jayein ➔ `agent65-api` ➔ **Environment**.
-2. `FRONTEND_ORIGINS` variable ko update karein aapke Vercel URL se:
+### Step 1: Database Setup (Neon PostgreSQL)
+For persistent production storage, provision a managed PostgreSQL database on Neon:
+1. Register at [neon.tech](https://neon.tech) and create a project (e.g. `vigbot-db`).
+2. Copy the connection string:
    ```text
-   FRONTEND_ORIGINS=["https://agent65-student-helpdesk.vercel.app"]
+   postgresql://user:password@ep-sample-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
    ```
-3. Render automatically redeploy ho jayega.
 
-Ab aapki website **poori duniya ke liye LIVE** hai! 🎉
+### Step 2: Seed / Migrate Student Records
+The local SQLite database (`database/vigbot.db`) contains 70 seeded student records (Section 7 and test accounts), faculty, course schedules, attendance logs, and academic policies.
+To migrate to Neon PostgreSQL, run:
+```powershell
+.\BACKEND\.venv\Scripts\python BACKEND/scripts/migrate_sqlite_to_postgres.py "postgresql://user:password@ep-sample-123456.us-east-2.aws.neon.tech/neondb?sslmode=require"
+```
+The migration script will verify table structures and insert the 70 student records along with associated timetable, marks, and attendance data.
 
----
+### Step 3: Deploy Backend on Render (FastAPI Docker)
+1. In [Render](https://render.com), create a **New Web Service** connected to your GitHub repository.
+2. Configure settings:
+   - **Root Directory:** `BACKEND`
+   - **Runtime:** `Docker`
+   - **Instance Type:** `Free` or `Starter`
+3. Set Environment Variables:
 
-# 💻 PART 2: Daily Operations Guide (Laptop Band/Chalu Hone Par Kya Karein)
+| Variable | Description | Example / Default |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | PostgreSQL connection string (or SQLite path) | `postgresql://...` |
+| `GEMINI_API_KEY` | Google Gemini API key | `AIzaSy...` |
+| `GEMINI_MODEL` | Gemini model ID for fallback | `gemini-2.5-flash` |
+| `LLM_PROVIDER` | Default LLM provider | `gemini` (or `local` / `mock`) |
+| `FRONTEND_ORIGINS` | Permitted frontend CORS origins | `["https://your-frontend.vercel.app"]` |
+| `ALLOW_PIPELINE_TEST_MODEL` | Flag for test model usage | `false` |
 
-Ye part aapke rozana ke use ke liye hai.
-
----
-
-### Situation A: Laptop Is Off
-* **Aapko kuch bhi karne ki zaroorat nahi hai.**
-* Aapki website `https://agent65-student-helpdesk.vercel.app` 24/7 chalegi.
-* Koi bhi student login karega, toh backend automatic **Groq Cloud AI (Llama 3.3 70B)** se ultra-fast answer dega.
-* Database **Neon Cloud** se authentic student records (Section 8, marks, timetable) fetch karega.
-
----
-
-### Situation B: Laptop Is On and You Want to Demo the Custom Model
-Agar aapko professor, evaluator ya doston ko dikhana hai ki:
-*"Dekho, live website par sawal pucha aur mere laptop ke local fine-tuned `agent65-8b` model ne answer generate kiya!"*
-
-Iske liye aapko bas ek baar Cloudflare Tunnel run karna hai:
-
-#### Quick Setup (Only Once):
-1. **Cloudflare tunnel download karein**:
-   Download karein [cloudflared-windows-amd64.exe](https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe).
-2. Is file ka naam rename karke `cloudflared.exe` rakh dein aur project root folder (`c:\StudentHelpdesk`) me daal dein.
-
-#### Daily One-Click Start:
-Hamne aapke liye ek shortcut file bana di hai:
-👉 **`hybrid.bat`** (ya **`start_laptop_hybrid_tunnel.bat`**) - project ke root folder me hai.
-
-1. Bas **`hybrid.bat`** par **Double-Click** karein!
-2. Ye automatically:
-   * Aapke laptop par **Ollama** start kar dega.
-   * Permanent Static Domain start karega:
-     ```
-     https://resonate-trimester-glade.ngrok-free.dev
-     ```
-3. Render dashboard me `LOCAL_MODEL_URL` me ye permanent link already set hai:
+4. Verify backend health once deployed:
+   ```bash
+   curl https://your-backend.onrender.com/api/v1/health
    ```
-   LOCAL_MODEL_URL = https://resonate-trimester-glade.ngrok-free.dev
+   Expected response:
+   ```json
+   {
+     "status": "healthy",
+     "agent": "VIGBOT (Academic Concierge & Executive Interface)",
+     "rls_guardrail_enforced": true,
+     "llm_provider": "gemini"
+   }
    ```
-4. **Boom!** Ab jo koi bhi live website par chat karega:
-   * Query seedha aapke laptop par aayegi.
-   * Aapke laptop ke CPU/GPU par `agent65-8b` run hoga.
-   * Aur response live website par dikhega!
+
+### Step 4: Deploy Frontend on Vercel (Next.js)
+1. In [Vercel](https://vercel.com), import the repository.
+2. Set **Root Directory** to `FRONTEND`.
+3. Set Environment Variables:
+   - `NEXT_PUBLIC_BACKEND_URL`: `https://your-backend.onrender.com/api/v1`
+4. Deploy. Ensure CORS is enabled on the backend for the generated Vercel domain.
 
 ---
 
-### Situation C: Demo Is Finished
-1. Terminal me `Ctrl + C` dabakar tunnel close kar dein aur laptop shut down kar dein.
-2. Render backend automatically fallback switch kar lega:
-   * Next request aate hi Render 4 second me notice karega ki laptop offline ho gaya hai.
-   * Aur bina kisi error ke turant **Groq Cloud API** par switch ho jayega.
-3. Website band nahi hogi, 24/7 chalti rahegi!
+## 3. Operational Verification & Diagnostics
 
----
+### Routing Tier Verification
+Each assistant message response returned by `POST /api/v1/conversations/{id}/messages` includes routing metadata:
+* `routed_by`:
+  - `"rules"`: Handled by Tier 1 deterministic rules, calculations, or distress interceptor.
+  - `"classifier"`: Handled by Tier 2 ML intent classification.
+  - `"gemini"`: Handled by Tier 3 Google Gemini cloud fallback.
+  - `"classifier_pipeline_test"`: Handled by dry-run testing pipeline model.
+* `used_fallback`: Boolean indicating whether Tier 3 cloud fallback was engaged.
 
-## 🔍 How to Check Which Model Answered?
+### Privacy Compliance
+* Student query texts are **never** logged to stdout or persistent log stores.
+* Inbound and outbound intent logging records only:
+  ```
+  Intent classification: intent=<intent_name> confidence=<score> is_confident=<bool> routed_by=<tier>
+  ```
+* System prompts sent to cloud LLMs undergo automated PII redaction: `roll_no`, `student_id`, and `full_name` are stripped and replaced with `[Authenticated Student]`.
 
-Har assistant response ke metadata me provider tag hota hai:
-* Jab **Laptop ON** hoga: Provider = `"local"`, Model = `"agent65-8b:latest"`
-* Jab **Laptop OFF** hoga: Provider = `"cloud"`, Model = `"Groq Llama-3.3-70B"`
-
----
-
-## 🛠️ Summary Checklist
-
-| Component | Provider | Cost | Requirement |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | Vercel (Next.js 16) | ₹0 | GitHub Account |
-| **Backend** | Render Free (Docker) | ₹0 | GitHub Account |
-| **Database** | Neon (PostgreSQL 0.5 GB) | ₹0 | No Card Required |
-| **AI (Laptop ON)** | Ollama `agent65-8b` via Tunnel | ₹0 | Laptop ON |
-| **AI (Laptop OFF)**| Groq Cloud API (Llama 3.3) | ₹0 | Free API Key |
-
-Ab aapka architecture bulletproof hai: **offline ho ya online, laptop khula ho ya band, college evaluation me 100/100 performance milegi!**
+### Running Tests
+To verify all backend services and classifiers:
+```powershell
+cd BACKEND
+.\.venv\Scripts\python -m pytest tests/ -v
+```
+To verify data guardrails across team author CSVs:
+```powershell
+.\BACKEND\.venv\Scripts\python -m pytest tests/test_data_guardrails.py -v
+```

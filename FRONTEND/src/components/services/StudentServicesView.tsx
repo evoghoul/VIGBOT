@@ -118,9 +118,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.servicesTitle || "Student Services & Applications"}</h2>
-            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-bold text-blue-800">
-              Agent 46
-            </span>
+            
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.servicesSubtitle || "Convert conversational requests into verified institutional tickets."}

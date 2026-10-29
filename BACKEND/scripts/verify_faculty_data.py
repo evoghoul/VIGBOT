@@ -26,7 +26,7 @@ def run_tests():
     print("🚀 STARTING ITERATIVE FACULTY DATA VERIFICATION")
     print("=" * 70)
 
-    db_path = os.path.abspath(os.path.join(BACKEND_DIR, "..", "database", "student_helpdesk.db"))
+    db_path = os.path.abspath(os.path.join(BACKEND_DIR, "..", "database", "vigbot.db"))
     assert os.path.exists(db_path), f"Database not found at {db_path}"
 
     errors = []

@@ -146,7 +146,7 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({
             title={showActions ? "Minimize quick actions" : "Show quick actions"}
             aria-label={showActions ? "Minimize quick actions" : "Show quick actions"}
             aria-expanded={showActions}
-            aria-controls="agent65-quick-action-list"
+            aria-controls="vigbot-quick-action-list"
           >
             {showActions ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </button>
@@ -154,7 +154,7 @@ export const QuickActionChips: React.FC<QuickActionChipsProps> = ({
       </div>
 
       <div
-        id="agent65-quick-action-list"
+        id="vigbot-quick-action-list"
         aria-hidden={!showActions}
         className={showActions ? "space-y-2" : "hidden"}
       >

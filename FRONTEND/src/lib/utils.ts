@@ -11,7 +11,7 @@ export function formatCurrency(amount: number): string {
 export function calculateConsecutiveClassesNeeded(
   attended: number,
   total: number,
-  targetPercentage: number = 70
+  targetPercentage: number = 75
 ): number {
   const currentPct = (attended / total) * 100;
   if (currentPct >= targetPercentage) return 0;

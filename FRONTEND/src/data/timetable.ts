@@ -82,6 +82,6 @@ export const WEEKLY_TIMETABLE: Record<string, TimetableSlot[]> = {
 export const TODAY_TIMETABLE = {
   day: "Saturday",
   date: "13 September 2026",
-  sourceAgent: "Agent 4 (Timetable Engine - Section 7 N-312)",
+  sourceAgent: "Timetable Engine - Section 7 N-312",
   slots: WEEKLY_TIMETABLE["Saturday"] || [],
 };

@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_path = os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db")
+db_path = os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db")
 
 def migrate():
     conn = sqlite3.connect(db_path)

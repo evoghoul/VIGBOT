@@ -1,5 +1,5 @@
 """
-Database Initialization Script for Agent 65 Student Helpdesk
+Database Initialization Script for VIGBOT Backend
 Applies the platform database migrations in strict dependency order:
 01_foundation.sql -> 02_people_identity.sql -> 03_curriculum.sql ->
 04_academics_attendance.sql -> 05_assessment_exams_outcomes.sql ->
@@ -14,7 +14,7 @@ import os
 import sys
 import psycopg2
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/student_helpdesk")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/vigbot")
 
 SOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "source"))
 HELPDESK_EXT = os.path.abspath(os.path.join(os.path.dirname(__file__), "13_helpdesk_extension.sql"))

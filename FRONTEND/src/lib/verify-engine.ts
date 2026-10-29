@@ -2,23 +2,23 @@ import { processQuery, detectDistress } from "./ai-engine";
 import { calculateConsecutiveClassesNeeded } from "./utils";
 import { CURRENT_STUDENT } from "../data/student";
 
-console.log("=== RUNNING VERIFICATION FOR AGENT 65 ===");
+console.log("=== RUNNING VERIFICATION FOR VIGBOT ===");
 
 // 1. Check Student Auth & RLS
 console.log("1. Authenticated Student:", CURRENT_STUDENT.name, CURRENT_STUDENT.id);
 if (CURRENT_STUDENT.id !== "251FA04E13") throw new Error("Incorrect student ID");
 
 // 2. Test Attendance Calculation
-const needed70 = calculateConsecutiveClassesNeeded(34, 50, 70);
-console.log("2. Consecutive classes needed for 34/50 to reach 70%:", needed70);
-if (needed70 !== 4) throw new Error(`Expected 4 consecutive classes, got ${needed70}`);
+const needed75 = calculateConsecutiveClassesNeeded(34, 50, 75);
+console.log("2. Consecutive classes needed for 34/50 to reach 75%:", needed75);
+if (needed75 !== 14) throw new Error(`Expected 14 consecutive classes, got ${needed75}`);
 
 // 3. Test Question: What is my attendance in Digital Electronics?
 const res1 = processQuery("What is my attendance in Digital Electronics?");
 console.log("3. Attendance Question Response:", res1.category, res1.sourceAgent);
 console.log("   Text:", res1.text);
-if (!res1.text.includes("68%") || !res1.text.includes("4 classes consecutively")) {
-  throw new Error("Attendance response missing 68% or 4 classes consecutively");
+if (!res1.text.includes("68%") || !res1.text.includes("14 classes consecutively")) {
+  throw new Error("Attendance response missing 68% or 14 classes consecutively");
 }
 
 // 4. Test Multi-Turn Context Retention:
@@ -39,19 +39,19 @@ if (!turn2.text.includes("Digital Electronics") || !turn2.text.includes("68%")) 
   throw new Error("Failed to retain context for Digital Electronics attendance");
 }
 
-// Turn 3: "How many classes do I need to attend to reach 70%?"
-const turn3 = processQuery("How many classes do I need to attend to reach 70%?", [
+// Turn 3: "How many classes do I need to attend to reach 75%?"
+const turn3 = processQuery("How many classes do I need to attend to reach 75%?", [
   { role: "user", content: "When is my Digital Electronics exam?" },
   { role: "assistant", content: turn1.text, responseMeta: turn1 },
   { role: "user", content: "What is my attendance in that subject?" },
   { role: "assistant", content: turn2.text, responseMeta: turn2 },
 ], "Digital Electronics");
 console.log("   Turn 3 (Consecutive needed):", turn3.text.substring(0, 80) + "...");
-if (!turn3.text.includes("4 classes consecutively")) {
-  throw new Error("Failed to calculate 4 consecutive classes in multi-turn context");
+if (!turn3.text.includes("14 classes consecutively")) {
+  throw new Error("Failed to calculate 14 consecutive classes in multi-turn context");
 }
 
-// 5. Test Mandatory Distress Detection (Agent 66)
+// 5. Test Mandatory Distress Detection
 const distressQuery = "I don't think I can handle this anymore.";
 const isDistressDetected = detectDistress(distressQuery);
 console.log("5. Distress detected:", isDistressDetected);
@@ -62,8 +62,8 @@ console.log("   Distress Category:", distressResponse.category, distressResponse
 if (distressResponse.category !== "DISTRESS_SUPPORT" || !distressResponse.isDistress) {
   throw new Error("Distress response did not switch to DISTRESS_SUPPORT");
 }
-if (distressResponse.sourceAgent !== "Agent 66 (Distress Escalation & Counseling)") {
-  throw new Error("Distress response not routed to Agent 66");
+if (distressResponse.sourceAgent !== "Distress Escalation & Counseling") {
+  throw new Error("Distress response not routed to Distress Counseling");
 }
 
 // 6. Test Fee Status
@@ -90,8 +90,8 @@ if (!fa2Res.text.includes("15 Oct 2026")) {
 // 9. Test Policies
 const polRes = processQuery("What does the attendance policy say?");
 console.log("9. Policy Query:", polRes.text.substring(0, 80) + "...");
-if (!polRes.text.includes("70%")) {
-  throw new Error("Policy query missing 70%");
+if (!polRes.text.includes("75%")) {
+  throw new Error("Policy query missing 75%");
 }
 
-console.log("=== ALL AGENT 65 LOGICAL TESTS PASSED SUCCESSFULLY! ===");
+console.log("=== ALL VIGBOT LOGICAL TESTS PASSED SUCCESSFULLY! ===");

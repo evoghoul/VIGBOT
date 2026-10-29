@@ -3,7 +3,7 @@ import re
 import os
 
 transcript_path = r"C:\Users\EVO GHOUL\.gemini\antigravity-ide\brain\79c343e3-5603-4af1-b209-1560eea786b0\.system_generated\logs\transcript_full.jsonl"
-output_path = r"C:\StudentHelpdesk\BACKEND\scripts\raw_questions.txt"
+output_path = r"BACKEND\scripts\raw_questions.txt"
 
 questions = []
 pattern = re.compile(r'^\d+\.\s+(.*)')

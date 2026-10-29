@@ -100,5 +100,28 @@ BACKEND/models/*.bin
 BACKEND/database/*.db
 
 # Keep database file so anyone cloning gets pre-seeded data out-of-the-box
+!database/vigbot.db
 !database/student_helpdesk.db
 .neon
+
+# Explicitly track VIGBOT intent dataset
+!data/intents.csv
+!data/authors/*.csv
+
+# Temporary and preliminary ML artifacts
+pipeline_test_*
+preliminary_*
+*/pipeline_test_*
+*/preliminary_*
+
+# Explicitly track final production intent classifier artifacts under BACKEND/artifacts
+!BACKEND/artifacts/intent_model.joblib
+!BACKEND/artifacts/intent_config.json
+!BACKEND/artifacts/intent_train_metadata.json
+
+# Public dataset download cache
+data/public/cache/
+
+# Local DB duplicates
+BACKEND/*.db
+FRONTEND/*.db

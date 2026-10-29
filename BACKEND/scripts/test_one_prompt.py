@@ -49,7 +49,7 @@ print(f"Category: {data.get('category')}")
 print(f"Source Agent: {data.get('source_agent')}")
 
 print("\nChecking training_data.jsonl for new entry...")
-with open("C:/StudentHelpdesk/BACKEND/training_data.jsonl", "r", encoding="utf-8") as f:
+with open("C:/StudentHelpdesk/scratch/../BACKEND/training_data.jsonl", "r", encoding="utf-8") as f:
     lines = f.readlines()
     if len(lines) > 0:
         last_line = lines[-1]

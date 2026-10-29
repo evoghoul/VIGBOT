@@ -1,10 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
-title Agent 65 - Laptop Hybrid Ollama Tunnel (Permanent Domain)
+title VIGBOT - Laptop Hybrid Ollama Tunnel (Permanent Domain)
 color 0A
 
 echo =====================================================================
-echo           AGENT 65: LAPTOP HYBRID OLLAMA TUNNEL LAUNCHER
+echo                     VIGBOT: LAPTOP HYBRID OLLAMA TUNNEL LAUNCHER
 echo =====================================================================
 echo.
 

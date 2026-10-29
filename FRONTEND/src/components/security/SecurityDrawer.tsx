@@ -40,7 +40,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
             <div>
               <h3 className="text-base font-bold text-foreground">{t.securityTitle || "Security & Access Audit"}</h3>
               <p className="text-sm text-muted-foreground">
-                Row-Level Security (RLS) Isolation • Agent 65 Core
+                Row-Level Security (RLS) Isolation • VIGBOT Core
               </p>
             </div>
           </div>
@@ -90,7 +90,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
           >
             <span className="flex items-center gap-1.5">
               <Server className="h-3.5 w-3.5" />
-              <span>Connected Agents (12)</span>
+              <span>Connected Services (12)</span>
             </span>
           </button>
         </div>
@@ -123,14 +123,14 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
 
                 <div className="space-y-2">
                   {[
-                    { step: "1", title: "Authenticate Student", desc: `Identity confirmed as ${student.name} (${student.id}) via Agent 44.` },
+                    { step: "1", title: "Authenticate Student", desc: `Identity confirmed as ${student.name} (${student.id}) via Identity Service.` },
                     { step: "2", title: "Establish Identity Context", desc: "OAuth2 token injected: [Verified]." },
                     { step: "3", title: "Classify Question Intent", desc: "Categorized into Personal Data, Institutional Info, Service, or Distress." },
                     { step: "4", title: "Authorize Requested Scope", desc: "Validates caller rights. Rejects attempts to request other students' data." },
-                    { step: "5", title: "Retrieve Only Student's Own Record", desc: "Data queried directly from specific specialized agent (e.g. Agent 11)." },
+                    { step: "5", title: "Retrieve Only Student's Own Record", desc: "Data queried directly from specific specialized service (e.g. Biometric Attendance)." },
                     { step: "6", title: "Generate Actionable Answer", desc: "Combines raw record + contextual calculation (e.g. 4 consecutive classes)." },
-                    { step: "7", title: "Route Service Request (if applicable)", desc: "Enqueues ticket into Agent 46 workflow bus." },
-                    { step: "8", title: "Continuous Distress Monitoring", desc: "Monitored at all turns for immediate Agent 66 supportive handoff." },
+                    { step: "7", title: "Route Service Request (if applicable)", desc: "Enqueues ticket into Services workflow bus." },
+                    { step: "8", title: "Continuous Distress Monitoring", desc: "Monitored at all turns for immediate supportive Crisis Counselor handoff." },
                   ].map((s) => (
                     <div
                       key={s.step}
@@ -203,10 +203,10 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
             <div className="space-y-3">
               <div className="pb-1">
                 <h4 className="font-bold text-foreground text-xs">
-                  Federated Institutional Agent Matrix
+                  Federated Institutional Service Matrix
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Agent 65 coordinates requests across 12 distributed data sources.
+                  VIGBOT coordinates requests across 12 distributed data sources.
                 </p>
               </div>
 
@@ -219,9 +219,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-foreground">{agent.name}</span>
-                        <span className="rounded-md bg-blue-50 px-1.5 py-0.2 font-mono text-sm font-bold text-blue-700">
-                          {agent.id}
-                        </span>
+                        
                         {agent.rlsEnforced && (
                           <span className="rounded-full bg-emerald-50 px-1.5 py-0.2 text-xs font-bold text-emerald-700 border border-emerald-200">
                             RLS

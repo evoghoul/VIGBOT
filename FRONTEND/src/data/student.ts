@@ -64,5 +64,5 @@ export const CURRENT_STUDENT: StudentProfile = {
   authStatus: "Authenticated",
   securityLabel: "Viewing your verified Section-7 student record",
   securityToken: "RLS-VFSTR-251FA04E13-VERIFIED",
-  sourceAgent: "Agent 44 (Student Profile - Section 7)",
+  sourceAgent: "Student Profile - Section 7",
 };

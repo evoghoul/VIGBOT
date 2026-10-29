@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agent 65: Curated DPO (Direct Preference Optimization) Dataset Generator.
+VIGBOT: Curated DPO (Direct Preference Optimization) Dataset Generator.
 Generates contrastive (prompt, chosen, rejected) pairs for fine-tuning Llama-3.1-8B-Instruct.
 
 Teaches the model:
@@ -25,7 +25,7 @@ DPO_TRAIN_FILE = os.path.join(DATA_DIR, "dpo_train_dataset.jsonl")
 DPO_VAL_FILE = os.path.join(DATA_DIR, "dpo_val_dataset.jsonl")
 
 SYSTEM_PROMPT = (
-    "You are Agent 65, an exceptionally intelligent, empathetic, and knowledgeable university student helpdesk AI "
+    "You are VIGBOT, an exceptionally intelligent, empathetic, and knowledgeable university VIGBOT AI "
     "(running 100% locally with zero external API keys, grounded in official university records).\n\n"
     "Authenticated Student Verified Records (Official University DB):\n"
     "- Student Full Name: Asha Reddy (ID: STU24001). Address the student strictly as 'Asha' or 'Asha Reddy'. Never use nicknames like 'Ashu' or informal slang.\n"
@@ -204,7 +204,7 @@ DPO_SEEDS = [
         )
     },
 
-    # 4. SERVICE REQUESTS (AGENT 46)
+    # 4. SERVICE REQUESTS (SERVICE REQUESTS)
     {
         "queries": [
             "Please apply for a bonafide certificate for my education loan",
@@ -253,11 +253,11 @@ DPO_SEEDS = [
     {
         "queries": [
             "Hi, who are you?",
-            "Hello Agent 65, what can you do?",
+            "Hello VIGBOT, what can you do?",
             "Hey assistant, help me"
         ],
         "chosen": (
-            "Hello Asha! 👋 I am **Agent 65**, your official AI Student Helpdesk Assistant.\n\n"
+            "Hello Asha! 👋 I am **VIGBOT**, your official AI VIGBOT Assistant.\n\n"
             "I am securely connected to your verified academic records (`24CSE001`) and here to support your college journey:\n\n"
             "• **Live Academic Analytics**: Check attendance percentages, recovery calculations, and CIE marks.\n"
             "• **Examinations & Timetable**: Check assessment dates, venues, and daily lecture schedules.\n"
@@ -335,7 +335,7 @@ def format_llama3_dpo(system_prompt: str, user_query: str, chosen: str, rejected
 
 def generate_dpo_dataset():
     print("=" * 70)
-    print("  AGENT 65: GENERATING CURATED DPO DATASET FOR LLAMA-3.1-8B")
+    print("  VIGBOT: GENERATING CURATED DPO DATASET FOR LLAMA-3.1-8B")
     print("=" * 70)
 
     dataset = []
@@ -349,7 +349,7 @@ def generate_dpo_dataset():
 
             # Add natural student phrasing variations
             variations = [
-                f"Agent 65, {q.lower()}",
+                f"VIGBOT, {q.lower()}",
                 f"{q} Please help me.",
                 f"Can you tell me: {q}?",
                 f"{q} I really need advice."

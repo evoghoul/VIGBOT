@@ -58,7 +58,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 
-function StudentHelpdeskContent() {
+function VigbotContent() {
   const { studentData, logout } = useStudent();
   const student = studentData?.profile || CURRENT_STUDENT;
   const attendance = studentData?.attendance || ATTENDANCE_DATA;
@@ -93,7 +93,7 @@ function StudentHelpdeskContent() {
   const [isDistressOpen, setIsDistressOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Shared Agent 65 Chat Context
+  // Shared VIGBOT Chat Context
   const { isMaximized, setIsMaximized, handleSend, handleResetChat } = useAgentChat();
 
   const { nextClassSlot, formattedNextExamDate } = useDynamicSchedule();
@@ -108,7 +108,7 @@ function StudentHelpdeskContent() {
   const handleAskHelpdesk = (query: string) => {
     if (activeTab === "home") {
       handleSend(query);
-      const el = document.getElementById("agent65-central-workspace");
+      const el = document.getElementById("vigbot-central-workspace");
       el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } else {
       setIsChatOpen(true);
@@ -119,7 +119,7 @@ function StudentHelpdeskContent() {
   const handleSelectCommandQuery = (query: string) => {
     if (activeTab === "home") {
       handleSend(query);
-      const el = document.getElementById("agent65-central-workspace");
+      const el = document.getElementById("vigbot-central-workspace");
       el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } else {
       setIsChatOpen(true);
@@ -143,7 +143,7 @@ function StudentHelpdeskContent() {
         timestamp: "Just now",
         priority: "normal",
         read: false,
-        sourceAgent: "Agent 46 (Services)",
+        sourceAgent: "VIGBOT (Services)",
       },
       ...prev,
     ]);
@@ -173,7 +173,7 @@ function StudentHelpdeskContent() {
     return <LoginView onLogin={() => setIsAuthenticated(true)} />;
   }
 
-  // 3. Once authenticated, display the unified Student Helpdesk Dashboard
+  // 3. Once authenticated, display the unified VIGBOT Dashboard
   return (
     <div className="min-h-dvh flex bg-muted/50 text-foreground antialiased selection:bg-blue-600 selection:text-white">
       {/* Primary Navigation: Left Sidebar (stabilizes layout on full screen) */}
@@ -220,7 +220,7 @@ function StudentHelpdeskContent() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-sm font-semibold text-blue-700 border border-blue-200 whitespace-nowrap">
                         <Sparkles className="h-3 w-3" />
-                        {t.agent65CoreActive}
+                        {t.vigbotCoreActive || "VIGBOT CORE ACTIVE"}
                       </span>
                       <button
                         onClick={() => setIsSecurityDrawerOpen(true)}
@@ -278,8 +278,8 @@ function StudentHelpdeskContent() {
                 </div>
               </div>
 
-              {/* 2. Large Central Agent 65 Student Helpdesk Interface */}
-              <div id="agent65-central-workspace" className="w-full">
+              {/* 2. Large Central VIGBOT Interface */}
+              <div id="vigbot-central-workspace" className="w-full">
                 <AiHelpdeskPanel
                   variant="central"
                   onNavigateTab={(tab) => setActiveTab(tab)}
@@ -465,13 +465,13 @@ function StudentHelpdeskContent() {
           }}
         />
 
-        {/* Fullscreen Maximized Agent 65 Workspace Modal */}
+        {/* Fullscreen Maximized VIGBOT Workspace Modal */}
         {isMaximized && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-8 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
             role="dialog"
             aria-modal="true"
-            aria-label="Agent 65 Fullscreen Workspace"
+            aria-label="VIGBOT Fullscreen Workspace"
           >
             <div className="w-full max-w-[92vw] h-[88vh] bg-card rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col border border-slate-200">
               <AiHelpdeskPanel
@@ -608,8 +608,8 @@ function StudentHelpdeskContent() {
         <button
           onClick={() => setIsChatOpen(true)}
           className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 hover:scale-105 transition-transform cursor-pointer"
-          title="Ask Student Helpdesk"
-          aria-label="Open Student Helpdesk chat"
+          title="Ask VIGBOT"
+          aria-label="Open VIGBOT chat"
         >
           <Bot className="h-6 w-6" />
           {unreadCount > 0 && (
@@ -627,7 +627,7 @@ export default function Home() {
   return (
     <LanguageProvider>
       <AgentChatProvider>
-        <StudentHelpdeskContent />
+        <VigbotContent />
       </AgentChatProvider>
     </LanguageProvider>
   );

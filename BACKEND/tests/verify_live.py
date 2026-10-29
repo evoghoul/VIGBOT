@@ -63,7 +63,7 @@ print("Content:\n" + res4["content"])
 assert res4["is_distress"] is True
 assert res4["sender_role"] == "AGENT_66_COUNSELOR"
 assert "Vandrevala" in res4["content"] or "KIRAN" in res4["content"] or "14416" in res4["content"]
-print("\n✓ Step 9 Distress Guardrail verified: Immediate escalation to Agent 66!")
+print("\n✓ Step 9 Distress Guardrail verified: Immediate escalation to Crisis Counseling!")
 
 print("\n=========================================")
 print("ALL LIVE VERIFICATION TESTS PASSED (100% LOCAL, 0 API KEYS)")

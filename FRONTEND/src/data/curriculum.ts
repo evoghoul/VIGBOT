@@ -21,7 +21,7 @@ export const CURRICULUM_DATA: {
   completedCredits: 78,
   currentSemesterCredits: 23,
   remainingCredits: 59,
-  sourceAgent: "Agent 1 (Curriculum Engine - Section 7)",
+  sourceAgent: "Curriculum Engine - Section 7",
   categories: [
     {
       name: "Core Engineering",

@@ -4,7 +4,7 @@ from app.models.schemas import ServiceRequestCreate, ServiceRequestResponse
 from app.database import DataRepository, DatabaseSession
 from app.security import get_current_student
 
-router = APIRouter(prefix="/service-requests", tags=["Service Requests (Agent 46)"])
+router = APIRouter(prefix="/service-requests", tags=["Service Requests"])
 
 @router.post("", response_model=ServiceRequestResponse)
 async def create_service_request(

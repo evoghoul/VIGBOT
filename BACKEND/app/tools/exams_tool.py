@@ -21,7 +21,7 @@ def get_exams_summary(session: DatabaseSession) -> Dict[str, Any]:
     card_data = {
         "type": "exam",
         "title": "Upcoming Examination Schedule",
-        "subtitle": "Controller of Examinations (Agent 30)",
+        "subtitle": "Controller of Examinations",
         "badge": f"{len(exams)} Events",
         "badgeVariant": "purple",
         "data": {

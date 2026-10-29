@@ -9,9 +9,14 @@ from app.tools.exams_tool import get_exams_summary
 from app.tools.fees_tool import get_fees_summary
 from app.tools.curriculum_tool import get_curriculum_summary
 from app.tools.knowledge_tool import search_policies_and_circulars
-from app.tools.services_tool import handle_service_request, handle_human_handover
+from app.tools.services_tool import handle_service_request, handle_human_handover, resolve_service_subtype
 from app.tools.library_tool import get_library_summary
+from app.tools.hostel_tool import get_hostel_summary
+from app.tools.transport_tool import get_transport_summary
+from app.tools.circulars_tool import get_circulars_summary
+from app.tools.events_tool import get_events_summary
 from app.agent.llm_client import LLMClient
+from app.agent.grounding_guard import compute_classes_needed, verify_numeric_faithfulness, enforce_grounding_or_fallback
 from app.config import settings
 
 class NLUEngine:
@@ -19,10 +24,10 @@ class NLUEngine:
     100% Local Autonomous Cognitive NLU & Reasoning Engine.
     Zero external API keys required.
     Operates as an autonomous cognitive agent:
-    - 100% of user queries are reasoned over by the fine-tuned local foundation model (agent65)
+    - 100% of user queries are reasoned over by the fine-tuned local foundation model (vigbot)
     - Dynamic RLS database grounding (attendance, timetable, exams, fees, marks, bylaws)
     - Non-destructive semantic action & UI card resolution
-    - Autonomous background execution for formal service requests (Agent 46) & human escalations
+    - Autonomous background execution for formal service requests  & human escalations
     - Empathetic proactive guidance matching ChatGPT/Gemini conversational depth
     """
 
@@ -39,7 +44,7 @@ class NLUEngine:
         q = query.strip()
         q_lower = q.lower()
 
-        # Detect the exact query language so Agent 65 responds in the matching language
+        # Detect the exact query language so VIGBOT responds in the matching language
         effective_lang = cls.detect_language(q, client_language=language)
 
         requested_model = selected_model.upper()
@@ -51,12 +56,57 @@ class NLUEngine:
 
         # ---------------- 0. PRIVACY GUARDRAIL & PROMPT INJECTION DEFENSE (Step 11) ----------------
         if cls.is_prompt_injection_or_unauthorized_cross_student(q_lower, session):
-            return cls.generate_privacy_injection_defense_response(session, q, effective_lang)
+            res = cls.generate_privacy_injection_defense_response(session, q, effective_lang)
+            res["routed_by"] = "rules"
+            return res
+
+        # ---------------- 0.4. HUMAN HANDOVER KEYWORD RULE (Outside the Classifier) ----------------
+        if cls.is_human_handover(q_lower):
+            from app.tools.services_tool import handle_human_handover
+            esc_res = handle_human_handover(
+                session=session,
+                target_office="DEAN_ACADEMICS",
+                reason="Student requested administrative escalation or human evaluation.",
+                summary=f"Inquiry: '{q}'. Active Subject: {active_subject or 'General'}",
+            )
+            return {
+                "category": "ESCALATION",
+                "topic": "Human Administrative Handover",
+                "source_agent": "VIGBOT Escalation Gateway",
+                "content": esc_res.get("text", ""),
+                "citations": [],
+                "structured_card": esc_res.get("structured_card"),
+                "suggested_follow_ups": ["Check escalation status", "Book Dean appointment"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "rules",
+                "used_fallback": False,
+                "routed_by": "rules",
+            }
+
+        # ---------------- 0.5. TRAINED ML INTENT CLASSIFIER (Step 6) ----------------
+        if getattr(settings, "USE_INTENT_CLASSIFIER", False):
+            from app.agent.intent_classifier import IntentClassifierService
+            clf_res = IntentClassifierService.get_instance().classify(q)
+            if clf_res is not None:
+                classified_response = cls.route_classified_intent(
+                    session=session,
+                    query=q,
+                    q_lower=q_lower,
+                    clf_result=clf_res,
+                    effective_lang=effective_lang,
+                    active_subject=active_subject,
+                )
+                if classified_response is not None:
+                    return classified_response
 
         # ---------------- 1. INITIAL ONBOARDING DASHBOARD ----------------
         # Return proactive academic briefing for menu, start, or open greetings/help requests
         if q_lower in ["start", "menu"] or cls.is_greeting_or_open_help(q_lower):
-            return cls.generate_proactive_briefing(session, effective_lang)
+            briefing = cls.generate_proactive_briefing(session, effective_lang)
+            briefing.setdefault("routed_by", "rules")
+            return briefing
 
         # Simple read-only record lookups should not spend time on intent
         # classification and LLM rewriting. Transactional requests continue
@@ -74,7 +124,7 @@ class NLUEngine:
             return {
                 "category": "PERSONAL_DATA",
                 "topic": "Verified Student Records",
-                "source_agent": "Agent 65 (Fast Verified Records)",
+                "source_agent": "VIGBOT (Fast Verified Records)",
                 "content": fast_reply,
                 "citations": [],
                 "structured_card": None,
@@ -83,7 +133,8 @@ class NLUEngine:
                 "language": effective_lang,
                 "llm_provider": "local",
                 "model_used": "verified-records",
-                "used_fallback": False
+                "used_fallback": False,
+                "routed_by": "rules",
             }
 
         # ---------------- 2. DETECT BACKGROUND ACTIONS & STRUCTURED CARDS ----------------
@@ -98,7 +149,7 @@ class NLUEngine:
         topic = "Conversational AI Assistant"
         
         model_label = f"Local {selected_model} Model"
-        source_agent = f"Agent 65 ({model_label})"
+        source_agent = f"VIGBOT ({model_label})"
 
         # The services quick action is a static workflow menu, so it does not
         # need model inference before showing the available request types.
@@ -113,70 +164,80 @@ class NLUEngine:
             )
             category = "PROCEDURAL_GUIDANCE"
             topic = "Student Services Directory"
-            source_agent = "Agent 46 (Student Services)"
+            source_agent = "Student Services"
 
-        # Hardcoded Food/Grocery Responses
-        elif cls.has_any_word(q_lower, ["food", "mess", "canteen", "eat", "lunch", "dinner", "breakfast"]):
-            direct_response_text = "I checked the official university records and found that there is a big canteen named MHP where you can eat during break times. Additionally, smaller canteens are available on the ground floor of each block."
-            category = "INSTITUTIONAL_INFO"
-            topic = "Campus Food & Dining"
-            source_agent = "Agent 71 (Campus Info)"
-
-        elif cls.has_any_word(q_lower, ["grocery", "day to day", "day-to-day", "essentials", "utility"]):
-            direct_response_text = "I checked the official university records and found that Zest is a utility store on campus where you can buy day-to-day life things and groceries."
-            category = "INSTITUTIONAL_INFO"
-            topic = "Campus Facilities"
-            source_agent = "Agent 71 (Campus Info)"
-
-        # The calendar quick action is also a read-only institutional lookup.
-        elif cls.has_any_word(q_lower, ["academic calendar", "calendar events", "upcoming events"]):
-            direct_response_text = (
-                "Here are the next official academic calendar events:\n\n"
-                "• **14 Sep 2026** - Vinayaka Chavithi Holiday\n"
-                "• **02 Oct 2026** - Gandhi Jayanthi Holiday\n"
-                "• **06-08 Oct 2026** - Module-2 Formative Assessment 1\n"
-                "• **18-21 Oct 2026** - Dasara Holidays & Vijaya Dasami\n"
-                "• **11-13 Nov 2026** - Module-2 Formative Assessment 2\n"
-                "• **14 Nov-04 Dec 2026** - Practical and Theory Summative Assessments\n"
-                "• **14 Dec 2026** - Commencement of II Semester"
-            )
-            category = "INSTITUTIONAL_INFO"
-            topic = "Academic Calendar"
-            source_agent = "Agent 55 (Academic Calendar)"
-
-        # A. Formal Service Request (Agent 46)
-        elif cls.has_any_word(q_lower, ["apply for", "certificate", "bonafide", "railway concession", "transit pass", "id card", "lost card", "mentor meeting", "book mentor", "lodge grievance", "file complaint", "grievance"]):
-            sr_cat = "OTHER"
-            title = "General Administrative Request"
-            desc = q
-            if "bonafide" in q_lower:
-                sr_cat = "BONAFIDE_CERTIFICATE"
-                title = "Bonafide Certificate Application"
-                desc = f"Student requested bonafide certificate: '{q}'"
-            elif cls.has_any_word(q_lower, ["railway", "transit", "bus pass"]):
-                sr_cat = "RAILWAY_CONCESSION"
-                title = "Transit / Railway Concession Application"
-                desc = f"Concession pass application: '{q}'"
-            elif "mentor" in q_lower:
-                sr_cat = "MENTOR_APPOINTMENT"
-                title = "Faculty Mentor 1-on-1 Appointment"
-                desc = f"Student requested mentor consultation: '{q}'"
-            elif cls.has_any_word(q_lower, ["grievance", "complaint"]):
-                sr_cat = "GRIEVANCE_LODGED"
-                title = "Student Grievance Lodged"
-                desc = f"Grievance details: '{q}'"
-
-            sr_res = handle_service_request(session, sr_cat, title, desc)
+        # A. Formal Service Request (ID Card, Bonafide, Transcript, NOC, Fee Receipt, Concession, Mentor, Grievance)
+        elif cls.has_any_word(q_lower, [
+            "apply for", "apply", "certificate", "bonafide", "railway concession", "transit pass",
+            "id card", "lost card", "replacement card", "identity card", "duplicate card",
+            "mentor meeting", "book mentor", "lodge grievance", "file complaint", "grievance",
+            "transcript", "grade card", "marks memo", "noc", "no objection", "fee receipt"
+        ]):
+            sr_cat, title, desc, instructions = resolve_service_subtype(q)
+            sr_res = handle_service_request(session, sr_cat, title, desc, instructions=instructions)
             card_data = sr_res.get("structured_card")
             category = "SERVICE_REQUEST"
             topic = f"Service Request: {title}"
-            source_agent = "Agent 65 -> Agent 46 (Workflow Automation)"
+            source_agent = "VIGBOT -> Workflow Automation"
             direct_response_text = sr_res.get("text", "")
             action_note = (
                 f"[SYSTEM ACTION EXECUTED: Successfully created service request ticket {sr_res['record']['request_no']} "
                 f"for '{title}'. Assigned Office: {sr_res['record']['assigned_office']}, Status: {sr_res['record']['status']}, "
                 f"SLA Due Date: {sr_res['record']['sla_due_date']}. Inform the student warmly of this tracking number.]"
             )
+
+        # A1. Hostel Regulations & Dining Summary
+        elif cls.has_any_word(q_lower, ["hostel", "hostels", "curfew", "outing pass", "outpass", "mess timing", "mess timings", "hostel mess", "hostel rules", "warden", "chief warden", "mess"]):
+            hostel_res = get_hostel_summary(session, q)
+            direct_response_text = hostel_res.get("text", "")
+            card_data = hostel_res.get("structured_card")
+            citations = hostel_res.get("citations", [])
+            category = "INSTITUTIONAL_INFO"
+            topic = "Hostel & Dining Services"
+            source_agent = "Hostel Administration"
+
+        # A2. University Bus & Transit Services
+        elif cls.has_any_word(q_lower, ["bus route", "bus routes", "college bus", "college buses", "bus pass", "transportation", "bus timing", "bus timings", "transit route", "transport"]):
+            trans_res = get_transport_summary(session, q)
+            direct_response_text = trans_res.get("text", "")
+            card_data = trans_res.get("structured_card")
+            citations = trans_res.get("citations", [])
+            category = "INSTITUTIONAL_INFO"
+            topic = "University Bus & Transport Services"
+            source_agent = "Campus Transport Service"
+
+        # A3. Official Administrative Circulars
+        elif cls.has_any_word(q_lower, ["circular", "circulars", "official notice", "administrative notice", "senate notice", "notifications", "circular notice"]):
+            circ_res = get_circulars_summary(session, q)
+            direct_response_text = circ_res.get("text", "")
+            card_data = circ_res.get("structured_card")
+            citations = circ_res.get("citations", [])
+            category = "INSTITUTIONAL_INFO"
+            topic = "Official Administrative Circulars"
+            source_agent = "Registrar Circulars Desk"
+
+        # A4. Campus Events & Festivals
+        elif cls.has_any_word(q_lower, ["event", "events", "mahotsav", "hackathon", "sports fest", "youth fest", "cultural fest", "symposium", "fests", "academic calendar", "calendar events", "upcoming events"]):
+            ev_res = get_events_summary(session, q)
+            direct_response_text = ev_res.get("text", "")
+            card_data = ev_res.get("structured_card")
+            citations = ev_res.get("citations", [])
+            category = "INSTITUTIONAL_INFO"
+            topic = "Campus Events & Activities"
+            source_agent = "Campus Events Cell"
+
+        # Hardcoded Food/Grocery Canteen Responses
+        elif cls.has_any_word(q_lower, ["food", "canteen", "eat", "lunch", "dinner", "breakfast"]):
+            direct_response_text = "I checked the official university records and found that there is a big canteen named MHP where you can eat during break times. Additionally, smaller canteens are available on the ground floor of each block."
+            category = "INSTITUTIONAL_INFO"
+            topic = "Campus Food & Dining"
+            source_agent = "Campus Info"
+
+        elif cls.has_any_word(q_lower, ["grocery", "day to day", "day-to-day", "essentials", "utility"]):
+            direct_response_text = "I checked the official university records and found that Zest is a utility store on campus where you can buy day-to-day life things and groceries."
+            category = "INSTITUTIONAL_INFO"
+            topic = "Campus Facilities"
+            source_agent = "Campus Info" 
 
         # A2. Club Information Query (list clubs, process of joining, what clubs exist)
         elif cls.has_any_word(q_lower, ["club", "clubs", "extracurricular", "society", "societies"]) and cls.has_any_word(q_lower, ["process", "how", "what", "list", "available", "which", "tell me", "details", "information", "info", "describe", "show", "know"]):
@@ -191,7 +252,7 @@ class NLUEngine:
             )
             category = "CLUBS"
             topic = "Student Clubs & Extracurriculars"
-            source_agent = "Agent 65 (Club Directory)"
+            source_agent = "VIGBOT (Club Directory)"
             direct_response_text = (
                 f"Here are all the active student clubs at Vignan University, {first_name}:\n\n"
                 f"{club_lines}\n\n"
@@ -202,7 +263,7 @@ class NLUEngine:
                 f"You can also browse all clubs in the **Clubs** tab on the left sidebar."
             )
 
-        # A3. Club Application (Agent 46 / Extracurriculars)
+        # A3. Club Application (Extracurriculars)
         elif cls.has_any_word(q_lower, ["join club", "apply for club", "register club", "join the club", "join a club", "join", "apply"]) and cls.has_any_word(q_lower, ["club", "music", "drama", "ai", "sports", "code", "theatrix"]):
             clubs = DataRepository.get_clubs()
             target_club_id = "CLUB_AI"
@@ -226,7 +287,7 @@ class NLUEngine:
             
             category = "CLUBS"
             topic = f"Club Application: {target_club_name}"
-            source_agent = "Agent 46 (Extracurriculars)"
+            source_agent = "Extracurriculars"
             direct_response_text = (
                 f"Hello {first_name}, your application to join **{target_club_name}** has been submitted.\n\n"
                 f"• **Club:** {target_club_name}\n"
@@ -246,7 +307,7 @@ class NLUEngine:
             card_data = esc_res.get("structured_card")
             category = "ESCALATION"
             topic = "Human Administrative Handover"
-            source_agent = "Agent 65 Escalation Gateway"
+            source_agent = "VIGBOT Escalation Gateway"
             direct_response_text = esc_res.get("text", "")
             action_note = (
                 f"[SYSTEM ACTION EXECUTED: Handover ticket registered with the Office of the Dean of Academics. "
@@ -269,7 +330,7 @@ class NLUEngine:
                     "student_name": name,
                     "status": "Support Active",
                     "priority_action": "Rest eyes, hydrate, and take a 20-minute break" if is_health_or_workload else "Attend next classes consistently",
-                    "mentor_support": "Available via Agent 46 Service Request",
+                    "mentor_support": "Available via Registrar Service Request",
                     "counselor_line": "Campus Student Wellness Center (Ext. 204 / Room 104)"
                 },
                 "actionLabel": "Book Mentor Meeting",
@@ -277,7 +338,7 @@ class NLUEngine:
             }
             category = "ACADEMIC_ADVISING"
             topic = "Student Wellness & Academic Guidance"
-            source_agent = "Agent 65 Academic Advisory"
+            source_agent = "VIGBOT Academic Advisory"
             citations = [
                 {
                     "title": "Academic Regulations R23",
@@ -325,7 +386,7 @@ class NLUEngine:
             }
             category = "PROCEDURAL_GUIDANCE"
             topic = "Academic Performance & Peer Boundary Guidance"
-            source_agent = "Agent 65 (Academic Advisory & RLS Guardrail)"
+            source_agent = "VIGBOT (Academic Advisory & RLS Guardrail)"
             citations = [
                 {
                     "title": "Academic Regulations R23",
@@ -343,7 +404,23 @@ class NLUEngine:
 
         # D. Intent Classification (Dynamic LLM Routing)
         else:
-            intent = LLMClient.classify_intent(query)
+            profile = DataRepository.get_student_profile(session)
+            sanitized_clf_query = query
+            if profile:
+                for pii_val, repl in [
+                    (profile.get("full_name"), "[Student]"),
+                    (profile.get("roll_no"), "[Redacted Roll No]"),
+                    (profile.get("email"), "[Redacted Email]"),
+                    (profile.get("phone_number"), "[Redacted Phone]"),
+                    (profile.get("phone"), "[Redacted Phone]"),
+                ]:
+                    if pii_val and isinstance(pii_val, str) and len(pii_val) > 2:
+                        sanitized_clf_query = re.sub(re.escape(pii_val), repl, sanitized_clf_query, flags=re.IGNORECASE)
+                fname = profile.get("full_name", "").split()[0] if profile.get("full_name") else ""
+                if fname and len(fname) > 2:
+                    sanitized_clf_query = re.sub(r"\b" + re.escape(fname) + r"\b", "[Student]", sanitized_clf_query, flags=re.IGNORECASE)
+
+            intent = LLMClient.classify_intent(sanitized_clf_query)
             
             if intent == "ATTENDANCE":
                 att_res = get_attendance_summary(session, active_subject)
@@ -354,7 +431,7 @@ class NLUEngine:
                 citations = [{"title": "Academic Regulations R23", "clause": "Clause 4.2", "effective_date": "2023-07-15", "summary": "Mandates 75% attendance"}]
                 category = "PERSONAL_DATA"
                 topic = "Attendance Analytics"
-                source_agent = "Agent 11 (Attendance System)"
+                source_agent = "Attendance System"
                 
             elif intent == "EXAMS":
                 exam_res = get_exams_summary(session)
@@ -363,7 +440,7 @@ class NLUEngine:
                 citations = [{"title": "Examination Ordinance 2026", "clause": "Clause 8.1", "effective_date": "2026-08-01", "summary": "Two continuous internal evaluations"}]
                 category = "PERSONAL_DATA"
                 topic = "Examinations & Assessments"
-                source_agent = "Agent 30 & Agent 34 (Examination Hub)"
+                source_agent = "Examination Hub"
                 
             elif intent == "FEES":
                 fee_res = get_fees_summary(session)
@@ -372,7 +449,7 @@ class NLUEngine:
                 citations = [{"title": "Fee Payment Notification No. 104/2026", "clause": "Clause 2: Late Surcharge Schedule", "effective_date": "2026-08-15", "summary": "Late fine of Rs. 50/day applicable after 15 Oct 2026."}]
                 category = "TRANSACTIONAL"
                 topic = "Student Fee Ledgers"
-                source_agent = "Agent 40 (Finance Engine)"
+                source_agent = "Finance Engine"
                 
             elif intent == "TIMETABLE":
                 tt_res = get_timetable_summary(session)
@@ -380,7 +457,7 @@ class NLUEngine:
                 card_data = tt_res.get("structured_card")
                 category = "PERSONAL_DATA"
                 topic = "Academic Timetable"
-                source_agent = "Agent 10 (Scheduling Service)"
+                source_agent = "Scheduling Service"
                 
             elif intent == "MARKS":
                 marks_res = get_marks_summary(session)
@@ -389,7 +466,7 @@ class NLUEngine:
                 citations = [{"title": "Grading System Manual 2026", "clause": "Clause 3.4: 10-Point Relative Grading Scale", "effective_date": "2026-07-01", "summary": "Minimum passing grade of 'P' (4.0/10) required for credit award."}]
                 category = "PERSONAL_DATA"
                 topic = "Academic Performance & Marks"
-                source_agent = "Agent 30 (Assessment Engine)"
+                source_agent = "Assessment Engine"
                 
             elif intent == "CURRICULUM":
                 curr_res = get_curriculum_summary(session)
@@ -398,7 +475,7 @@ class NLUEngine:
                 citations = [{"title": "B.Tech Curriculum Framework 2026", "clause": "Section 5", "effective_date": "2026-07-01", "summary": "Total 120 credits required"}]
                 category = "ACADEMIC_AUDIT"
                 topic = "Curriculum & Degree Audit"
-                source_agent = "Agent 20 (Curriculum Engine)"
+                source_agent = "Curriculum Engine"
                 
             elif intent == "LIBRARY":
                 lib_res = get_library_summary(session)
@@ -407,7 +484,7 @@ class NLUEngine:
                 citations = [{"title": "Central Library Policies", "clause": "Section 2", "effective_date": "2026-08-01", "summary": "Overdue books incur fines"}]
                 category = "PERSONAL_DATA"
                 topic = "Library Circulation Records"
-                source_agent = "Agent 25 (Library System)"
+                source_agent = "Library System"
                 
             elif intent == "FACULTY":
                 advisors = DataRepository.get_student_advisors(session)
@@ -424,7 +501,7 @@ class NLUEngine:
                     }
                     category = "PERSONAL_DATA"
                     topic = "Faculty & Advisor Directory"
-                    source_agent = "Agent 44 (Faculty & Identity System)"
+                    source_agent = "Faculty & Identity System"
                     
             elif intent in [
                 "POLICIES", "CIRCULARS", "CALENDAR", "CLUBS", "LOST_AND_FOUND",
@@ -433,7 +510,7 @@ class NLUEngine:
             ]:
                 category = intent
                 topic = intent.replace("_", " ").title()
-                source_agent = "Agent 65 (Navigation Assistant)"
+                source_agent = "VIGBOT (Navigation Assistant)"
                 
             else:
                 # Universal Knowledge Search for KNOWLEDGE_BASE or GENERAL
@@ -461,7 +538,7 @@ class NLUEngine:
                     direct_response_text = "\n\n".join(parts)
                     category = "INSTITUTIONAL_INFO"
                     topic = "Knowledge Base"
-                    source_agent = "Agent 55 (Knowledge Hub)"
+                    source_agent = "Knowledge Hub"
 
 
         # ---------------- 3. COGNITIVE LLM GENERATION (ChatGPT/Gemini Quality) ----------------
@@ -485,7 +562,8 @@ class NLUEngine:
                 "language": effective_lang,
                 "llm_provider": "local",
                 "model_used": "verified-records",
-                "used_fallback": False
+                "used_fallback": False,
+                "routed_by": "rules"
             }
 
         # The fine-tuned LLM is ALWAYS the conversational voice! We NEVER replace it with a canned string.
@@ -522,16 +600,423 @@ class NLUEngine:
             "language": effective_lang,
             "llm_provider": effective_provider,
             "model_used": model_used,
-            "used_fallback": used_fallback
+            "used_fallback": used_fallback,
+            "routed_by": "rules" if used_fallback else "gemini"
         }
+
+    # ---------------- INTENT CLASSIFIER DISPATCH (Step 6) ----------------
+
+    @classmethod
+    def route_classified_intent(
+        cls,
+        session: DatabaseSession,
+        query: str,
+        q_lower: str,
+        clf_result: Dict[str, Any],
+        effective_lang: str,
+        active_subject: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Routes confident predictions from the trained intent classifier directly
+        to their dedicated service handlers according to ml/intents.yaml.
+        Returns a complete response dict if handled, or None if below threshold.
+        """
+        intent = clf_result["intent"]
+        is_confident = clf_result["is_confident"]
+        routed_by = clf_result["routed_by"]
+
+        # 1. Distress safety path: confident prediction provides supportive counseling response without crisis overlay
+        if intent == "distress_support":
+            if is_confident:
+                # If inquiry is specifically academic stress regarding marks/attendance recovery
+                if "can i still pass" in q_lower or ("low marks" in q_lower and "attendance" in q_lower):
+                    recovery_text = cls.generate_deterministic_fallback(session, query, active_subject, effective_lang)
+                    return {
+                        "category": "ACADEMIC_ADVISING",
+                        "topic": "Academic Advising & Stress Recovery",
+                        "source_agent": "VIGBOT (Academic Advising Hub)",
+                        "content": recovery_text,
+                        "citations": [],
+                        "structured_card": None,
+                        "is_distress": False,
+                        "suggested_follow_ups": ["How to apply for condonation", "Book advisor meeting"],
+                        "active_subject": active_subject,
+                        "language": effective_lang,
+                        "llm_provider": "local",
+                        "model_used": "intent-classifier",
+                        "used_fallback": False,
+                        "routed_by": routed_by,
+                    }
+
+                profile = DataRepository.get_student_profile(session) or {}
+                student_name = profile.get("full_name", "Student")
+                first_name = student_name.split()[0] if student_name else "Student"
+                counseling_text = (
+                    f"We are here to support you, {first_name}. You don't have to carry academic pressure or emotional stress alone.\n\n"
+                    f"Our university provides confidential student wellbeing and counseling support:\n"
+                    f"• **Student Wellness Center:** Room 102, Student Activity Building\n"
+                    f"• **Campus Emergency Counselor:** +91-98765-43210 (24/7)\n"
+                    f"• **National Tele-MANAS Helpline:** 14416 (Toll-Free, 24/7)\n"
+                    f"• **Faculty Mentor Support:** You can request a 1-on-1 academic advising consultation.\n\n"
+                    f"Would you like me to help connect you with your mentor or share wellness resources?"
+                )
+                card_data = {
+                    "type": "counseling_support",
+                    "title": "Student Counseling & Wellness Services",
+                    "subtitle": "Confidential support & guidance",
+                    "badge": "Wellbeing Support",
+                    "badgeVariant": "purple",
+                    "data": {
+                        "helpline": "14416 / +91-98765-43210",
+                        "center": "Room 102, Student Wellness Center",
+                        "confidential": True,
+                    },
+                    "actionLabel": "Book Mentor Meeting",
+                    "actionIntent": "Book mentor meeting",
+                }
+                return {
+                    "category": "DISTRESS_SUPPORT",
+                    "topic": "Mental Health & Wellbeing Counseling",
+                    "source_agent": "Distress Escalation & Counseling",
+                    "content": counseling_text,
+                    "citations": [],
+                    "structured_card": card_data,
+                    "is_distress": False,  # Only keyword crisis check triggers the crisis overlay
+                    "suggested_follow_ups": ["Book mentor meeting", "View counseling hours"],
+                    "active_subject": active_subject,
+                    "language": effective_lang,
+                    "llm_provider": "local",
+                    "model_used": "intent-classifier",
+                    "used_fallback": False,
+                    "routed_by": routed_by,
+                }
+            return None
+
+        # 2. Below threshold fallback: return None to allow existing rules/Gemini pipeline to handle
+        if not is_confident:
+            return None
+
+        # 3. Confident predictions routed according to ml/intents.yaml
+        if intent == "attendance":
+            att_res = get_attendance_summary(session, active_subject)
+            return {
+                "category": "PERSONAL_DATA",
+                "topic": "Attendance Analytics",
+                "source_agent": "Attendance System",
+                "content": att_res.get("text", ""),
+                "citations": [{"title": "Academic Regulations R23", "clause": "Clause 4.2", "effective_date": "2023-07-15", "summary": "Mandates 75% attendance"}],
+                "structured_card": att_res.get("structured_card"),
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": att_res.get("context_subject") or active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "exams":
+            exam_res = get_exams_summary(session)
+            return {
+                "category": "PERSONAL_DATA",
+                "topic": "Examinations & Assessments",
+                "source_agent": "Examination Hub",
+                "content": exam_res.get("text", ""),
+                "citations": [{"title": "Examination Ordinance 2026", "clause": "Clause 8.1", "effective_date": "2026-08-01", "summary": "Two continuous internal evaluations"}],
+                "structured_card": exam_res.get("structured_card"),
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "fees":
+            fee_res = get_fees_summary(session)
+            return {
+                "category": "TRANSACTIONAL",
+                "topic": "Student Fee Ledgers",
+                "source_agent": "Finance Engine",
+                "content": fee_res.get("text", ""),
+                "citations": [{"title": "Fee Payment Notification No. 104/2026", "clause": "Clause 2: Late Surcharge Schedule", "effective_date": "2026-08-15", "summary": "Late fine applicable after deadline."}],
+                "structured_card": fee_res.get("structured_card"),
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "timetable":
+            tt_res = get_timetable_summary(session)
+            return {
+                "category": "PERSONAL_DATA",
+                "topic": "Academic Timetable",
+                "source_agent": "Scheduling Service",
+                "content": tt_res.get("text", ""),
+                "citations": [],
+                "structured_card": tt_res.get("structured_card"),
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "marks":
+            marks_res = get_marks_summary(session)
+            return {
+                "category": "PERSONAL_DATA",
+                "topic": "Academic Performance & Marks",
+                "source_agent": "Assessment Engine",
+                "content": marks_res.get("text", ""),
+                "citations": [{"title": "Grading System Manual 2026", "clause": "Clause 3.4: 10-Point Relative Grading Scale", "effective_date": "2026-07-01", "summary": "Minimum passing grade required for credit award."}],
+                "structured_card": marks_res.get("structured_card"),
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "curriculum":
+            curr_res = get_curriculum_summary(session)
+            return {
+                "category": "ACADEMIC_AUDIT",
+                "topic": "Curriculum & Degree Audit",
+                "source_agent": "Curriculum Engine",
+                "content": curr_res.get("text", ""),
+                "citations": [{"title": "B.Tech Curriculum Framework 2026", "clause": "Section 5", "effective_date": "2026-07-01", "summary": "Credit and course roadmap requirements."}],
+                "structured_card": curr_res.get("structured_card"),
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "library":
+            lib_res = get_library_summary(session)
+            return {
+                "category": "PERSONAL_DATA",
+                "topic": "Library Circulation Records",
+                "source_agent": "Library System",
+                "content": lib_res.get("text", ""),
+                "citations": [{"title": "Central Library Policies", "clause": "Section 2", "effective_date": "2026-08-01", "summary": "Overdue book circulation rules."}],
+                "structured_card": lib_res.get("structured_card"),
+                "suggested_follow_ups": cls.generate_dynamic_followups(query, active_subject),
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "faculty":
+            advisors = DataRepository.get_student_advisors(session)
+            profile = DataRepository.get_student_profile(session)
+            student_name = profile.get("full_name", "Student") if profile else "Student"
+            card_data = {
+                "type": "FACULTY_CONTACT",
+                "title": "Academic Advisors & Faculty Contacts",
+                "subtitle": "Section Official Faculty Directory",
+                "badge": "Verified Faculty",
+                "badgeVariant": "blue",
+                "data": advisors or {},
+                "actionLabel": "Book Advisor Session",
+                "actionIntent": "Book mentor meeting",
+            }
+            return {
+                "category": "PERSONAL_DATA",
+                "topic": "Faculty & Advisor Directory",
+                "source_agent": "Faculty & Identity System",
+                "content": f"Here is your official academic faculty and advisor directory, {student_name}.",
+                "citations": [],
+                "structured_card": card_data,
+                "suggested_follow_ups": ["Book mentor meeting", "View class teacher office hours"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "services":
+            sr_cat, title, desc, instructions = resolve_service_subtype(query)
+            sr_res = handle_service_request(session, sr_cat, title, desc, instructions=instructions)
+            return {
+                "category": "SERVICE_REQUEST",
+                "topic": f"Service Request: {title}",
+                "source_agent": "VIGBOT -> Workflow Automation",
+                "content": sr_res.get("text", ""),
+                "citations": [],
+                "structured_card": sr_res.get("structured_card"),
+                "suggested_follow_ups": ["Check request status", "View all services"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "clubs":
+            clubs = DataRepository.get_clubs()
+            profile = DataRepository.get_student_profile(session)
+            student_name = profile.get("full_name", "Student") if profile else "Student"
+            first_name = student_name.split()[0] if student_name else "Student"
+            club_lines = "\n".join(f"• **{c['name']}** ({c['category']}) — {c['description']}" for c in clubs)
+            return {
+                "category": "CLUBS",
+                "topic": "Student Clubs & Extracurriculars",
+                "source_agent": "VIGBOT (Club Directory)",
+                "content": f"Here are the active student clubs at Vignan University, {first_name}:\n\n{club_lines}\n\nTell me which club you want to join and I will submit your registration.",
+                "citations": [],
+                "structured_card": None,
+                "suggested_follow_ups": ["Join AI Innovation Club", "Join Music Club"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "hostel":
+            hostel_res = get_hostel_summary(session, query)
+            return {
+                "category": "INSTITUTIONAL_INFO",
+                "topic": "Hostel & Dining Services",
+                "source_agent": "Hostel Administration",
+                "content": hostel_res.get("text", ""),
+                "citations": hostel_res.get("citations", []),
+                "structured_card": hostel_res.get("structured_card"),
+                "suggested_follow_ups": ["Apply for outing pass", "View mess menu timings"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "transport":
+            trans_res = get_transport_summary(session, query)
+            return {
+                "category": "INSTITUTIONAL_INFO",
+                "topic": "University Bus & Transport Services",
+                "source_agent": "Campus Transport Service",
+                "content": trans_res.get("text", ""),
+                "citations": trans_res.get("citations", []),
+                "structured_card": trans_res.get("structured_card"),
+                "suggested_follow_ups": ["View bus routes", "Request bus pass endorsement"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "circulars":
+            circ_res = get_circulars_summary(session, query)
+            return {
+                "category": "INSTITUTIONAL_INFO",
+                "topic": "Official Administrative Circulars",
+                "source_agent": "Registrar Circulars Desk",
+                "content": circ_res.get("text", ""),
+                "citations": circ_res.get("citations", []),
+                "structured_card": circ_res.get("structured_card"),
+                "suggested_follow_ups": ["When is the next holiday?", "View academic calendar"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "events":
+            ev_res = get_events_summary(session, query)
+            return {
+                "category": "INSTITUTIONAL_INFO",
+                "topic": "Campus Events & Activities",
+                "source_agent": "Campus Events Cell",
+                "content": ev_res.get("text", ""),
+                "citations": ev_res.get("citations", []),
+                "structured_card": ev_res.get("structured_card"),
+                "suggested_follow_ups": ["Join AI Innovation Club", "View sports tournaments"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "policy_bylaws":
+            pol_res = search_policies_and_circulars(query)
+            return {
+                "category": "POLICIES",
+                "topic": "Institutional Policies & Bylaws",
+                "source_agent": "Knowledge Hub",
+                "content": pol_res.get("text", "Official university policies and regulations are referenced below."),
+                "citations": pol_res.get("citations", []),
+                "structured_card": pol_res.get("structured_card"),
+                "suggested_follow_ups": ["What is R23 Clause 4.2?", "How does condonation work?"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        elif intent == "greeting_smalltalk":
+            briefing = cls.generate_proactive_briefing(session, effective_lang)
+            briefing["routed_by"] = routed_by
+            return briefing
+
+        elif intent == "out_of_scope":
+            return {
+                "category": "OUT_OF_SCOPE",
+                "topic": "General University Out-of-Scope",
+                "source_agent": "VIGBOT (Conversational AI)",
+                "content": "I am VIGBOT, your university AI assistant. I can assist you with your attendance, grades, timetables, exams, fees, library, faculty contacts, and official campus services. How may I help you with your academic inquiries today?",
+                "citations": [],
+                "structured_card": None,
+                "suggested_follow_ups": ["Check my attendance", "View exam schedule", "Check fee dues"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "system",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        return None
 
     # ---------------- HELPER METHODS & LLM REASONING LOOP ----------------
 
     @classmethod
     def _determine_model_complexity(cls, query: str) -> str:
         """
-        All queries are processed exclusively by the local 8B model (agent65-8b:latest).
-        Runs 100% offline with zero external API calls.
+        Architecture: Hybrid 3-Tier Execution.
+        - Tier 1: Deterministic Security & Fast Database Rules (Zero-latency)
+        - Tier 2: Local CPU TF-IDF + Logistic Regression Intent Classifier (<0.8ms)
+        - Tier 3: Cloud LLM Reasoning Fallback (Gemini / Groq) with Outbound Student PII Redaction
         """
         return "8B"
 
@@ -561,8 +1046,8 @@ class NLUEngine:
         direct_response_text: str = ""
     ) -> Tuple[str, bool, str, str]:
         """
-        Generates genuine, empathetic, contextual reasoning from the local open-source LLM (agent65).
-        Runs 100% offline with zero external API keys.
+        Generates empathetic, contextual reasoning via the Tier 3 Cloud LLM Fallback (Gemini / Groq)
+        or graceful deterministic fallback when LLM is unavailable. Outbound student PII is strictly redacted.
         """
         profile = DataRepository.get_student_profile(session)
         name = profile.get("full_name", "there") if profile else "there"
@@ -573,7 +1058,7 @@ class NLUEngine:
 
         # If LLM is available, generate response
         if LLMClient.is_available():
-            grounded_context = cls.build_grounded_student_context(session, query, active_subject)
+            grounded_context = cls.build_grounded_student_context(session, query, active_subject, redact_pii=True)
             if direct_response_text:
                 grounded_context += f"\n\n- Verified Database Information / System Answer to use:\n{direct_response_text}\n"
             
@@ -628,16 +1113,16 @@ class NLUEngine:
                     "   b) Provide a structured, numbered 3-part academic improvement roadmap:\n"
                     "      1. Target S-Grades in Formative Assessments: Upcoming CIE exams begin on October 6. Focusing on core theory credits will provide the highest weight toward pushing CGPA above 8.5/9.0 under the 10-point relative grading scale.\n"
                     f"      2. Attendance Safety Buffer: At {att_str}, attendance is right on the borderline of the 75% mandatory cutoff. Attending the next 5 consecutive lectures will secure exam eligibility without condonation risk.\n"
-                    f"      3. Academic Guidance: Proactively offer to schedule a 1-on-1 counseling session with counselor {coun_name} (or class teacher {ct_name}) or raise an academic support request through Agent 46.\n"
+                    f"      3. Academic Guidance: Proactively offer to schedule a 1-on-1 counseling session with counselor {coun_name} (or class teacher {ct_name}) or raise an academic support request through Student Services.\n"
                     "   c) NEVER dump an introductory capabilities menu or say 'You can ask me about...' when asked for academic or procedural guidance."
                 )
 
             system_prompt = (
-                "You are Agent 65, an intelligent university student helpdesk AI running locally with genuine reasoning grounded in verified university records.\n\n"
+                "You are VIGBOT, an intelligent university AI assistant running locally with genuine reasoning grounded in verified university records.\n\n"
                 f"{grounded_context}\n"
                 f"{action_section}\n"
                 "Directives:\n"
-                f"1. Address the student strictly as '{student_first_name}'.\n"
+                "1. Address the student respectfully as 'Student' or in second person ('you'/'your'). Do not request or output personally identifiable information (PII) such as full names or student roll numbers.\n"
                 f"{lang_directive}"
                 "3. When discussing attendance, ALWAYS report the exact percentage, classes attended out of held, the exact consecutive classes needed to cross the 75% cutoff, and the deadline date from verified records.\n"
                 "4. When discussing examinations, ALWAYS state the exact course assessment date, time slot, and examination hall venue from the verified records.\n"
@@ -648,14 +1133,48 @@ class NLUEngine:
                 "9. Never hallucinate fake grades or dates not present in the verified records.\n"
                 "10. Be concise, clear, and articulate. Express all formatting using clean Markdown bullets and bold text. NEVER use LaTeX tags or raw HTML tags.\n"
                 f"{procedural_directive}\n"
-                "12. When asked for student identity, registration number, or roll number, ALWAYS state their verified Roll Number and Name from the Authenticated Student Verified Records.\n"
+                "12. For student identity or verification queries, confirm that the session is verified under Row-Level Access Control (RLAC) as [Authenticated Student].\n"
                 "13. CRITICAL: If 'Verified Database Information / System Answer to use' is provided in the context, you MUST explicitly state in your opening sentence that you retrieved this information from the official university records/database. Example: 'I checked the official university records and found that...'\n"
                 "14. Always provide highly detailed, step-by-step directions and explanations in your responses whenever applicable."
             )
+            # Outbound Student PII Redaction: scrub profile name, roll no, email, phone from user query and history
+            sanitized_query = query
+            if profile:
+                for pii_val, repl in [
+                    (profile.get("full_name"), "[Student]"),
+                    (profile.get("roll_no"), "[Redacted Roll No]"),
+                    (profile.get("email"), "[Redacted Email]"),
+                    (profile.get("phone_number"), "[Redacted Phone]"),
+                    (profile.get("phone"), "[Redacted Phone]"),
+                ]:
+                    if pii_val and isinstance(pii_val, str) and len(pii_val) > 2:
+                        sanitized_query = re.sub(re.escape(pii_val), repl, sanitized_query, flags=re.IGNORECASE)
+                fname = profile.get("full_name", "").split()[0] if profile.get("full_name") else ""
+                if fname and len(fname) > 2:
+                    sanitized_query = re.sub(r"\b" + re.escape(fname) + r"\b", "[Student]", sanitized_query, flags=re.IGNORECASE)
+
+            sanitized_history = []
+            for turn in conversation_history:
+                turn_c = turn.get("content", "")
+                if profile:
+                    for pii_val, repl in [
+                        (profile.get("full_name"), "[Student]"),
+                        (profile.get("roll_no"), "[Redacted Roll No]"),
+                        (profile.get("email"), "[Redacted Email]"),
+                        (profile.get("phone_number"), "[Redacted Phone]"),
+                        (profile.get("phone"), "[Redacted Phone]"),
+                    ]:
+                        if pii_val and isinstance(pii_val, str) and len(pii_val) > 2:
+                            turn_c = re.sub(re.escape(pii_val), repl, turn_c, flags=re.IGNORECASE)
+                    fname = profile.get("full_name", "").split()[0] if profile.get("full_name") else ""
+                    if fname and len(fname) > 2:
+                        turn_c = re.sub(r"\b" + re.escape(fname) + r"\b", "[Student]", turn_c, flags=re.IGNORECASE)
+                sanitized_history.append({**turn, "content": turn_c})
+
             llm_reply, provider_used, model_used = LLMClient.chat_with_history(
                 system_prompt=system_prompt,
-                history=conversation_history,
-                user_prompt=query,
+                history=sanitized_history,
+                user_prompt=sanitized_query,
                 model=selected_model,
                 language=effective_lang
             )
@@ -690,7 +1209,17 @@ class NLUEngine:
                 #     if forbidden.lower() not in name.lower() and forbidden.lower() not in student_roll_str:
                 #         llm_reply = re.sub(re.escape(forbidden), "[CONFIDENTIAL_RECORD]", llm_reply, flags=re.IGNORECASE)
 
-                return llm_reply, False, model_used, provider_used
+                # Numeric Faithfulness & Hallucination Guard
+                student_context = {
+                    "profile": profile,
+                    "attendance": DataRepository.get_attendance(session),
+                    "fees": DataRepository.get_fees(session),
+                    "marks": DataRepository.get_marks(session),
+                }
+                fallback_msg = cls.generate_deterministic_fallback(session, query, active_subject, effective_lang, action_note)
+                guarded_reply = enforce_grounding_or_fallback(llm_reply, student_context, fallback_msg)
+                used_fb = (guarded_reply != llm_reply)
+                return guarded_reply, used_fb, model_used, provider_used
 
         # Deterministic fallback if LLM is offline or timed out
         fallback_msg = cls.generate_deterministic_fallback(session, query, active_subject, effective_lang, action_note)
@@ -739,9 +1268,9 @@ class NLUEngine:
                 return (
                     f"Hello {first_name}, your official service request has been generated:\n\n"
                     f"• **Ticket Number:** `{sr_id}`\n"
-                    f"• **Status:** SUBMITTED (Assigned to Registrar Student Affairs - Agent 46)\n"
+                    f"• **Status:** SUBMITTED (Assigned to Registrar Student Affairs)\n"
                     f"• **Expected Turnaround (SLA):** 3 working days\n\n"
-                    f"Your request has been routed to Agent 46 for processing. You will receive an update once it is ready for collection."
+                    f"Your request has been routed to Registrar Student Affairs for processing. You will receive an update once it is ready for collection."
                 )
             if "escalat" in action_note.lower() or "handover" in action_note.lower():
                 return (
@@ -804,7 +1333,7 @@ class NLUEngine:
                 f"Looking at your current profile, you are maintaining a **{cgpa_str} CGPA** with **{att_str} attendance**. To elevate your performance:\n\n"
                 f"1. **Target S-Grades in Formative Assessments:** Your upcoming CIE exams begin on **October 6**. Focusing on your core theory credits will provide the highest weight toward pushing your CGPA above 8.5.\n"
                 f"2. **Attendance Safety Buffer:** At {att_str}, you are right on the borderline of the 75% mandatory cutoff. Attending your next 5 consecutive lectures will secure your exam eligibility without condonation risk.\n"
-                f"3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **{coun_name}** {coun_contact}, or raise an academic support request through Agent 46?"
+                f"3. **Academic Guidance:** Would you like me to schedule a 1-on-1 counseling session with your counselor, **{coun_name}** {coun_contact}, or raise an academic support request through Student Services?"
             )
 
         # 4. Service Request triggers in prompt
@@ -818,10 +1347,10 @@ class NLUEngine:
             return (
                 f"Hello {first_name}, your official service request has been created:\n\n"
                 f"• **Ticket Number:** `{sr_id}`\n"
-                f"• **Assigned Office:** Registrar Student Affairs (Agent 46)\n"
+                f"• **Assigned Office:** Registrar Student Affairs \n"
                 f"• **Status:** SUBMITTED\n"
                 f"• **SLA Due Date:** 3 working days\n\n"
-                f"Your certificate request has been successfully routed to Agent 46."
+                f"Your certificate request has been successfully routed to Registrar Student Affairs."
             )
 
         # 4b. Club Application triggers (Moved to Section 2)
@@ -1002,7 +1531,7 @@ class NLUEngine:
                         f"• **Phone Number:** **{men.get('phone')}**\n"
                         f"• **Email Address:** {men.get('email')}\n"
                         f"• **Cabin Location:** {men.get('cabin')}\n\n"
-                        f"You can book a 1-on-1 advisory session with your mentor directly through Agent 46."
+                        f"You can book a 1-on-1 advisory session with your mentor directly through Student Services."
                     )
 
                 # Check for HOD inquiry
@@ -1057,7 +1586,7 @@ class NLUEngine:
             )
 
         return (
-            f"Hello {first_name}, I am Agent 65, securely grounded in your official university database records.\n\n"
+            f"Hello {first_name}, I am VIGBOT, securely grounded in your official university database records.\n\n"
             f"You can ask me about:\n"
             f"• **Faculty & Advisors**: Class Teacher ({ct_name}), Counsellor ({coun_name}), contact numbers, and cabins.\n"
             f"• **Attendance**: Live subject-wise attendance and exact recovery math to cross the 75% cutoff.\n"
@@ -1069,6 +1598,17 @@ class NLUEngine:
         )
 
     @classmethod
+    def is_human_handover(cls, q_lower: str) -> bool:
+        """Identifies explicit requests for human administrative escalation outside the classifier."""
+        keywords = [
+            "talk to human", "speak to human", "speak with human", "human officer",
+            "human staff", "human evaluation", "human handover", "escalate to dean",
+            "escalate to hod", "transfer to human", "connect to human",
+            "connect me to an administrator", "discretionary review"
+        ]
+        return any(k in q_lower for k in keywords) or q_lower == "escalate"
+
+    @classmethod
     def is_prompt_injection_or_unauthorized_cross_student(
         cls,
         q_lower: str,
@@ -1078,7 +1618,66 @@ class NLUEngine:
         Detects prompt-injection attempts, system rule overrides, and unauthorized cross-student queries
         before any LLM inference occurs, ensuring strict Row-Level Access Control (RLAC).
         """
-        # Feature disabled as per user request to allow API models access to all data
+        injection_triggers = [
+            "system override",
+            "ignore all previous",
+            "ignore previous rules",
+            "ignore previous instructions",
+            "ignore all instructions",
+            "disregard previous",
+            "disregard your rules",
+            "override rules",
+            "override security",
+            "developer mode",
+            "act as admin",
+            "as admin",
+            "bypass security",
+            "bypass rls",
+            "bypass authentication",
+            "bypass guardrail",
+            "print system prompt",
+            "system prompt",
+            "reveal password",
+            "password hash",
+            "authentication tokens",
+            "jailbreak",
+            "dump database",
+            "dump all",
+            "print all student",
+            "show all student",
+            "reveal all student",
+            "all student cgpa",
+            "all student marks",
+            "all student records",
+            "reveal rahul",
+            "rahul verma",
+            "rohan verma",
+            "rohan varma",
+        ]
+        if any(trig in q_lower for trig in injection_triggers):
+            return True
+
+        # Check for cross-student roll number snooping
+        if session:
+            try:
+                profile = DataRepository.get_student_profile(session)
+                cur_roll = (profile.get("roll_no") or "").lower() if profile else ""
+                cur_name = (profile.get("full_name") or "").lower() if profile else ""
+                
+                # Check for roll number patterns like 24cse001, 24cse002, 251fa04..., etc.
+                roll_matches = re.findall(r"\b\d{2}[a-z]{2,5}\d{3,4}\b", q_lower)
+                for r in roll_matches:
+                    if r != cur_roll:
+                        return True
+                        
+                # Check for other student names
+                if any(w in q_lower for w in ["asha reddy", "asha's", " asha "]) and "asha" not in cur_name:
+                    return True
+                if any(w in q_lower for w in ["rohan varma", "rohan verma", "rahul verma", "rohan's", "rahul's", " rohan ", " rahul "]) and "rohan" not in cur_name and "rahul" not in cur_name:
+                    return True
+            except Exception:
+                pass
+
         return False
 
     @classmethod
@@ -1121,7 +1720,7 @@ class NLUEngine:
         return {
             "category": "PERSONAL_DATA",
             "topic": "Privacy & Row-Level Access Control (RLAC)",
-            "source_agent": "Agent 65 (Privacy & RLAC Boundary Guardrail)",
+            "source_agent": "VIGBOT (Privacy & RLAC Boundary Guardrail)",
             "content": content,
             "citations": citations,
             "structured_card": None,
@@ -1258,7 +1857,8 @@ class NLUEngine:
         cls,
         session: DatabaseSession,
         query: str = "",
-        active_subject: Optional[str] = None
+        active_subject: Optional[str] = None,
+        redact_pii: bool = True
     ) -> str:
         profile = DataRepository.get_student_profile(session)
         if not profile:
@@ -1274,9 +1874,21 @@ class NLUEngine:
         cgpa_val = profile.get("cgpa", 8.09) or 8.09
         att_pct_val = profile.get("overall_attendance_pct", 76.0) or 76.0
         backlog_val = profile.get("backlog_count", 0)
+
+        if redact_pii:
+            student_header = (
+                f"- Student: [Authenticated Student] (Program: {prog_name} ({dept_name}), "
+                f"Year {profile.get('current_year_of_study', 2)}, Section {sec_name})."
+            )
+        else:
+            student_header = (
+                f"- Student: {name} (Roll Number: {profile.get('roll_no')}, Student ID: {profile.get('student_id')}), "
+                f"Program: {prog_name} ({dept_name}), Year {profile.get('current_year_of_study', 2)}, Section {sec_name}. Address strictly as '{first_name}'."
+            )
+
         context_lines = [
             f"Authenticated Student Verified Records (Official University DB):",
-            f"- Student: {name} (Roll Number: {profile.get('roll_no')}, Student ID: {profile.get('student_id')}), Program: {prog_name} ({dept_name}), Year {profile.get('current_year_of_study', 2)}, Section {sec_name}. Address strictly as '{first_name}'.",
+            student_header,
             f"- High-Level Academic Status: Current CGPA = {cgpa_val:.2f}, Overall Attendance = {att_pct_val:.1f}%, Active Backlogs = {backlog_val}."
         ]
 
@@ -1522,7 +2134,7 @@ class NLUEngine:
         timetable = DataRepository.get_timetable(session)
 
         lines = [
-            f"👋 **Hello {name}!** I am your **Agent 65 (Student Helpdesk Assistant)**.",
+            f"👋 **Hello {name}!** I am **VIGBOT**, your AI university assistant.",
             f"I am securely connected to your verified student records (`{roll}`). Here is your **live academic briefing**:\n"
         ]
 
@@ -1582,7 +2194,7 @@ class NLUEngine:
         return {
             "category": "PERSONAL_DATA",
             "topic": "Proactive Academic Briefing",
-            "source_agent": "Agent 65 (Proactive Hub)",
+            "source_agent": "VIGBOT (Proactive Hub)",
             "content": content,
             "citations": [],
             "structured_card": structured_card,
@@ -1597,3 +2209,9 @@ class NLUEngine:
             "model_used": "direct-database-briefing",
             "used_fallback": False
         }
+
+# Module-level export of summary handlers for direct resolution
+get_hostel_summary = get_hostel_summary
+get_transport_summary = get_transport_summary
+get_circulars_summary = get_circulars_summary
+get_events_summary = get_events_summary

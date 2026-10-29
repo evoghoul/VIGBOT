@@ -4,7 +4,7 @@ import uuid
 import sqlite3
 
 def get_db_connection():
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
     
     # Ensure directory exists
     os.makedirs(os.path.dirname(db_path), exist_ok=True)

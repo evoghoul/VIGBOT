@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    Agent 65: One-Click Launcher for FastAPI Backend + Live Public Tunnel
+    VIGBOT: One-Click Launcher for FastAPI Backend + Live Public Tunnel
 .DESCRIPTION
     Launches your local FastAPI backend, verifies local Ollama status,
     and opens a public HTTPS tunnel (Cloudflare Tunnel or LocalTunnel)
-    so your live Vercel frontend can call your local Agent 65 model!
+    so your live Vercel frontend can call your local VIGBOT model!
 #>
 
 Write-Host "=====================================================================" -ForegroundColor Cyan
-Write-Host "          AGENT 65: STUDENT HELPDESK - LIVE TUNNEL LAUNCHER           " -ForegroundColor Cyan
+Write-Host "                     VIGBOT - LIVE TUNNEL LAUNCHER                    " -ForegroundColor Cyan
 Write-Host "=====================================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -23,14 +23,14 @@ if (-not (Test-Path $pythonPath)) {
 }
 
 # 2. Check Ollama
-Write-Host "[*] Checking local Ollama AI daemon (agent65-8b:latest)..." -ForegroundColor Yellow
+Write-Host "[*] Checking local Ollama AI daemon..." -ForegroundColor Yellow
 try {
     $tags = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -TimeoutSec 2
     $models = $tags.models.name -join ", "
     Write-Host "    [OK] Ollama is active with models: $models" -ForegroundColor Green
 } catch {
     Write-Host "    [!] Local Ollama daemon not reachable on localhost:11434." -ForegroundColor Yellow
-    Write-Host "        Make sure to start Ollama or Agent 65 will automatically use Groq/Gemini cloud cascade." -ForegroundColor DarkGray
+    Write-Host "        Make sure to start Ollama or VIGBOT will automatically use Groq/Gemini cloud cascade." -ForegroundColor DarkGray
 }
 
 # 3. Launch Backend in new window

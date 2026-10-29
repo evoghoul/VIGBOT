@@ -919,7 +919,7 @@ def _seed_policies(cur, conn):
         "Academic & Classroom Policies - Attendance Mandates",
         "AC-01",
         "2026-08-01",
-        "Students must maintain a minimum of 80% attendance per semester to sit for final examinations. Shortages down to 70% may be condoned by competent authorities for valid reasons, but any attendance below 70% results in being barred from exams and withheld promotion.",
+        "Students must maintain a minimum of 75% mandatory attendance per semester to sit for final examinations. Condonation for shortages between 65% and 75% is permitted strictly on valid medical grounds with Dean approval, but any attendance below 65% results in debarment from exams and withheld promotion.",
         "Dean of Academics"
     ],
     [
@@ -1146,7 +1146,7 @@ def _seed_studentlife_club_application(cur, conn):
     [
         6,
         "CLUB_MUSIC",
-        "Agent 65",
+        "VIGBOT",
         "Pending",
         "2026-09-17T16:20:00.052421",
         None,

@@ -25,7 +25,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "10 Jul 2026",
     description: "Official commencement of instructional coursework and laboratory sessions for Module-1 of Semester-I.",
     status: "Completed",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-02",
@@ -35,7 +35,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     endDate: "06 Aug 2026",
     description: "First formative assessment (FA-1) for Module-1 courses across 2nd, 3rd & 4th year B.Tech.",
     status: "Completed",
-    sourceAgent: "Agent 34 (Assessments)",
+    sourceAgent: "Assessments",
   },
   {
     id: "CAL-03",
@@ -44,7 +44,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "15 Aug 2026",
     description: "National holiday on account of Independence Day. Flag hoisting and celebrations at VFSTR campus.",
     status: "Completed",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-04",
@@ -53,7 +53,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "25 Aug 2026",
     description: "Institutional holiday on account of Milad-un-Nabi.",
     status: "Completed",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-05",
@@ -63,7 +63,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     endDate: "07 Sep 2026",
     description: "Second formative assessment for Module-1 (held on 03, 05 & 07 Sep) across 2nd, 3rd & 4th year.",
     status: "Completed",
-    sourceAgent: "Agent 34 (Assessments)",
+    sourceAgent: "Assessments",
   },
   {
     id: "CAL-06",
@@ -72,7 +72,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "04 Sep 2026",
     description: "Institutional holiday on account of Sri Krishnashtami.",
     status: "Completed",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-07",
@@ -82,7 +82,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     description: "Commencement of instructional lectures, project work and advanced laboratories for Module-2 (Semester-I).",
     status: "Current",
     actionLabel: "View Module-2 Courses",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-08",
@@ -91,7 +91,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "14 Sep 2026",
     description: "Institutional holiday on account of Vinayaka Chavithi (Ganesh Chaturthi).",
     status: "Upcoming",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-09",
@@ -100,7 +100,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "02 Oct 2026",
     description: "National holiday on account of Mahatma Gandhi Jayanthi.",
     status: "Upcoming",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-10",
@@ -111,7 +111,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     description: "Continuous internal assessment 1 for Module-2 subjects (06 & 07 Oct for 2nd, 3rd, 4th; 08 Oct for 2nd year).",
     status: "Upcoming",
     actionLabel: "View Assessment Card",
-    sourceAgent: "Agent 34 (Assessments)",
+    sourceAgent: "Assessments",
   },
   {
     id: "CAL-11",
@@ -121,7 +121,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     endDate: "21 Oct 2026",
     description: "Dasara vacation period including Durgashtami (18 Oct), Dasara holidays (19 & 21 Oct) and Vijaya Dasami (20 Oct).",
     status: "Upcoming",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-12",
@@ -130,7 +130,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "08 Nov 2026",
     description: "Institutional festival holiday on account of Deepavali.",
     status: "Upcoming",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
   {
     id: "CAL-13",
@@ -141,7 +141,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     description: "Final formative internal assessment for Module-2 (2nd, 3rd & 4th year B.Tech).",
     status: "Upcoming",
     actionLabel: "View Assessment Card",
-    sourceAgent: "Agent 34 (Assessments)",
+    sourceAgent: "Assessments",
   },
   {
     id: "CAL-14",
@@ -152,7 +152,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     description: "Laboratory external evaluations, project demos and hands-on practical summative exams (2nd, 3rd & 4th Year).",
     status: "Upcoming",
     actionLabel: "View Practical Schedule",
-    sourceAgent: "Agent 30 (Examinations)",
+    sourceAgent: "Examinations",
   },
   {
     id: "CAL-15",
@@ -163,7 +163,7 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     description: "Centralized end-semester theory examinations conducted by Examination Cell (Weeks 20, 21 & 22).",
     status: "Upcoming",
     actionLabel: "View Exam Schedule",
-    sourceAgent: "Agent 30 (Examinations)",
+    sourceAgent: "Examinations",
   },
   {
     id: "CAL-16",
@@ -172,6 +172,6 @@ export const ACADEMIC_CALENDAR_DATA: CalendarEvent[] = [
     startDate: "14 Dec 2026",
     description: "Official re-opening of university and commencement of instructional classes for B.Tech Semester-II (2026-27).",
     status: "Upcoming",
-    sourceAgent: "Agent 55 (Academic Calendar)",
+    sourceAgent: "Academic Calendar",
   },
 ];

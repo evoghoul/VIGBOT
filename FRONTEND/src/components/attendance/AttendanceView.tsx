@@ -13,6 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { ATTENDANCE_DATA, AttendanceSubject } from "@/data/attendance";
+import { calculateConsecutiveClassesNeeded } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useStudent } from "@/context/StudentContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -48,7 +49,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.attendanceTitle || "Attendance Telemetry"}</h2>
-            <Badge variant="primary">Agent 11</Badge>
+            
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.attendanceSubtitle || "Biometric and lecture-by-lecture records. Statutory minimum threshold: 75%."}
@@ -78,7 +79,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 key={sub.code}
                 onClick={() => {
                   setSelectedSubject(sub);
-                  setSimulatedClasses(sub.classesNeeded70 || 1);
+                  setSimulatedClasses(sub.classesNeeded75 || calculateConsecutiveClassesNeeded(sub.attended, sub.total, 75) || 1);
                 }}
                 className={`rounded-lg border p-4 transition-all cursor-pointer ${
                   isSelected
@@ -130,11 +131,11 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                     <span>{t.classesMissed}: {sub.total - sub.attended}</span>
                   </div>
                   <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
-                    {/* Minimum 70% guideline line */}
+                    {/* Minimum 75% guideline line */}
                     <div
                       className="absolute top-0 bottom-0 w-0.5 bg-slate-400 z-10"
-                      style={{ left: "70%" }}
-                      title={t.mandatoryThreshold || "Mandatory 70% threshold"}
+                      style={{ left: "75%" }}
+                      title={t.mandatoryThreshold || "Mandatory 75% threshold"}
                     />
                     <div
                       className={`h-full transition-all duration-500 ${
@@ -150,7 +151,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                 {/* Subtext advice */}
                 {isAttention && (
                   <div className="mt-2.5 rounded-lg bg-amber-50 p-2 text-sm text-amber-900 font-medium flex items-center justify-between">
-                    <span>{t.attendNext || "Attend next"} <strong>{sub.classesNeeded70} {t.consecutiveClasses || "classes"}</strong> {t.toReach70 || "to reach 70%"}.</span>
+                    <span>{t.attendNext || "Attend next"} <strong>{sub.classesNeeded75 || calculateConsecutiveClassesNeeded(sub.attended, sub.total, 75)} {t.consecutiveClasses || "classes"}</strong> {t.toReach75 || "to reach 75%"}.</span>
                     <span className="text-sm font-bold text-amber-700 underline">{t.simulateAttendance || "Simulate"}</span>
                   </div>
                 )}
@@ -194,7 +195,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                   <div className="text-sm text-muted-foreground">{t.currentAttendance || "Current %"}</div>
                   <div
                     className={`text-base font-bold ${
-                      selectedSubject.percentage < 70 ? "text-amber-800" : "text-emerald-700"
+                      selectedSubject.percentage < 75 ? "text-amber-800" : "text-emerald-700"
                     }`}
                   >
                     {selectedSubject.percentage}%
@@ -210,23 +211,23 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
                     <span>{t.simulateAttendance || "Attendance Calculator"}</span>
                   </div>
                   <span className="text-xs font-mono font-bold text-blue-700">
-                    Target: 70%
+                    Target: 75%
                   </span>
                 </div>
 
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {selectedSubject.percentage < 70 ? (
+                  {selectedSubject.percentage < 75 ? (
                     <>
                       You currently have <strong>{selectedSubject.percentage}%</strong>. You must attend the next{" "}
                       <strong className="text-blue-900 underline">
-                        {selectedSubject.classesNeeded70} classes consecutively
+                        {selectedSubject.classesNeeded75 || calculateConsecutiveClassesNeeded(selectedSubject.attended, selectedSubject.total, 75)} classes consecutively
                       </strong>{" "}
-                      without absence to cross the statutory 70% threshold.
+                      without absence to cross the statutory 75% threshold.
                     </>
                   ) : (
                     <>
                       You are in the safe zone at <strong>{selectedSubject.percentage}%</strong>. You can afford to miss up to{" "}
-                      <strong>{selectedSubject.canBunkBefore70} classes</strong> before falling below 70%.
+                      <strong>{Math.max(0, Math.floor((selectedSubject.attended - 0.75 * selectedSubject.total) / 0.75))} classes</strong> before falling below 75%.
                     </>
                   )}
                 </p>
@@ -275,7 +276,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
               {/* Direct conversational query trigger */}
               <button
                 onClick={() =>
-                  onAskHelpdesk(`How many classes do I need to attend to reach 70% in ${selectedSubject.name}?`)
+                  onAskHelpdesk(`How many classes do I need to attend to reach 75% in ${selectedSubject.name}?`)
                 }
                 className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors shadow-2xs cursor-pointer"
               >

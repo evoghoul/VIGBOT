@@ -106,11 +106,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-sm tracking-tight text-foreground whitespace-nowrap">
-                  {t.appName || "Student Helpdesk"}
+                  {t.appName || "VIGBOT"}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
                   <Sparkles className="h-2.5 w-2.5" />
-                  AGENT 65
+                  AI
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -146,7 +146,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
               </h1>
               <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                 {t.loginBannerNote ||
-                  "Sign in with your University Roll Number to connect with your personalized Student Helpdesk AI Agent."}
+                  "Sign in with your University Roll Number to connect with your personalized VIGBOT AI Assistant."}
               </p>
             </div>
 
@@ -254,7 +254,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-md bg-blue-600 text-white font-bold text-xs shadow-sm">
-                  {CURRENT_STUDENT.name.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()}
+                  {CURRENT_STUDENT.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
@@ -281,14 +281,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
               </div>
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                <span>{t.loginTwelveFederated || "12 Federated Agents"}</span>
+                <span>{t.loginTwelveFederated || "12 Domain Modules & 18 ML Intents"}</span>
               </div>
             </div>
 
             {/* Admin Portal Link */}
             <div className="pt-4 border-t border-slate-200 text-center">
-              <a 
-                href="/admin/login" 
+              <a
+                href="/admin/login"
                 className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
               >
                 <ShieldCheck className="h-4 w-4" />
@@ -303,7 +303,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
       <footer className="relative z-10 w-full border-t border-slate-200 bg-card/80 backdrop-blur-md px-6 py-4 text-center text-xs text-muted-foreground">
         <p>
           {t.loginFooterPolicy ||
-            "Institutional Helpdesk Agent 65 • Group 13 Autonomous Context Engine • Protected by University Privacy Policies"}
+            "VIGBOT • Group 13 Autonomous Context Engine • Protected by University Privacy Policies"}
         </p>
       </footer>
     </div>

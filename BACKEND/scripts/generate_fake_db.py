@@ -1,5 +1,5 @@
 """
-Generate Showcase Database for Agent 65 Student Helpdesk
+Generate Showcase Database for VIGBOT VIGBOT
 University: Vignan Foundation for Science, Technology and Research (VFSTR)
 Department: Computer Science & Engineering (CSE)
 Batch: 2024-2028 (Second Year, Section 7)
@@ -414,7 +414,7 @@ def build_sqlite_database(db_path: str):
 
     # AgentOps Registry
     AGENTS = [
-        ("A65_STUDENT_HELPDESK", 65, "Student Helpdesk Agent", "STUDENT_SUPPORT", "Conversational interface for students into academic, attendance, fees, and services."),
+        ("VIGBOT_HELPDESK", 65, "VIGBOT Agent", "STUDENT_SUPPORT", "Conversational interface for students into academic, attendance, fees, and services."),
         ("A11_ATTENDANCE_ANALYSIS", 11, "Attendance Analysis Agent", "ATTENDANCE", "Computes course and overall attendance, projected trajectory, and detects shortfall risk."),
         ("A08_COURSE_OUTCOME", 8, "Course Outcome Attainment Agent", "OUTCOMES", "Calculates NBA direct CO/PO attainment levels from question-level marks."),
         ("A44_STUDENT_PROFILE", 44, "Student Profile Agent", "IDENTITY", "Federated student demographic, enrollment, and academic standing repository."),
@@ -515,7 +515,7 @@ def build_postgres_sql_seed(output_sql_path: str):
     print(f"Generated 99_showcase_seed.sql successfully with {len(STUDENTS_DATA)} students!")
 
 if __name__ == "__main__":
-    db_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+    db_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
     sql_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "source", "99_showcase_seed.sql"))
     build_sqlite_database(db_file)
     build_postgres_sql_seed(sql_file)

@@ -3,7 +3,7 @@
 import os
 import sqlite3
 
-DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
 
 # report_no|roll_no|name|year|section|cgpa|attendance|hosteler|gender|backlog_count
 REPORT = """1|251FA04044|ANKALA SWEETY GRACE|2|1|8.25|97|H|F|0

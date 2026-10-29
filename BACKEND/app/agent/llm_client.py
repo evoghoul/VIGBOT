@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class LLMClient:
     """
     Client for cloud-based LLM inference.
-    Primary provider: Google Gemini (gemini-3.6-flash)
+    Primary provider: Google Gemini (gemini-2.5-flash)
     Fallback provider: Groq (qwen/qwen3.8-27b)
     Automatically rotates to Groq when Gemini hits rate limits or fails.
     """
@@ -49,7 +49,7 @@ class LLMClient:
         )
 
         reply = cls._send_chat(
-            messages=[{"role": "user", "content": query}],
+            messages=[{"role": "user", "content": cls.redact_pii_text(query)}],
             system_prompt=system_prompt,
         )
 
@@ -66,6 +66,29 @@ class LLMClient:
                 if intent in reply:
                     return intent
         return "GENERAL"
+
+    @classmethod
+    def redact_pii_text(cls, text: str) -> str:
+        """
+        Scrubs student personally identifiable information (PII) before sending to external cloud LLMs:
+        - University roll numbers (e.g. 24CSE001, 23ECE045, 21IT123)
+        - Phone numbers (10 digits with optional +91, 91, or 0 prefix)
+        - Email addresses (e.g. student email addresses)
+        """
+        if not text:
+            return text
+
+        # 1. Roll numbers (e.g., 24CSE001, 22IT012, etc.)
+        cleaned = re.sub(r"\b\d{2}[A-Za-z]{2,5}\d{3,4}\b", "[Redacted Roll No]", text, flags=re.IGNORECASE)
+
+        # 2. Email addresses
+        cleaned = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b", "[Redacted Email]", cleaned)
+
+        # 3. Phone numbers (10-digit Indian numbers with optional country/trunk code)
+        cleaned = re.sub(r"(?:\+91[\-\s]?|91[\-\s]?|0)?[6-9]\d{4}[\-\s]?\d{5}\b", "[Redacted Phone]", cleaned)
+        cleaned = re.sub(r"(?:\+91[\-\s]?|91[\-\s]?|0)?[6-9]\d{9}\b", "[Redacted Phone]", cleaned)
+
+        return cleaned
 
     @classmethod
     def chat_with_history(
@@ -86,13 +109,13 @@ class LLMClient:
 
         for turn in recent_turns:
             role = "user" if turn.get("sender_role") == "STUDENT" else "assistant"
-            content = turn.get("content", "")
+            content = cls.redact_pii_text(turn.get("content", ""))
             if len(content) > 800:
                 content = content[:800] + "..."
             if content:
                 messages.append({"role": role, "content": content})
 
-        messages.append({"role": "user", "content": user_prompt})
+        messages.append({"role": "user", "content": cls.redact_pii_text(user_prompt)})
 
         res, provider, model_used = cls._send_chat_with_provider(messages, system_prompt=system_prompt)
         if res:
@@ -118,6 +141,9 @@ class LLMClient:
         messages: List[Dict[str, str]],
         system_prompt: Optional[str] = None,
     ) -> Tuple[Optional[str], str, str]:
+        messages = [{"role": m["role"], "content": cls.redact_pii_text(m["content"])} for m in messages]
+        if system_prompt:
+            system_prompt = cls.redact_pii_text(system_prompt)
         """
         Try Gemini first; fall back to Groq on failure or rate limit.
         Returns (text, provider, model).
@@ -127,8 +153,7 @@ class LLMClient:
         if gemini_key:
             result = cls._send_gemini_chat(messages, system_prompt, gemini_key)
             if result is not None:
-                # Force 3.6-flash to avoid any stale environment variable cache
-                model_used = "gemini-3.6-flash"
+                model_used = getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash")
                 logger.info(f"Response served by Gemini ({model_used})")
                 return result, "gemini", model_used
             logger.warning("Gemini failed or rate-limited — falling back to Groq")
@@ -157,16 +182,16 @@ class LLMClient:
         try:
             from google import genai
 
-            # Force 3.6-flash to avoid any stale environment variable cache
-            model_name = "gemini-3.6-flash"
+            model_name = getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash")
 
             contents = []
             for msg in messages:
                 role = "user" if msg["role"] == "user" else "model"
+                clean_msg = cls.redact_pii_text(msg["content"])
                 contents.append(
                     genai.types.Content(
                         role=role,
-                        parts=[genai.types.Part(text=msg["content"])],
+                        parts=[genai.types.Part(text=clean_msg)],
                     )
                 )
 
@@ -175,7 +200,7 @@ class LLMClient:
                 "temperature": 0.4,
             }
             if system_prompt:
-                config_kwargs["system_instruction"] = system_prompt
+                config_kwargs["system_instruction"] = cls.redact_pii_text(system_prompt)
 
             client = genai.Client(api_key=api_key)
             

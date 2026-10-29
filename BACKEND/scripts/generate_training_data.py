@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agent 65 Training Data Generator: The Food for Fine-Tuning.
+VIGBOT Training Data Generator: The Food for Fine-Tuning.
 Generates high-quality, multi-turn conversational datasets formatted for Llama 3.2 / Mistral fine-tuning
 in standard ChatML / Llama 3 format:
 {"messages": [
@@ -25,7 +25,7 @@ if sys.platform == "win32":
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 SYSTEM_PROMPT = (
-    "You are Agent 65, an exceptionally intelligent, empathetic, and authoritative university student helpdesk AI. "
+    "You are VIGBOT, an exceptionally intelligent, empathetic, and authoritative university VIGBOT AI. "
     "You serve enrolled students by providing precise academic advice, real-time attendance recovery calculations, "
     "official university bylaws and circular citations (e.g., Clause 4.2 attendance condonation, Clause 8.1 revaluation), "
     "examination schedules, and administrative service request workflows. "
@@ -162,7 +162,7 @@ DIALOGUE_CORPUS: List[List[Dict[str, str]]] = [
             "- Full Student Name & University Roll Number\n"
             "- Degree (B.Tech), Branch (CSE), Current Semester & Academic Year\n"
             "- University Affiliation and AICTE/UGC accreditation statement\n\n"
-            "Shall I submit this request on your behalf to **Agent 46 (Workflow Automation)** now?"
+            "Shall I submit this request on your behalf to **Workflow Automation** now?"
         )},
         {"role": "user", "content": "Yes please submit it, and also tell me where can I get a railway concession pass."},
         {"role": "assistant", "content": (
@@ -182,7 +182,7 @@ DIALOGUE_CORPUS: List[List[Dict[str, str]]] = [
             "Let me know if you need me to lodge the preliminary Transit Pass application for you!"
         )}
     ],
-    # ---------------- 6. Crisis & Mental Distress Protocol (Agent 66 Handshake) ----------------
+    # ---------------- 6. Crisis & Mental Distress Protocol (Crisis Support Handshake) ----------------
     [
         {"role": "user", "content": "I can't take this pressure anymore. I feel completely hopeless and like ending everything."},
         {"role": "assistant", "content": (
@@ -203,7 +203,7 @@ DIALOGUE_CORPUS: List[List[Dict[str, str]]] = [
         {"role": "assistant", "content": (
             "To get to the CSE Department Head Office (Room A-309), please go to the 3rd Floor of A-Block (Admin).\n\n"
             "The HOD for CSE is **Dr. S. V. Phani Kumar**. His official office hours are Mon-Fri 2PM-4PM. "
-            "Would you like me to book an appointment with him through Agent 46, or do you just need directions?"
+            "Would you like me to book an appointment with him through Student Services, or do you just need directions?"
         )},
         {"role": "user", "content": "How do I reach room H-102?"},
         {"role": "assistant", "content": (
@@ -229,7 +229,7 @@ DIALOGUE_CORPUS: List[List[Dict[str, str]]] = [
 
 def fetch_faqs_from_db() -> List[List[Dict[str, str]]]:
     """Fetches seeded FAQs from the database to include in training data."""
-    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
     if not os.path.exists(db_path):
         return []
         
@@ -372,7 +372,7 @@ def main():
     train_path = os.path.join(output_dir, "train_data.jsonl")
     val_path = os.path.join(output_dir, "val_data.jsonl")
 
-    print("🚀 Generating Agent 65 High-Quality Conversational Training Dataset...")
+    print("🚀 Generating VIGBOT High-Quality Conversational Training Dataset...")
     db_faqs = fetch_faqs_from_db()
     print(f"📥 Fetched {len(db_faqs)} FAQs from the database.")
     

@@ -37,9 +37,7 @@ export const CurriculumView: React.FC<CurriculumViewProps> = ({ onAskHelpdesk })
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.curriculumTitle || "Course Curriculum & Syllabus"}</h2>
-            <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-sm font-bold text-cyan-800">
-              Agent 1
-            </span>
+            
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Program: {CURRICULUM_DATA.programme} • 120 {t.totalCredits || "Total Credits"}

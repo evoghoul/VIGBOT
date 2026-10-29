@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ["better-sqlite3"],
   outputFileTracingIncludes: {
-    "/**": ["./student_helpdesk.db"]
+    "/**": ["./vigbot.db", "./student_helpdesk.db"]
   },
   async headers() {
     return [

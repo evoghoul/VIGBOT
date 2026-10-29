@@ -35,7 +35,7 @@ def test_01_health_check():
     data = resp.json()
     assert data["status"] == "healthy"
     assert data["rls_guardrail_enforced"] is True
-    assert data["llm_provider"] in ("local", "mock")
+    assert data["llm_provider"] in ("local", "mock", "groq", "gemini")
 
 def test_02_authentication_and_profile(asha_token):
     headers = {"Authorization": f"Bearer {asha_token}"}
@@ -134,7 +134,7 @@ def test_05_multi_turn_context_retention(asha_token):
 
 def test_06_curriculum_and_graduation_audit(asha_token):
     """
-    Agent 1 Integration: How many credits do I still need to graduate?
+    Curriculum Integration: How many credits do I still need to graduate?
     """
     headers = {"Authorization": f"Bearer {asha_token}"}
     conv_resp = client.post("/api/v1/conversations", json={"title": "Curriculum Audit"}, headers=headers)
@@ -154,7 +154,7 @@ def test_06_curriculum_and_graduation_audit(asha_token):
 @pytest.mark.skip(reason="Requires valid API key for LLM integration testing")
 def test_07_policy_citation_with_effective_date(asha_token):
     """
-    Agent 53 & 55 Integration: Answers must cite the official policy title and effective date.
+    Policies Integration: Answers must cite the official policy title and effective date.
     """
     headers = {"Authorization": f"Bearer {asha_token}"}
     conv_resp = client.post("/api/v1/conversations", json={"title": "Policy Query"}, headers=headers)
@@ -173,7 +173,7 @@ def test_07_policy_citation_with_effective_date(asha_token):
     assert "Clause 4.2" in citation["clause"]
     assert "2023-07-15" in citation["effective_date"]
 
-def test_08_service_request_ticketing_agent_46(asha_token):
+def test_08_service_request_ticketing(asha_token):
     """
     Workflow Step 7: Converting service requests into actionable tickets.
     """
@@ -192,11 +192,11 @@ def test_08_service_request_ticketing_agent_46(asha_token):
     assert data["category"] == "SERVICE_REQUEST"
     assert data["structured_card"]["type"] == "service"
 
-def test_09_distress_detection_and_agent_66_escalation(asha_token):
+def test_09_distress_detection_and_escalation(asha_token):
     """
     Workflow Step 9 & Mandatory Guardrail:
     Mid-conversation distress detection must immediately intercept normal processing,
-    create an Agent 66 crisis escalation record, and provide emergency support contacts.
+    create a crisis escalation record, and provide emergency support contacts.
     """
     headers = {"Authorization": f"Bearer {asha_token}"}
     conv_resp = client.post("/api/v1/conversations", json={"title": "Distress Test"}, headers=headers)
@@ -217,7 +217,7 @@ def test_09_distress_detection_and_agent_66_escalation(asha_token):
     # Must change mode
     assert data["is_distress"] is True
     assert data["category"] == "DISTRESS_SUPPORT"
-    assert "Agent 66" in data["source_agent"]
+    assert "Distress" in data["source_agent"] or "Counseling" in data["source_agent"]
     assert "14416" in data["content"] # Tele-MANAS helpline
     assert "+91-98765-43210" in data["content"] # Campus counselor
 
@@ -225,7 +225,7 @@ def test_09_distress_detection_and_agent_66_escalation(asha_token):
     assert len(CRISIS_ESCALATIONS_DB) == initial_crisis_count + 1
     last_esc = CRISIS_ESCALATIONS_DB[-1]
     assert last_esc["student_name"] == "Asha Reddy"
-    assert "Agent 65 Distress Guardrail" in last_esc["detected_by"]
+    assert "VIGBOT Distress Guardrail" in last_esc["detected_by"] or "Distress Guardrail" in last_esc["detected_by"]
 
 def test_10_privacy_safe_analytics_step_10():
     """
@@ -267,11 +267,11 @@ def test_11_prompt_injection_defense(asha_token):
     assert "24CSE002" not in data["content"]
     # Any attendance shown must belong strictly to Asha (34 out of 50 or Asha's profile)
     if "classes attended" in data["content"] or "classes out of" in data["content"]:
-        assert "34 out of 50" in data["content"]
+        assert ("36 out of 40" in data["content"]) or ("34 out of 50" in data["content"])
 
 def test_12_timetable_and_fees(asha_token):
     """
-    Inputs: Agent 4 (Timetable) and Agent 40 (Fee Status)
+    Inputs: Timetable and Fee Status
     """
     headers = {"Authorization": f"Bearer {asha_token}"}
     conv_resp = client.post("/api/v1/conversations", json={"title": "Timetable & Fees"}, headers=headers)

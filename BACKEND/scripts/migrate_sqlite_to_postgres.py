@@ -1,5 +1,5 @@
 """
-Migration Script: SQLite (database/student_helpdesk.db) -> Neon PostgreSQL
+Migration Script: SQLite (database/vigbot.db) -> Neon PostgreSQL
 Migrates all 141 students, Section 8 records, timetable slots, attendance,
 marks, fees, exams, and faculty directly into Neon PostgreSQL.
 """
@@ -360,5 +360,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     neon_url = sys.argv[1].strip()
-    db_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "student_helpdesk.db"))
+    db_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
     migrate(db_file, neon_url)

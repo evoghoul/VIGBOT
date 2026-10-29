@@ -3,8 +3,8 @@ import os
 import json
 
 def generate_frontend_students():
-    db_path = os.path.abspath(r'C:\StudentHelpdesk\database\student_helpdesk.db')
-    out_path = os.path.abspath(r'C:\StudentHelpdesk\FRONTEND\src\data\students-db.ts')
+    db_path = os.path.abspath(r'database\vigbot.db')
+    out_path = os.path.abspath(r'FRONTEND\src\data\students-db.ts')
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -197,14 +197,14 @@ def generate_frontend_students():
                 'authStatus': 'Authenticated',
                 'securityLabel': f'Viewing your verified VFSTR Section-7 student record',
                 'securityToken': f'RLS-VFSTR-{roll.upper()}-VERIFIED',
-                'sourceAgent': 'Agent 44 (Student Profile)'
+                'sourceAgent': 'Student Profile'
             },
             'attendance': {
                 'overallPercentage': round(tot_att, 1),
                 'totalAttended': tot_att_cnt,
                 'totalConducted': tot_held if tot_held > 0 else 240,
                 'status': 'Critical' if tot_att < 65.0 else ('Attention required' if tot_att < 75.0 else 'Healthy'),
-                'sourceAgent': 'Agent 11 (Attendance Engine)',
+                'sourceAgent': 'Attendance Engine',
                 'subjects': subjects
             },
             'marks': {

@@ -18,7 +18,7 @@ const StudentContext = createContext<StudentContextType | undefined>(undefined);
 export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeRoll, setActiveRoll] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("agent65_active_student") || "251FA04E13";
+      return localStorage.getItem("vigbot_active_student") || localStorage.getItem("agent65_active_student") || "251FA04E13";
     }
     return "251FA04E13";
   });
@@ -28,7 +28,7 @@ export const StudentProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("agent65_active_student", activeRoll);
+      localStorage.setItem("vigbot_active_student", activeRoll);
     }
 
     // Try fetching live dashboard from backend if token is available

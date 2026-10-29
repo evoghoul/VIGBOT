@@ -26,7 +26,7 @@ export const FEES_DATA: {
   totalPaid: 92000,
   outstanding: 28000,
   dueDate: "30 September 2026",
-  sourceAgent: "Agent 40 (Fee Status)",
+  sourceAgent: "Fee Status",
   breakdown: [
     {
       head: "Tuition Fee",

@@ -126,7 +126,7 @@ export const CareerView = () => {
                   
                   <div className="mt-8 pt-4 border-t border-dashed border-slate-200 text-center opacity-50">
                     <Sparkles className="h-4 w-4 mx-auto text-indigo-400 mb-1" />
-                    <p className="text-[10px]">Formatted by Agent 65 Career Hub</p>
+                    <p className="text-[10px]">Formatted by VIGBOT Career Hub</p>
                   </div>
                 </div>
               </div>

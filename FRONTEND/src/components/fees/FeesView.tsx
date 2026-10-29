@@ -45,9 +45,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.feesTitle || "Fees & Financial Ledger"}</h2>
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-sm font-bold text-amber-800">
-              Agent 40
-            </span>
+            
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.feesSubtitle || "Personal academic accounts and payment records."}
@@ -69,7 +67,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
         <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 text-emerald-900 flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-xs font-semibold">
             <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
-            <span>Simulated Payment Verified! Transaction token logged with Agent 40.</span>
+            <span>Simulated Payment Verified! Transaction token logged securely.</span>
           </div>
           <span className="text-sm font-bold text-emerald-700">Ref: TXN-2026-9921</span>
         </div>

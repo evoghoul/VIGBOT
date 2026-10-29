@@ -118,7 +118,7 @@ export const CommandBarModal: React.FC<CommandBarModalProps> = ({
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-blue-600" />
-                <span>Ask Agent 65: &quot;{searchTerm}&quot;</span>
+                <span>Ask VIGBOT: &quot;{searchTerm}&quot;</span>
               </div>
               <ArrowRight className="h-4 w-4 text-blue-600" />
             </div>

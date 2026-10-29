@@ -1,6 +1,6 @@
 ﻿import re
 
-db_path = r'C:\StudentHelpdesk\BACKEND\app\database.py'
+db_path = r'BACKEND\app\database.py'
 with open(db_path, 'r', encoding='utf-8') as f:
     code = f.read()
 

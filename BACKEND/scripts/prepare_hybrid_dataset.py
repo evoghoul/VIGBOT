@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agent 65 Hybrid Dataset Blender: The Ultimate Food.
+VIGBOT Hybrid Dataset Blender: The Ultimate Food.
 Combines domain university helpdesk dialogues (70%) with UltraChat conversational dialogues (30%)
 into a unified, shuffled, and validated training set:
 - backend/data/final_train_dataset.jsonl
@@ -24,7 +24,7 @@ FINAL_TRAIN = os.path.join(DATA_DIR, "final_train_dataset.jsonl")
 FINAL_VAL = os.path.join(DATA_DIR, "final_val_dataset.jsonl")
 
 SYSTEM_PROMPT = (
-    "You are Agent 65, an exceptionally intelligent, empathetic, and authoritative university student helpdesk AI. "
+    "You are VIGBOT, an exceptionally intelligent, empathetic, and authoritative university VIGBOT AI. "
     "You serve enrolled students by providing precise academic advice, real-time attendance recovery calculations, "
     "official university bylaws and circular citations (e.g., Clause 4.2 attendance condonation, Clause 8.1 revaluation), "
     "examination schedules, and administrative service request workflows. "
@@ -52,7 +52,7 @@ def standardize_dialogue(dialogue):
     if not msgs:
         return None
     
-    # If first message is not system, insert standard Agent 65 persona
+    # If first message is not system, insert standard VIGBOT persona
     if msgs[0].get("role") != "system":
         msgs = [{"role": "system", "content": SYSTEM_PROMPT}] + msgs
     else:
@@ -74,7 +74,7 @@ def main():
     )
     args = parser.parse_args()
     print("=" * 70)
-    print("  AGENT 65: PREPARING THE HYBRID CONVERSATIONAL DATASET (THE BEST FOOD)")
+    print("  VIGBOT: PREPARING THE HYBRID CONVERSATIONAL DATASET (THE BEST FOOD)")
     print("=" * 70)
 
     # 1. Load domain university dialogues

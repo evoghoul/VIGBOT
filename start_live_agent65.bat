@@ -1,10 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
-title Agent 65 - Live Server ^& Public Tunnel Launcher
+title VIGBOT - Live Server ^& Public Tunnel Launcher
 color 0A
 
 echo =====================================================================
-echo           AGENT 65: STUDENT HELPDESK - LIVE TUNNEL LAUNCHER
+echo                     VIGBOT - LIVE TUNNEL LAUNCHER
 echo =====================================================================
 echo.
 
@@ -17,13 +17,13 @@ if not exist "%~dp0BACKEND\.venv\Scripts\python.exe" (
 )
 
 :: 2. Check Ollama Status
-echo [*] Checking local Ollama AI daemon (agent65-8b:latest)...
+echo [*] Checking local Ollama AI daemon...
 "%~dp0BACKEND\.venv\Scripts\python.exe" -c "import sys; sys.path.insert(0, r'%~dp0BACKEND'); from app.agent.local_llm import LocalLLMClient; print('    [OK] Ollama is active with model:', LocalLLMClient.get_active_model()) if LocalLLMClient.is_available() else print('    [!] Notice: Ollama not running, falling back to cloud cascade.')"
 
 :: 3. Launch FastAPI Backend in a separate window
 echo.
 echo [*] Starting FastAPI Backend on http://localhost:8000...
-start "Agent 65 Backend (FastAPI)" cmd /k "cd /d "%~dp0BACKEND" && "%~dp0BACKEND\.venv\Scripts\python.exe" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+start "VIGBOT Backend (FastAPI)" cmd /k "cd /d "%~dp0BACKEND" && "%~dp0BACKEND\.venv\Scripts\python.exe" -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 :: Wait 3 seconds for backend to initialize
 ping 127.0.0.1 -n 4 >nul

@@ -2,7 +2,7 @@ import sqlite3
 import uuid
 
 def get_db_connection():
-    db_path = r"C:\StudentHelpdesk\database\student_helpdesk.db"
+    db_path = r"database\vigbot.db"
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
@@ -129,7 +129,7 @@ def seed_data(conn):
         
         # Filing ANC complaint
         ("ps6", "p2", 1, "Immediately distance yourself from the situation and reach a safe space (Hostel Warden's office or Security Desk)."),
-        ("ps7", "p2", 2, "Open the Student Helpdesk Dashboard and navigate to the 'Clubs & Communities' section."),
+        ("ps7", "p2", 2, "Open the VIGBOT Dashboard and navigate to the 'Clubs & Communities' section."),
         ("ps8", "p2", 3, "Locate the Anti-Ragging Cell (ANC) card and click on the 'Register Complaint' button."),
         ("ps9", "p2", 4, "Fill out the secure incident form. You can choose to remain completely anonymous. No faculty middleman is involved; the report goes directly to the Nodal Officer."),
         ("ps10", "p2", 5, "You will receive a secure Tracking ID to follow up on the action taken."),

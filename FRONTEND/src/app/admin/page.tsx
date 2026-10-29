@@ -935,9 +935,9 @@ function LiveSessionsTab() {
   const [activeSession, setActiveSession] = React.useState<string | null>('SESS-102');
   
   const sessions = [
-    { id: 'SESS-102', student: '24CSE001', topic: 'Fee Payment Issue', status: 'High Friction', agent: 'Agent 65' },
-    { id: 'SESS-105', student: '22BME014', topic: 'Attendance Exemption', status: 'Normal', agent: 'Agent 65' },
-    { id: 'SESS-109', student: 'Anonymous', topic: 'Hostel Complaint', status: 'Escalating', agent: 'Agent 65' },
+    { id: 'SESS-102', student: '24CSE001', topic: 'Fee Payment Issue', status: 'High Friction', agent: 'VIGBOT' },
+    { id: 'SESS-105', student: '22BME014', topic: 'Attendance Exemption', status: 'Normal', agent: 'VIGBOT' },
+    { id: 'SESS-109', student: 'Anonymous', topic: 'Hostel Complaint', status: 'Escalating', agent: 'VIGBOT' },
   ];
 
   const transcript = [
@@ -980,7 +980,7 @@ function LiveSessionsTab() {
             <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
               <div>
                 <h3 className="font-semibold text-slate-900">Session {activeSession}</h3>
-                <div className="text-xs text-slate-500">Shadowing Agent 65 in real-time...</div>
+                <div className="text-xs text-slate-500">Shadowing VIGBOT in real-time...</div>
               </div>
               <div className="flex gap-2">
                 <button className="px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-1 transition-colors">
@@ -993,7 +993,7 @@ function LiveSessionsTab() {
               {transcript.map((msg, i) => (
                 <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div className="flex items-baseline gap-2 mb-1">
-                    <span className="text-xs font-medium text-slate-500">{msg.role === 'user' ? 'Student' : 'Agent 65'}</span>
+                    <span className="text-xs font-medium text-slate-500">{msg.role === 'user' ? 'Student' : 'VIGBOT'}</span>
                     <span className="text-[10px] text-slate-400">{msg.time}</span>
                   </div>
                   <div className={`p-3 rounded-lg text-sm max-w-[80%] relative group ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm'}`}>
@@ -1041,7 +1041,7 @@ function VerificationsTab() {
             <div className="p-4 border border-slate-100 rounded-lg bg-slate-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div>
                 <div className="font-medium text-slate-900">Medical Attendance Exemption</div>
-                <div className="text-sm text-slate-500">Student: 23MEC045 • Requested 70% threshold relaxation</div>
+                <div className="text-sm text-slate-500">Student: 23MEC045 • Requested 75% threshold relaxation (medical condonation)</div>
               </div>
               <div className="flex gap-2">
                 <button className="px-3 py-1.5 text-xs font-medium bg-white border border-rose-200 text-rose-600 rounded hover:bg-rose-50 transition-colors">Reject</button>
@@ -1183,7 +1183,7 @@ function AgentHealthTab() {
           </thead>
           <tbody>
             <tr className="border-b border-slate-50">
-              <td className="py-3 font-medium">Support_Agent_65</td>
+              <td className="py-3 font-medium">Support_VIGBOT</td>
               <td className="py-3 text-slate-500">Frontline Triage</td>
               <td className="py-3"><span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-bold">ONLINE</span></td>
               <td className="py-3 text-slate-500">Just now</td>
@@ -1249,8 +1249,8 @@ function KanbanTab({ grievances, handleStatusUpdate }: any) {
 
 function AuditTab() {
   const auditLogs = [
-    { id: 1, time: '10:42 AM', action: 'Distress Protocol Triggered', user: 'Agent 65', detail: 'Flagged chat #892 for manual review due to negative sentiment.' },
-    { id: 2, time: '10:15 AM', action: 'Knowledge Base Queried', user: 'Agent 65', detail: 'Fetched policy: Hostel Leave Guidelines 2024.' },
+    { id: 1, time: '10:42 AM', action: 'Distress Protocol Triggered', user: 'VIGBOT', detail: 'Flagged chat #892 for manual review due to negative sentiment.' },
+    { id: 2, time: '10:15 AM', action: 'Knowledge Base Queried', user: 'VIGBOT', detail: 'Fetched policy: Hostel Leave Guidelines 2024.' },
     { id: 3, time: '09:30 AM', action: 'Automated Email Sent', user: 'System', detail: 'Sent resolution receipt to 21BEE092@student.edu.' },
     { id: 4, time: '08:00 AM', action: 'Database Backup', user: 'System', detail: 'Nightly automated backup completed successfully.' },
   ];

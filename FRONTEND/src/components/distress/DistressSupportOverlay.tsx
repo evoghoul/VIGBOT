@@ -49,7 +49,7 @@ export const DistressSupportOverlay: React.FC<DistressSupportOverlayProps> = ({
                   {t.distressSupportTitle}
                 </h3>
                 <span className="rounded-full bg-rose-100 px-2 py-0.5 text-sm font-bold text-rose-800">
-                  Agent 66 Priority
+                  Emergency Priority
                 </span>
               </div>
               <p className="text-xs text-muted-foreground font-medium mt-0.5">

@@ -85,7 +85,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       title: t.feat1Title || "One AI agent, every answer",
       description:
         t.feat1Desc ||
-        "Ask about attendance, exams, fees, or policies in plain language. Agent 65 pulls the real record and answers instantly — no forms, no tickets, no waiting on email.",
+        "Ask about attendance, exams, fees, or policies in plain language. VIGBOT pulls the real record and answers instantly — no forms, no tickets, no waiting on email.",
     },
     {
       icon: UserCheck,
@@ -93,7 +93,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       title: t.feat2Title || "Attendance that warns you early",
       description:
         t.feat2Desc ||
-        "See per-subject attendance against the 70% rule, with a consecutive-classes calculator that tells you exactly what it takes to stay clear.",
+        "See per-subject attendance against the 75% rule, with a consecutive-classes calculator that tells you exactly what it takes to stay clear.",
     },
     {
       icon: GraduationCap,
@@ -139,7 +139,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     },
     {
       step: "02",
-      title: t.step2Title || "Ask Agent 65 anything",
+      title: t.step2Title || "Ask VIGBOT anything",
       description:
         t.step2Desc ||
         "Type a question the way you'd ask a senior — the assistant classifies it, checks your access, and answers from the real data.",
@@ -166,7 +166,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       title: t.trust2Title || "Federated, not siloed",
       description:
         t.trust2Desc ||
-        "12 specialized institutional agents (attendance, exams, fees, and more) sit behind Agent 65, each authorized independently.",
+        "18 specialized domain topics (attendance, exams, fees, hostel, transport, and more) sit behind VIGBOT, each authorized independently.",
     },
     {
       icon: HeartHandshake,
@@ -194,7 +194,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <div className="h-7 w-px bg-slate-200 hidden sm:block" />
             <div className="hidden sm:block">
               <span className="text-sm sm:text-base font-bold tracking-tight text-foreground leading-tight block">
-                {t.appName || "Student Helpdesk"} <span className="text-blue-600">65</span>
+                {t.appName || "VIGBOT"}
               </span>
               <p className="text-sm text-muted-foreground leading-none mt-1">
                 {t.autonomousSystem || "Autonomous University System"}
@@ -250,7 +250,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <div className="mb-6 flex flex-wrap items-center gap-2">
               <Badge variant="primary">
                 <Sparkles className="h-3 w-3" />
-                {t.agent65CoreActive || "Agent 65 Core"}
+                {t.vigbotCoreActive || "VIGBOT Core"}
               </Badge>
               <Badge variant="success">
                 <ShieldCheck className="h-3 w-3" />
@@ -310,7 +310,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Zap className="h-4 w-4 text-blue-500" />
-                {t.landingTwelveAgents || "12 federated agents"}
+                {t.landingTwelveAgents || "12 Domain Modules & 18 ML Intents"}
               </span>
               <span className="flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
@@ -340,7 +340,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             </h2>
             <p className="mt-4 text-base text-muted-foreground sm:text-lg">
               {t.landingFeatSub ||
-                "No more chasing five different portals. Agent 65 connects to every record that matters and answers from the source of truth."}
+                "No more chasing five different portals. VIGBOT connects to every record that matters and answers from the source of truth."}
             </p>
           </div>
 
@@ -417,7 +417,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </h2>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
                 {t.trustSub ||
-                  "Agent 65 never touches another student's data, even by accident. Every request is authenticated, scoped, and logged before it reaches an institutional agent."}
+                  "VIGBOT never touches another student's data, even by accident. Every request is authenticated, scoped, and logged before it reaches an institutional agent."}
               </p>
               <button
                 onClick={onGetStarted}
@@ -460,13 +460,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             {t.ctaHeading || "Your record is already connected. Go ask it something."}
           </h2>
           <p className="mt-4 text-base text-blue-100 sm:text-lg">
-            {t.ctaSub || "Sign in with your university roll number to talk to Agent 65."}
+            {t.ctaSub || "Sign in with your university roll number to talk to VIGBOT."}
           </p>
           <button
             onClick={onGetStarted}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-card px-7 py-3.5 text-sm font-semibold text-blue-700 shadow-lg hover:bg-blue-50 transition-colors cursor-pointer"
           >
-            <span>{t.ctaButton || "Sign in to Student Helpdesk"}</span>
+            <span>{t.ctaButton || "Sign in to VIGBOT"}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -480,7 +480,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <Bot className="h-4 w-4" />
             </div>
             <span className="text-sm font-bold text-foreground">
-              {t.appName || "Student Helpdesk"} &middot; AGENT 65
+              {t.appName || "VIGBOT"}
             </span>
           </div>
           <p className="text-xs text-muted-foreground">

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Agent 65 JSONL data before fine-tuning.
+"""Validate VIGBOT JSONL data before fine-tuning.
 
 This is a read-only check: it never rewrites the input files.
 """
@@ -68,7 +68,7 @@ def validate_file(path: Path) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate Agent 65 JSONL training data")
+    parser = argparse.ArgumentParser(description="Validate VIGBOT JSONL training data")
     parser.add_argument("paths", nargs="+", type=Path)
     args = parser.parse_args()
 

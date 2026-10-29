@@ -24,7 +24,7 @@ export const EXAMINATIONS_DATA: {
   exams: ExamScheduleItem[];
 } = {
   nearestExamDays: 24,
-  sourceAgent: "Agent 30 (Examination Cell & Evaluation)",
+  sourceAgent: "Examination Cell & Evaluation",
   exams: [
     {
       id: "EX-01",

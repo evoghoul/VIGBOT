@@ -1,6 +1,6 @@
 -- =====================================================================
 -- 13_helpdesk_extension.sql
--- Missing Helpdesk Extension Schema for Agent 65
+-- Missing Helpdesk Extension Schema for VIGBOT
 -- Target: PostgreSQL 14+
 -- =====================================================================
 
@@ -27,11 +27,11 @@ CREATE INDEX IF NOT EXISTS idx_conv_student ON helpdesk.conversation (student_id
 CREATE TABLE IF NOT EXISTS helpdesk.message (
     message_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_id uuid NOT NULL REFERENCES helpdesk.conversation ON DELETE CASCADE,
-    sender_role text NOT NULL CHECK (sender_role IN ('STUDENT','AGENT_65','HUMAN_OFFICER','AGENT_66_COUNSELOR')),
+    sender_role text NOT NULL CHECK (sender_role IN ('STUDENT','AGENT_65','VIGBOT','HUMAN_OFFICER','AGENT_66_COUNSELOR')),
     content text NOT NULL,
     category text CHECK (category IN
         ('PERSONAL_DATA','INSTITUTIONAL_INFO','PROCEDURAL_GUIDANCE','SERVICE_REQUEST','ESCALATION','DISTRESS_SUPPORT','GENERAL')),
-    source_agent text DEFAULT 'Agent 65',
+    source_agent text DEFAULT 'VIGBOT',
     citations jsonb DEFAULT '[]'::jsonb,
     structured_card jsonb,
     is_distress boolean NOT NULL DEFAULT false,
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS helpdesk.message (
 CREATE INDEX IF NOT EXISTS idx_msg_conv ON helpdesk.message (conversation_id, created_at ASC);
 
 -- ---------------------------------------------------------------------
--- 3. Service requests and ticketing (Feeds Agent 46, Workflow Step 7)
+-- 3. Service requests and ticketing (Workflow Step 7)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS helpdesk.service_request (
     service_request_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS helpdesk.service_request (
              CHECK (priority IN ('LOW','NORMAL','HIGH','URGENT')),
     status text NOT NULL DEFAULT 'SUBMITTED'
            CHECK (status IN ('SUBMITTED','IN_REVIEW','PROCESSING','READY_FOR_COLLECTION','REJECTED','RESOLVED','CLOSED')),
-    assigned_office text NOT NULL DEFAULT 'Registrar Student Affairs (Agent 46)',
+    assigned_office text NOT NULL DEFAULT 'Registrar Student Affairs',
     sla_due_date date,
     conversation_id uuid REFERENCES helpdesk.conversation,
     resolution_notes text,
@@ -151,16 +151,16 @@ DROP POLICY IF EXISTS ho_student_self ON helpdesk.handover;
 CREATE POLICY ho_student_self ON helpdesk.handover
   FOR ALL USING (student_id = identity.current_student_id());
 
--- Register Agent 65 in agentops catalogue if table exists
+-- Register VIGBOT in agentops catalogue if table exists
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'agentops' AND table_name = 'agent') THEN
     INSERT INTO agentops.agent (agent_id, code, agent_no, name, domain, agent_class, scope_statement, reasoning_policy, requires_human_approval, status)
     VALUES (
         'aaaaaaaa-6565-6565-6565-656565656565',
-        'A65_STUDENT_HELPDESK',
+        'VIGBOT',
         65,
-        'Student Helpdesk Agent',
+        'VIGBOT Campus Assistant',
         'STUDENT_SUPPORT',
         2,
         'Single conversational point of access for authenticated students to academic, attendance, marks, fees, timetable, institutional policies, and service requests.',

@@ -25,7 +25,7 @@ export const INITIAL_SERVICES: ServiceRequest[] = [
     status: "Forwarded to Student Services",
     submittedAt: "08 Sep 2026, 11:20 AM",
     assignedDept: "Academic Registrar Division",
-    sourceAgent: "Agent 46 (Service Requests)",
+    sourceAgent: "Service Requests",
     trackingToken: "TRK-SR-8921-CSE",
   },
   {
@@ -39,7 +39,7 @@ export const INITIAL_SERVICES: ServiceRequest[] = [
     status: "Forwarded to Student Services",
     submittedAt: "05 Sep 2026, 03:15 PM",
     assignedDept: "Faculty Mentorship Cell",
-    sourceAgent: "Agent 46 (Service Requests)",
+    sourceAgent: "Service Requests",
     trackingToken: "TRK-SR-8742-MEN",
   },
 ];

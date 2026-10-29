@@ -279,7 +279,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className="h-12 w-auto max-w-[155px] object-contain drop-shadow-xs group-hover:scale-[1.02] transition-transform shrink-0"
                 />
                 <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700 border border-indigo-200 shadow-2xs">
-                  Agent 65
+                  VIGBOT
                 </span>
               </div>
             ) : (
@@ -371,7 +371,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </div>
 
-        {/* Agent 65 Status Pill & Security */}
+        {/* VIGBOT Status Pill & Security */}
         <div className="px-3 py-2 border-t border-slate-100 bg-muted/50/50">
           <button
             onClick={onOpenSecurityDrawer}
