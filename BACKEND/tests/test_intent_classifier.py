@@ -331,6 +331,7 @@ def test_outbound_gemini_client_prompt_scrubs_all_pii_even_when_student_types_it
     mock_chat_obj.send_message.side_effect = mock_send_message
 
     with patch("google.genai.Client", return_value=mock_genai_client), \
+         patch.object(settings, "ENABLE_GEMINI", True), \
          patch.object(settings, "GEMINI_API_KEY", "test-valid-api-key"), \
          patch.object(settings, "USE_INTENT_CLASSIFIER", False):
 

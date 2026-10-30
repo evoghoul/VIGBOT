@@ -125,3 +125,9 @@ data/public/cache/
 # Local DB duplicates
 BACKEND/*.db
 FRONTEND/*.db
+
+
+# Research locks, temporary files, and local cache
+BACKEND/data/vigbot_research/locks/
+BACKEND/data/vigbot_research/*.tmp*
+BACKEND/data/vigbot_research/cache/

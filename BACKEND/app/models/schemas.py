@@ -97,7 +97,7 @@ class StudentProfile(BaseModel):
 
 # ---------------- Structured Card Schemas ----------------
 class StructuredCard(BaseModel):
-    type: str # 'attendance', 'exam', 'fee', 'curriculum', 'timetable', 'service', 'distress', 'policy'
+    type: str # 'attendance', 'exam', 'fee', 'curriculum', 'timetable', 'service', 'distress', 'policy', 'navigation'
     title: str
     subtitle: Optional[str] = None
     badge: Optional[str] = None
@@ -105,6 +105,7 @@ class StructuredCard(BaseModel):
     data: Dict[str, Any] = Field(default_factory=dict)
     actionLabel: Optional[str] = None
     actionIntent: Optional[str] = None
+    target: Optional[str] = None
 
 # ---------------- Chat & Message Schemas ----------------
 class MessageCreate(BaseModel):
@@ -133,6 +134,8 @@ class MessageResponse(BaseModel):
     model_used: Optional[str] = None
     used_fallback: bool = False
     routed_by: Optional[str] = None
+    redirect_path: Optional[str] = None
+    action: Optional[Dict[str, Any]] = None
     created_at: datetime
 
 class ConversationCreate(BaseModel):

@@ -851,11 +851,11 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                 {!isUser && turn.responseMeta?.redirect_path && (
                   <div className="mt-3">
                     <button
-                      onClick={() => onNavigateTab(turn.responseMeta!.redirect_path as any)}
+                      onClick={() => onNavigateTab((turn.responseMeta?.action?.target || turn.responseMeta!.redirect_path) as any)}
                       className="flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200 transition-colors shadow-xs cursor-pointer"
                     >
                       <ArrowUpRight className="h-3.5 w-3.5" />
-                      <span>Go to {turn.responseMeta.redirect_path}</span>
+                      <span>{turn.responseMeta.action?.label || `Go to ${turn.responseMeta.redirect_path}`}</span>
                     </button>
                   </div>
                 )}

@@ -140,14 +140,18 @@ async def health_check():
     gemini_key = getattr(settings, "GEMINI_API_KEY", "")
     groq_key = getattr(settings, "GROQ_API_KEY", "")
     cloud_key = getattr(settings, "CLOUD_API_KEY", "")
-    # The Groq key may be stored under GEMINI_API_KEY for compatibility
-    groq_active = _usable_secret(groq_key) or _usable_secret(cloud_key) or _usable_secret(gemini_key)
+
+    gemini_active = bool(getattr(settings, "ENABLE_GEMINI", False) and _usable_secret(gemini_key))
+    groq_active = bool(getattr(settings, "ENABLE_GROQ", False) and (_usable_secret(groq_key) or _usable_secret(cloud_key) or _usable_secret(gemini_key)))
+
+    provider = "gemini" if gemini_active else ("groq" if groq_active else "local")
+
     return {
         "status": "healthy",
         "agent": "VIGBOT (VIGBOT Agent)",
         "version": settings.APP_VERSION,
-        "llm_provider": "groq",
-        "gemini_configured": _usable_secret(gemini_key),
+        "llm_provider": provider,
+        "gemini_configured": gemini_active,
         "gemini_model": settings.GEMINI_MODEL,
         "groq_configured": groq_active,
         "rls_guardrail_enforced": True

@@ -273,6 +273,13 @@ def enforce_grounding_or_fallback(
     If reply_text fails numeric verification against the student's authorized context,
     automatically replaces or corrects with the deterministic grounded fallback text.
     """
+    personal_record_indicators = [
+        "attendance", "cgpa", "tuition", "fee", "marks",
+        "consecutive classes", "classes attended", "classes held"
+    ]
+    if not any(k in reply_text.lower() for k in personal_record_indicators):
+        return reply_text
+
     verification = verify_numeric_faithfulness(reply_text, student_context)
     if verification["is_faithful"]:
         return reply_text

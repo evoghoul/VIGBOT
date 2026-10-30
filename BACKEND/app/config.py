@@ -21,11 +21,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///database/vigbot.db" if os.path.exists(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))) else "sqlite:///database/vigbot.db")
     USE_IN_MEMORY_DB: bool = os.getenv("USE_IN_MEMORY_DB", "false").lower() in ("true", "1", "yes")
     
-    # LLM Provider Configuration (Primary: Gemini)
+    # LLM Provider Configuration (Primary: Gemini, disabled when ENABLE_GEMINI is false)
+    ENABLE_GEMINI: bool = os.getenv("ENABLE_GEMINI", "false").lower() in ("true", "1", "yes")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
     
-    # LLM Fallback Provider (Groq)
+    # LLM Fallback Provider (Groq, disabled when ENABLE_GROQ is false)
+    ENABLE_GROQ: bool = os.getenv("ENABLE_GROQ", "false").lower() in ("true", "1", "yes")
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
     

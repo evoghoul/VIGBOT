@@ -82,6 +82,8 @@ class VIGBOTOrchestrator:
                 "model_used": "rules",
                 "used_fallback": False,
                 "routed_by": "rules",
+                "redirect_path": None,
+                "action": None,
                 "created_at": agent_msg["created_at"]
             }
 
@@ -148,6 +150,8 @@ class VIGBOTOrchestrator:
             "model_used": nlu_result.get("model_used", "unknown"),
             "used_fallback": nlu_result.get("used_fallback", False),
             "routed_by": nlu_result.get("routed_by", "rules"),
+            "redirect_path": nlu_result.get("redirect_path"),
+            "action": nlu_result.get("action"),
             "created_at": agent_msg["created_at"]
         }
 

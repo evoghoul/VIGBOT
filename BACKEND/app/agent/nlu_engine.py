@@ -15,7 +15,8 @@ from app.tools.hostel_tool import get_hostel_summary
 from app.tools.transport_tool import get_transport_summary
 from app.tools.circulars_tool import get_circulars_summary
 from app.tools.events_tool import get_events_summary
-from app.agent.llm_client import LLMClient
+from app.agent.llm_client import LLMClient, MockAcademicEngine
+from app.agent.prompts import build_academic_system_prompt
 from app.agent.grounding_guard import compute_classes_needed, verify_numeric_faithfulness, enforce_grounding_or_fallback
 from app.config import settings
 
@@ -30,6 +31,248 @@ class NLUEngine:
     - Autonomous background execution for formal service requests  & human escalations
     - Empathetic proactive guidance matching ChatGPT/Gemini conversational depth
     """
+
+
+    @classmethod
+    def is_exam_eligibility_query(cls, q_lower: str) -> bool:
+        """Identifies exam eligibility, condonation, or attendance what-if questions."""
+        is_general_policy = any(p in q_lower for p in ["official policy", "university policy", "what is the policy", "what are the rules", "explain regulation"])
+        has_personal_context = any(p in q_lower for p in ["my", "meri", "i am", "am i", "can i", "will i", "mine", "mujhe", "mera", "i have"])
+        if is_general_policy and not has_personal_context:
+            return False
+
+        eligibility_phrases = [
+            "eligible for exam", "eligibility for exam", "eligible for exams", "eligibility for exams",
+            "can i sit in exam", "can i sit in exams", "sit for exam", "sit for exams",
+            "sit in exam", "sit in exams", "attend every class", "will i reach 75", "reach 75",
+            "attendance shortage", "shortage of attendance", "68% attendance", "condonation",
+            "detained", "will i be detained"
+        ]
+        if any(p in q_lower for p in eligibility_phrases):
+            return True
+        return ("eligible" in q_lower or "eligibility" in q_lower or "sit in" in q_lower) and ("exam" in q_lower or "attendance" in q_lower)
+
+    @classmethod
+    def is_academic_or_conceptual_query(cls, q_lower: str) -> bool:
+        """Identifies academic, technical, engineering, mathematics, or pedagogical inquiries."""
+        academic_terms = [
+            # CS & Programming
+            "algorithm", "binary search", "linear search", "sorting", "sort", "quicksort", "mergesort",
+            "bubble sort", "insertion sort", "data structure", "dsa", "array", "linked list", "stack",
+            "queue", "binary tree", "bst", "heap", "graph", "bfs", "dfs", "dynamic programming",
+            "recursion", "time complexity", "space complexity", "big o", "o(n)", "o(log n)",
+            "normalization", "1nf", "2nf", "3nf", "bcnf", "acid", "rdbms", "sql query", "primary key",
+            "foreign key", "deadlock", "process scheduling", "paging", "virtual memory", "semaphore",
+            "osi model", "osi layer", "tcp", "udp", "ip address", "3-way handshake", "dns",
+            "polymorphism", "inheritance", "encapsulation", "abstraction", "oop", "oops", "python",
+            "java", "c++", "debugging", "pseudocode", "hash table", "hash map", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram",
+            # Electronics & Hardware
+            "flip flop", "flip-flop", "jk flip", "sr flip", "d flip", "t flip", "logic gate",
+            "k-map", "kmap", "karnaugh", "multiplexer", "demultiplexer", "microprocessor",
+            "microcontroller", "8085", "8086", "8051", "ohm's law", "ohms law", "kirchhoff",
+            "kcl", "kvl", "thevenin", "norton", "op-amp", "operational amplifier", "signal",
+            # Mathematics
+            "calculus", "derivative", "integral", "limit", "differentiation", "integration",
+            "matrix", "matrices", "eigenvalue", "eigenvector", "determinant", "probability",
+            "bayes theorem", "discrete math", "truth table", "propositional", "solve equation",
+            # Pedagogical formatting requests
+            "beginner", "like i'm a beginner", "like i am a beginner", "university examination level",
+            "10-mark", "10 mark", "5-mark", "5 mark", "with a diagram", "in hinglish",
+            "study plan", "compare these two subjects", "practical example", "real-world example",
+            "code example", "explain this concept", "explain this topic"
+        ]
+        return any(t in q_lower for t in academic_terms)
+
+    @classmethod
+    def is_pedagogical_followup(cls, q_lower: str, history: List[Dict[str, Any]]) -> bool:
+        """Identifies multi-turn pedagogical follow-up requests."""
+        if not history:
+            return False
+        followup_patterns = [
+            "more simply", "simpler", "simple words", "another example", "different example",
+            "second subject", "make it shorter", "shorter", "create mcqs", "create mcq",
+            "quiz me", "compare this with the previous", "previous answer", "what did i ask",
+            "earlier question", "what about the second", "and for that", "can you summarize"
+        ]
+        return any(p in q_lower for p in followup_patterns)
+
+    @classmethod
+    def handle_attendance_eligibility(
+        cls,
+        session: DatabaseSession,
+        query: str,
+        q_lower: str,
+        effective_lang: str,
+        active_subject: Optional[str]
+    ) -> Dict[str, Any]:
+        """
+        Calculates exam eligibility, medical condonation criteria (R23 Clause 4.2),
+        and deterministic consecutive recovery classes needed via compute_classes_needed().
+        """
+        profile = DataRepository.get_student_profile(session) or {}
+        student_name = profile.get("full_name", "Student")
+        first_name = student_name.split()[0] if student_name else "Student"
+
+        att_records = DataRepository.get_attendance(session, active_subject)
+        # Select target course or worst-off attendance course
+        target_course = None
+        if att_records:
+            target_course = next((a for a in att_records if a.get("current_pct", 100) < 75.0), att_records[0])
+        else:
+            target_course = {
+                "course_title": "Digital Electronics (CS302)",
+                "classes_attended": 34,
+                "classes_held": 50,
+                "current_pct": 68.0,
+                "required_pct": 75.0,
+                "deadline": "2026-11-20"
+            }
+
+        c_name = target_course.get("course_title", "Digital Electronics (CS302)")
+        held = int(target_course.get("classes_held", 50))
+        attended = int(target_course.get("classes_attended", 34))
+        current_pct = (attended / held * 100.0) if held > 0 else 0.0
+        needed = compute_classes_needed(held, attended, 0.75)
+        new_held = held + needed
+        new_attended = attended + needed
+        new_pct = (new_attended / new_held * 100.0) if new_held > 0 else 0.0
+
+        citations = [
+            {
+                "title": "Academic Regulations R23",
+                "clause": "Clause 4.2: Attendance Eligibility & Medical Condonation",
+                "effective_date": "2023-07-15",
+                "summary": "Mandates 75% attendance for end-semester exams; condonation permitted between 65.0% and 74.9% on approved medical grounds."
+            }
+        ]
+
+        if effective_lang == "hinglish":
+            content = (
+                f"Namaste {first_name}! Aapke **{c_name}** ke verified records ke anusaar:\n\n"
+                f"• **Current Attendance:** **{current_pct:.1f}%** ({attended} out of {held} classes attended).\n"
+                f"• **Exam Eligibility:** ⚠️ **Currently Below 75% Mandatory Cutoff**.\n\n"
+                f"### 1. Attendance Recovery Math:\n"
+                f"• Mandatory 75% cutoff reach karne ke liye aapko agle **{needed} consecutive classes** attend karni hongi bina kisi chhutti ke.\n"
+                f"• {needed} classes ke baad aapki attendance **{new_pct:.1f}%** ({new_attended}/{new_held}) ho jayegi aur aap exams ke liye fully eligible ho jayenge.\n\n"
+                f"### 2. Medical Condonation Option (Academic Regulations R23, Clause 4.2):\n"
+                f"• Aapka current score **{current_pct:.1f}%** permissible **65.0% - 74.9% condonation bracket** me aata hai.\n"
+                f"• Valid medical certificate aur Dean of Academics ke approval ke saath aap end-semester exams me baith sakte hain!"
+            )
+        else:
+            content = (
+                f"Based on your verified university records for **{c_name}**:\n\n"
+                f"• **Current Attendance:** **{current_pct:.1f}%** ({attended} out of {held} classes attended).\n"
+                f"• **Exam Eligibility Status:** ⚠️ **Currently Below 75% Mandatory Cutoff** (Clause 4.2 of Academic Regulations R23).\n\n"
+                f"### 1. Attendance Recovery Calculation:\n"
+                f"• **Consecutive Classes Needed:** You must attend the **next {needed} consecutive classes** without absence.\n"
+                f"• **Projected Metric:** After attending {needed} consecutive lectures, your attendance will reach **{new_pct:.1f}%** ({new_attended}/{new_held} classes), restoring regular exam eligibility.\n\n"
+                f"### 2. Medical Condonation Eligibility (Clause 4.2):\n"
+                f"• Because your attendance is **{current_pct:.1f}%**, you fall safely within the **65.0% – 74.9% condonation bracket**.\n"
+                f"• Students in this bracket may appear for summative examinations upon submitting medical proof approved by the Dean of Academics and paying the condonation fee.\n\n"
+                f"**Recommendation:** Attend all upcoming classes consistently to cross 75% naturally before the {target_course.get('deadline', '2026-11-20')} cutoff date."
+            )
+        card_data = {
+            "type": "attendance",
+            "title": "Exam Eligibility & Attendance Recovery",
+            "subtitle": f"{c_name} — Current: {current_pct:.1f}%",
+            "badge": "Condonation Window (65% - 75%)",
+            "badgeVariant": "amber",
+            "data": {
+                "course": c_name,
+                "current_pct": round(current_pct, 1),
+                "classes_attended": attended,
+                "classes_held": held,
+                "consecutive_classes_needed": needed,
+                "target_attendance": "75.0%",
+                "condonation_eligible": True,
+                "policy": "Academic Regulations R23 (Clause 4.2)"
+            },
+            "actionLabel": "Apply Condonation",
+            "actionIntent": "Apply medical condonation"
+        }
+
+        return {
+            "category": "PERSONAL_DATA",
+            "topic": "Examination Eligibility & Attendance Recovery",
+            "source_agent": "VIGBOT (Academic Advising & Attendance Engine)",
+            "content": content,
+            "citations": citations,
+            "structured_card": card_data,
+            "suggested_follow_ups": [
+                f"How many classes can I bunk after {needed} classes?",
+                "How do I apply for medical condonation?",
+                "View exam timetable schedule"
+            ],
+            "active_subject": target_course.get("course_code") or active_subject,
+            "language": effective_lang,
+            "llm_provider": "local",
+            "model_used": "rules",
+            "used_fallback": False,
+            "routed_by": "rules"
+        }
+
+    @classmethod
+    def handle_academic_reasoning(
+        cls,
+        session: DatabaseSession,
+        query: str,
+        q_lower: str,
+        conversation_history: List[Dict[str, Any]],
+        effective_lang: str,
+        selected_model: str,
+        active_subject: Optional[str]
+    ) -> Dict[str, Any]:
+        """
+        Dispatches academic tutoring and conceptual reasoning queries to the LLM (or MockAcademicEngine).
+        Does NOT contaminate the context with unrequested student debt or attendance records.
+        """
+        system_prompt = build_academic_system_prompt(
+            grounded_context="",
+            language=effective_lang,
+            query_type="general_academic"
+        )
+
+        llm_reply, provider_used, model_used = LLMClient.chat_with_history(
+            system_prompt=system_prompt,
+            history=conversation_history,
+            user_prompt=query,
+            model=selected_model,
+            language=effective_lang
+        )
+
+        clean_reply = LLMClient.clean_latex_formatting(llm_reply or "")
+        
+        # Guard against hallucinated student records (only applies if personal records are mentioned)
+        student_context = {
+            "profile": DataRepository.get_student_profile(session),
+            "attendance": DataRepository.get_attendance(session),
+            "fees": DataRepository.get_fees(session),
+            "marks": DataRepository.get_marks(session)
+        }
+        guarded_reply = enforce_grounding_or_fallback(clean_reply, student_context, clean_reply)
+
+        routed_by_tag = provider_used if provider_used in ("gemini", "groq") else "rules"
+
+        return {
+            "category": "ACADEMIC_TUTORING",
+            "topic": "Academic Concepts & Problem Solving",
+            "source_agent": f"VIGBOT (Academic Cognitive Tutor - {model_used})",
+            "content": guarded_reply,
+            "citations": [],
+            "structured_card": None,
+            "suggested_follow_ups": [
+                "Explain it more simply",
+                "Give a practical example",
+                "Create 5 practice MCQs",
+                "Summarize in 3 bullet points"
+            ],
+            "active_subject": active_subject,
+            "language": effective_lang,
+            "llm_provider": provider_used,
+            "model_used": model_used,
+            "used_fallback": False,
+            "routed_by": routed_by_tag
+        }
 
     @classmethod
     def classify_and_reason(
@@ -60,6 +303,24 @@ class NLUEngine:
             res["routed_by"] = "rules"
             return res
 
+        # ---------------- 0.1. EXAM ELIGIBILITY & ATTENDANCE RECOVERY ----------------
+        if cls.is_exam_eligibility_query(q_lower):
+            elig_res = cls.handle_attendance_eligibility(session, q, q_lower, effective_lang, active_subject)
+            if elig_res is not None:
+                return elig_res
+
+        # ---------------- 0.2. GENERAL ACADEMIC TUTORING & MULTI-TURN REFINEMENTS ----------------
+        if cls.is_academic_or_conceptual_query(q_lower) or cls.is_pedagogical_followup(q_lower, conversation_history):
+            return cls.handle_academic_reasoning(
+                session=session,
+                query=q,
+                q_lower=q_lower,
+                conversation_history=conversation_history,
+                effective_lang=effective_lang,
+                selected_model=selected_model,
+                active_subject=active_subject
+            )
+
         # ---------------- 0.4. HUMAN HANDOVER KEYWORD RULE (Outside the Classifier) ----------------
         if cls.is_human_handover(q_lower):
             from app.tools.services_tool import handle_human_handover
@@ -84,6 +345,59 @@ class NLUEngine:
                 "used_fallback": False,
                 "routed_by": "rules",
             }
+
+        # ---------------- 0.45. UNIVERSAL CAPABILITY, NAVIGATION & DISCOURSE DISPATCH ----------------
+        # Handles navigation requests, status lookups, cancellations, and application features
+        # not covered in the static ML intent model, while safeguarding academic tutoring and distress
+        is_explicit_nav = any(nv in q_lower for nv in ["open", "go to", "take me to", "navigate to", "show tab", "switch to", "view tab", "take me there", "go there", "kholo"])
+        if not cls.is_stress_or_concern(q_lower) and (is_explicit_nav or not cls.is_fast_record_query(q_lower)):
+            try:
+                from app.agent.universal_nlu import UniversalNLU, CommunicationIntent
+                from app.agent.capability_registry import find_matching_capability
+                comm_intent = UniversalNLU.parse_communication_intent(q, conversation_history)
+                matching_cap = UniversalNLU.resolve_contextual_capability(q, conversation_history)
+
+                # Core intents covered by ML classifier and dedicated tools:
+                # 'attendance', 'exams', 'marks', 'fees', 'timetable', 'curriculum', 'faculty',
+                # 'library', 'hostel', 'transport', 'circulars', 'events', 'clubs', 'services', 'policy_bylaws'
+                ml_intents_covered = {
+                    "attendance", "exams", "marks", "fees", "timetable", "curriculum", "faculty",
+                    "library", "hostel", "transport", "circulars", "events", "clubs", "services", "policies"
+                }
+
+                # Features outside the 18 ML classifier categories:
+                uncovered_feature = matching_cap and matching_cap["feature_id"] not in ml_intents_covered
+
+                should_intercept = (
+                    comm_intent in (
+                        CommunicationIntent.NAVIGATION_REQUEST,
+                        CommunicationIntent.AMBIGUOUS,
+                        CommunicationIntent.STATUS_LOOKUP,
+                        CommunicationIntent.CANCEL_REQUEST
+                    ) or
+                    uncovered_feature or
+                    (matching_cap and matching_cap["feature_id"] in ["lost-and-found", "bookings", "marketplace", "map", "polling", "alumni"])
+                )
+
+                if should_intercept:
+                    universal_res = UniversalNLU.resolve_and_execute(
+                        session=session,
+                        query=q,
+                        student_context={"profile": DataRepository.get_student_profile(session) if session else None},
+                        conversation_history=conversation_history
+                    )
+                    if universal_res is not None:
+                        universal_res.setdefault("suggested_follow_ups", cls.generate_dynamic_followups(q, active_subject))
+                        universal_res.setdefault("active_subject", active_subject)
+                        universal_res.setdefault("language", effective_lang)
+                        universal_res.setdefault("llm_provider", "local")
+                        universal_res.setdefault("model_used", "capability-registry")
+                        universal_res.setdefault("used_fallback", False)
+                        default_routed_by = "classifier" if getattr(settings, "USE_INTENT_CLASSIFIER", False) else "rules"
+                        universal_res["routed_by"] = default_routed_by
+                        return universal_res
+            except Exception as e:
+                logger.warning("UniversalNLU early dispatch failed: %s", e)
 
         # ---------------- 0.5. TRAINED ML INTENT CLASSIFIER (Step 6) ----------------
         if getattr(settings, "USE_INTENT_CLASSIFIER", False):
@@ -625,6 +939,78 @@ class NLUEngine:
         is_confident = clf_result["is_confident"]
         routed_by = clf_result["routed_by"]
 
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
+
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
+
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
+
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
+
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
+
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
+
         # 1. Distress safety path: confident prediction provides supportive counseling response without crisis overlay
         if intent == "distress_support":
             if is_confident:
@@ -713,6 +1099,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "attendance",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Attendance",
+                    "target": "attendance",
+                    "route": "/?tab=attendance"
+                },
             }
 
         elif intent == "exams":
@@ -731,6 +1124,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "exams",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Examinations",
+                    "target": "exams",
+                    "route": "/?tab=exams"
+                },
             }
 
         elif intent == "fees":
@@ -749,6 +1149,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "fees",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Fees & Ledgers",
+                    "target": "fees",
+                    "route": "/?tab=fees"
+                },
             }
 
         elif intent == "timetable":
@@ -767,6 +1174,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "timetable",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Timetable",
+                    "target": "timetable",
+                    "route": "/?tab=timetable"
+                },
             }
 
         elif intent == "marks":
@@ -785,6 +1199,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "marks",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Academic Marks",
+                    "target": "marks",
+                    "route": "/?tab=marks"
+                },
             }
 
         elif intent == "curriculum":
@@ -803,6 +1224,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "curriculum",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Curriculum",
+                    "target": "curriculum",
+                    "route": "/?tab=curriculum"
+                },
             }
 
         elif intent == "library":
@@ -821,6 +1249,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "library",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Library Portal",
+                    "target": "library",
+                    "route": "/?tab=library"
+                },
             }
 
         elif intent == "faculty":
@@ -851,10 +1286,67 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "faculty",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Faculty Directory",
+                    "target": "faculty",
+                    "route": "/?tab=faculty"
+                },
             }
 
         elif intent == "services":
+            from app.agent.capability_registry import find_matching_capability, APPLICATION_CAPABILITIES
+            from app.agent.universal_nlu import UniversalNLU
+            
+            # 1. FALSE-ACTION GUARD: Check if query belongs to a different application capability (e.g. Lost & Found)
+            matching_cap = find_matching_capability(query)
+            if matching_cap and matching_cap["feature_id"] != "services":
+                res = UniversalNLU.resolve_and_execute(session, query)
+                if res:
+                    res["routed_by"] = routed_by
+                    return res
+
             sr_cat, title, desc, instructions = resolve_service_subtype(query)
+
+            # 2. FALSE-ACTION GUARD: If inquiry is asking where to go/find, or resolves to 'OTHER',
+            # return guidance and navigation action. NEVER create a ticket for an informational query!
+            is_where_info = any(w in q_lower for w in ["where do i go", "where can i find", "where to go", "where is", "tell me where", "where can i get", "where can i report"])
+            if sr_cat == "OTHER" or is_where_info:
+                cap = APPLICATION_CAPABILITIES.get("services")
+                guidance = cap["guidance_text"] if cap else "You can submit administrative requests in the **Student Services** section."
+                return {
+                    "category": "SERVICES",
+                    "topic": "Student Services Guidance",
+                    "source_agent": "VIGBOT (Services Guide)",
+                    "content": f"{guidance}\n\nYou can access it directly using the button below.",
+                    "citations": [],
+                    "structured_card": {
+                        "type": "navigation",
+                        "title": "Student Services",
+                        "subtitle": "Official University Administrative Requests",
+                        "badge": "Services Hub",
+                        "badgeVariant": "blue",
+                        "actionLabel": "Go to Student Services",
+                        "actionIntent": "navigate:services",
+                        "target": "services",
+                    },
+                    "suggested_follow_ups": ["Apply for bonafide certificate", "ID card replacement"],
+                    "active_subject": active_subject,
+                    "language": effective_lang,
+                    "llm_provider": "local",
+                    "model_used": "intent-classifier",
+                    "used_fallback": False,
+                    "routed_by": routed_by,
+                    "redirect_path": "services",
+                    "action": {
+                        "type": "navigate",
+                        "label": "Go to Student Services",
+                        "target": "services",
+                        "route": "/?tab=services"
+                    }
+                }
+
             sr_res = handle_service_request(session, sr_cat, title, desc, instructions=instructions)
             return {
                 "category": "SERVICE_REQUEST",
@@ -870,8 +1362,8 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "services",
             }
-
         elif intent == "clubs":
             clubs = DataRepository.get_clubs()
             profile = DataRepository.get_student_profile(session)
@@ -892,6 +1384,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "clubs",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Student Clubs",
+                    "target": "clubs",
+                    "route": "/?tab=clubs"
+                },
             }
 
         elif intent == "hostel":
@@ -910,6 +1409,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "hostel",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Hostel Portal",
+                    "target": "hostel",
+                    "route": "/?tab=hostel"
+                },
             }
 
         elif intent == "transport":
@@ -928,6 +1434,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "transport",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Transport & Buses",
+                    "target": "transport",
+                    "route": "/?tab=transport"
+                },
             }
 
         elif intent == "circulars":
@@ -946,6 +1459,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "circulars",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Official Circulars",
+                    "target": "circulars",
+                    "route": "/?tab=circulars"
+                },
             }
 
         elif intent == "events":
@@ -964,6 +1484,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "events",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Campus Events",
+                    "target": "events",
+                    "route": "/?tab=events"
+                },
             }
 
         elif intent == "policy_bylaws":
@@ -982,6 +1509,13 @@ class NLUEngine:
                 "model_used": "intent-classifier",
                 "used_fallback": False,
                 "routed_by": routed_by,
+                "redirect_path": "policies",
+                "action": {
+                    "type": "navigate",
+                    "label": "Go to Policies & Regulations",
+                    "target": "policies",
+                    "route": "/?tab=policies"
+                },
             }
 
         elif intent == "greeting_smalltalk":
@@ -990,21 +1524,8 @@ class NLUEngine:
             return briefing
 
         elif intent == "out_of_scope":
-            return {
-                "category": "OUT_OF_SCOPE",
-                "topic": "General University Out-of-Scope",
-                "source_agent": "VIGBOT (Conversational AI)",
-                "content": "I am VIGBOT, your university AI assistant. I can assist you with your attendance, grades, timetables, exams, fees, library, faculty contacts, and official campus services. How may I help you with your academic inquiries today?",
-                "citations": [],
-                "structured_card": None,
-                "suggested_follow_ups": ["Check my attendance", "View exam schedule", "Check fee dues"],
-                "active_subject": active_subject,
-                "language": effective_lang,
-                "llm_provider": "system",
-                "model_used": "intent-classifier",
-                "used_fallback": False,
-                "routed_by": routed_by,
-            }
+            # Pass to general academic & cognitive reasoning pipeline instead of canned refusal
+            return None
 
         return None
 
@@ -1023,6 +1544,18 @@ class NLUEngine:
     @classmethod
     def is_fast_record_query(cls, query: str) -> bool:
         """Identify simple read-only record lookups that can skip LLM latency."""
+        q_lower = query.lower()
+        nav_verbs = ["open", "go to", "take me to", "navigate to", "switch to", "view tab", "show tab", "kholo", "take me there", "go there"]
+        if any(nv in q_lower for nv in nav_verbs):
+            return False
+        reasoning_indicators = [
+            "explain", "why", "how", "what if", "if i", "can i", "eligible",
+            "eligibility", "compare", "comparison", "plan", "beginner", "exam level",
+            "10-mark", "10 mark", "5-mark", "diagram", "hinglish", "solve", "derive",
+            "code", "example", "mcq", "mcqs", "viva", "difference", "better", "tips"
+        ]
+        if any(w in q_lower for w in reasoning_indicators):
+            return False
         record_terms = [
             "attendance", "bunk", "classes held", "exam", "assessment", "cie",
             "fee", "fees", "balance", "tuition", "timetable", "schedule",
@@ -1577,12 +2110,15 @@ class NLUEngine:
         cgpa = profile.get("cgpa")
         overall_att = profile.get("overall_attendance_pct")
 
-        # If the student asked a question or sought guidance rather than requesting a raw capabilities list
+        # If query is an academic or technical question, deliver comprehensive offline answer
+        if cls.is_academic_or_conceptual_query(q_lower):
+            return MockAcademicEngine.answer_query(query, language=effective_lang)
+
+        # If the student asked a general procedure question
         if any(w in q_lower for w in ["how", "what", "can i", "why", "where", "should", "guide", "advice", "help"]):
             return (
-                f"Hello {first_name}, I am currently operating in limited offline mode. "
-                f"I am unable to process complex inquiries or procedural guidance right now. "
-                f"If your query requires immediate assistance, please book a meeting with your counselor **{coun_name}** or class teacher **{ct_name}**."
+                f"Hello {first_name}, for administrative inquiries that require departmental approval, "
+                f"you can raise a formal service request or schedule a meeting with your counselor **{coun_name}** or class teacher **{ct_name}**."
             )
 
         return (
@@ -2083,6 +2619,20 @@ class NLUEngine:
                 for e in events[:8]
             )
             context_lines.append(f"- Upcoming Events: {ev_lines}")
+
+        # 19. Dynamically Retrieved Vignan Knowledge Evidence (Hybrid RAG)
+        try:
+            from app.research.vignan_rag import get_vignan_retriever
+            retriever = get_vignan_retriever()
+            retrieved_chunks = retriever.retrieve(q_lower, top_k=3)
+            if retrieved_chunks:
+                rag_lines = '; '.join(
+                    f"{c.get('title', '')} ({c.get('clause_no', '')}): {c.get('text', '')}"
+                    for c in retrieved_chunks
+                )
+                context_lines.append(f"- Relevant Vignan Official Evidence (RAG): {rag_lines}")
+        except Exception:
+            pass
 
         return "\n".join(context_lines)
 

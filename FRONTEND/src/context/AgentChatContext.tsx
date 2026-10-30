@@ -236,7 +236,8 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     model_used: normalizeModelName(backendResp.model_used, model),
                     used_fallback: backendResp.used_fallback ?? false,
                     routed_by: backendResp.routed_by ?? "rules",
-                    redirect_path: mappedRedirectPath,
+                    redirect_path: backendResp.redirect_path || mappedRedirectPath,
+                    action: backendResp.action,
                   },
                 },
               ]);

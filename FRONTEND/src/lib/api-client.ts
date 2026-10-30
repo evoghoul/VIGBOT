@@ -60,6 +60,13 @@ export interface BackendMessageResponse {
   model_used?: string;
   used_fallback?: boolean;
   routed_by?: "rules" | "classifier" | "gemini" | "classifier_pipeline_test" | string | null;
+  redirect_path?: string;
+  action?: {
+    type: string;
+    label: string;
+    target: string;
+    route?: string;
+  };
   created_at: string;
 }
 

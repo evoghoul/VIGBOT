@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { LoginView } from "@/components/auth/LoginView";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { Sidebar } from "@/components/sidebar/Sidebar";
@@ -97,6 +97,23 @@ function VigbotContent() {
   const { isMaximized, setIsMaximized, handleSend, handleResetChat } = useAgentChat();
 
   const { nextClassSlot, formattedNextExamDate } = useDynamicSchedule();
+
+  useEffect(() => {
+    if (activeTab === "student-profile" || activeTab === "profile") {
+      setIsProfileOpen(true);
+      setActiveTab("home");
+    }
+  }, [activeTab]);
+
+  const handleNavigateTab = (tab: string) => {
+    if (tab === "student-profile" || tab === "profile") {
+      setIsProfileOpen(true);
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
+
 
   const handlePerformLogout = () => {
     logout();
@@ -282,7 +299,7 @@ function VigbotContent() {
               <div id="vigbot-central-workspace" className="w-full">
                 <AiHelpdeskPanel
                   variant="central"
-                  onNavigateTab={(tab) => setActiveTab(tab)}
+                  onNavigateTab={handleNavigateTab}
                   onOpenServiceModal={handleOpenNewService}
                   onOpenEscalation={(summary) => {
                     setEscalationSummary(summary);
@@ -294,7 +311,7 @@ function VigbotContent() {
 
               {/* 3. Academic Snapshot (6 KPI cards - each leads to respective tab) */}
               <div className="pt-2">
-                <StudentSnapshot onNavigateTab={(tab) => setActiveTab(tab)} />
+                <StudentSnapshot onNavigateTab={handleNavigateTab} />
               </div>
 
               {/* 4. Academic Routine & Examination Overview (Full Width & Uncramped) */}
@@ -370,7 +387,7 @@ function VigbotContent() {
           {activeTab === "calendar" && (
             <CalendarView
               onAskHelpdesk={handleAskHelpdesk}
-              onNavigateTab={(tab) => setActiveTab(tab)}
+              onNavigateTab={handleNavigateTab}
             />
           )}
 
