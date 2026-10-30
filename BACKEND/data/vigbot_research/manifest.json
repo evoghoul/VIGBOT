@@ -236,6 +236,7 @@
     "cleanup_manifest": "CLEANUP_FILE_MANIFEST.json",
     "cleanup_test_results": "CLEANUP_TEST_RESULTS.json",
     "final_project_structure": "FINAL_PROJECT_STRUCTURE.md",
-    "project_cleanup_report": "PROJECT_CLEANUP_REPORT.md"
+    "project_cleanup_report": "PROJECT_CLEANUP_REPORT.md",
+    "phase16_audit_report": "PHASE16_FINAL_AUDIT.md"
   }
 }
