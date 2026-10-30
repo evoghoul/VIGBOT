@@ -1,5 +1,5 @@
 {
-  "audit_timestamp": "2026-10-30T07:56:36Z",
+  "audit_timestamp": "2026-10-30T08:26:46Z",
   "total_independent_cases": 252,
   "disaggregated_metrics": {
     "intent_classification_accuracy_pct": 90.87,
@@ -7,12 +7,12 @@
     "operation_identification_accuracy_pct": 90.48,
     "parameter_extraction_accuracy_pct": 100.0,
     "navigation_success_rate_pct": 100.0,
-    "backend_execution_safety_rate_pct": 98.41,
-    "false_write_count": 4,
-    "false_success_confirmation_count": 4,
+    "backend_execution_safety_rate_pct": 100.0,
+    "false_write_count": 0,
+    "false_success_confirmation_count": 0,
     "held_out_situational_feature_accuracy_pct": 61.22,
     "held_out_situational_intent_accuracy_pct": 63.27,
-    "average_execution_latency_ms": 51.93
+    "average_execution_latency_ms": 42.84
   },
   "dimension_breakdown": {
     "situational_heldout": {
@@ -74,11 +74,6 @@
     {
       "test_id": "indep_att_01_dengue_shortage",
       "query": "I had dengue for 2 weeks in September and medical certificate was submitted, why is my portal showing 67%?",
-      "reason": "False write/confirmation on read-only request"
-    },
-    {
-      "test_id": "indep_att_01_dengue_shortage",
-      "query": "I had dengue for 2 weeks in September and medical certificate was submitted, why is my portal showing 67%?",
       "dimension": "situational_heldout",
       "expected_feature": "attendance",
       "detected_feature": null,
@@ -87,15 +82,10 @@
     {
       "test_id": "indep_mrk_01_cgpa_cutoff",
       "query": "What is my current cumulative GPA and do I meet the 7.5 cutoff for campus placements?",
-      "reason": "False write/confirmation on read-only request"
-    },
-    {
-      "test_id": "indep_mrk_01_cgpa_cutoff",
-      "query": "What is my current cumulative GPA and do I meet the 7.5 cutoff for campus placements?",
       "dimension": "situational_heldout",
       "expected_feature": "marks",
       "detected_feature": "career",
-      "detected_category": "SERVICES"
+      "detected_category": "CAREER"
     },
     {
       "test_id": "indep_bk_05_hypothetical_might_book",
@@ -114,9 +104,28 @@
       "detected_category": "TRANSACTIONAL"
     },
     {
-      "test_id": "indep_exm_02_seating_venue",
-      "query": "Where is my seat allocated for tomorrow's Theory of Computation mid examination?",
-      "reason": "False write/confirmation on read-only request"
+      "test_id": "indep_fac_02_mentor_contact",
+      "query": "Give me the official email and phone number of my academic advisor",
+      "dimension": "situational_heldout",
+      "expected_feature": "faculty",
+      "detected_feature": "student-profile",
+      "detected_category": "PERSONAL_DATA"
+    },
+    {
+      "test_id": "indep_grv_01_ragging_incident",
+      "query": "Some seniors are forcing juniors to do pushups outside boys mess at midnight",
+      "dimension": "situational_heldout",
+      "expected_feature": "grievance",
+      "detected_feature": "hostel",
+      "detected_category": "INSTITUTIONAL_INFO"
+    },
+    {
+      "test_id": "indep_grv_02_unfair_marking",
+      "query": "Faculty awarded 0 marks for internal lab viva without conducting the viva, where do I formally appeal?",
+      "dimension": "situational_heldout",
+      "expected_feature": "grievance",
+      "detected_feature": "marks",
+      "detected_category": "PERSONAL_DATA"
     }
   ]
 }

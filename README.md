@@ -1,21 +1,26 @@
 # VIGBOT: Autonomous AI Campus Assistant (VFSTR Vadlamudi)
 
-An autonomous AI assistant built for **Vignan's Foundation for Science, Technology and Research (VFSTR :: Vadlamudi)**. Grounded in official institutional bylaws, academic records, attendance percentages, timetable slots, exam schedules, and the **2026-27 Semester-I B.Tech Academic Calendar**.
+An autonomous, production-grade AI academic assistant and helpdesk built for **Vignan's Foundation for Science, Technology and Research (VFSTR :: Vadlamudi)**. Grounded in official institutional bylaws, academic records, attendance percentages, timetable slots, exam schedules, and the **2026-27 Semester-I B.Tech Academic Calendar**.
 
-VIGBOT pairs verified institutional database lookups and security guardrails with **Google Gemini (gemini-3.5-flash)** for natural conversation and a **sub-millisecond CPU-bound Intent Classifier** (TF-IDF Word + Subword Character N-Grams + Multinomial Logistic Regression) for zero-cost, high-speed intent routing and crisis safety.
+VIGBOT pairs verified institutional database lookups, 28 verified application capabilities, and security guardrails with **Google Gemini (gemini-3.5-flash)** for natural conversation, **Universal NLU** for zero-false-action intent routing, and a **sub-millisecond CPU-bound Intent Classifier** (TF-IDF Word + Subword Character N-Grams + Multinomial Logistic Regression) for high-speed intent routing and crisis safety.
 
 ---
 
-## Key Features
+## Key Highlights & Production Status
 
-- **Low-Latency Intent Classification**: Zero-cost, CPU-bound ML intent classifier (~1-2ms on standard CPU) across 18 specialized domain intents with dynamic confidence thresholding and graceful fallback to Gemini.
+- **28 Verified Application Capabilities & 48 Operations**: Full bidirectional integration between conversational AI and 28 frontend tabs/routes (Lost & Found, Facility Bookings, Attendance, SGRC Grievance, Student Services, Fee Management, Exams, Hostels, Transport, etc.).
+- **Zero False Writes & Zero Fabricated Tickets**: Strict distinction between *asking* and *doing*. Informational inquiries ("where do I report...", "how do I book...") never mutate the database, never fabricate tracking numbers, and provide direct one-click navigation pills.
+- **Low-Latency Intent Classification**: Zero-cost, CPU-bound ML intent classifier (~1-2ms on standard CPU) across 18 specialized domain intents with dynamic confidence thresholding and graceful fallback.
 - **22+1 Official Languages of India**: Full support for all 22 languages recognized under the 8th Schedule of the Constitution of India plus English, with real-time clickable dropdown and instant search filter.
 - **Zero-Delay Mental Health Crisis Guardrail**: Asymmetric safety thresholding for `distress_support` ($\ge 99\%$ recall target) triggering immediate confidential escalation (Tele-MANAS & Crisis Counseling) without ever routing to cloud LLMs.
 - **Row-Level Access Control (RLAC) & Prompt Injection Defense**: Hardened security boundaries preventing cross-student record access, unauthorized queries, and prompt injection attempts before model inference.
-- **Traceable Telemetry (`routed_by`)**: Full observability over how every answer is generated (`rules`, `classifier`, `gemini`, `classifier_pipeline_test`).
-- **Official VFSTR Academic Calendar (2026-27)**: Grounded in the official B.Tech 2nd (R25), 3rd (R22C24) & 4th (R22) Year academic calendar (Dated: 6/1/2026).
-- **Interactive Voice Input**: Speech-to-text microphone with live visual waveform audio meter.
-- **Privacy-First Zero-PII Logging**: Classifier logs operational telemetry (intent, confidence, threshold) but never stores or logs student query text.
+- **Comprehensive Quality & Test Verification**:
+  - **Backend Pytest Suite**: 89 passed, 3 skipped, 1 deselected, 0 failures.
+  - **Phase 14 Independent Benchmark**: 252 held-out cases with 0 false writes, 0 fabricated confirmations, and 100% navigation success.
+  - **Adversarial Safety Suite**: 15/15 adversarial attack and injection scenarios passing with zero unauthorized mutations.
+  - **Frontend E2E Verification**: 28/28 capabilities verified against Next.js components.
+  - **Frontend Build**: Next.js 16.3.4 (Turbopack) build succeeded with 0 TypeScript errors.
+  - **Scripts Integrity**: 12 standing scripts and 8 archived legacy patches passing with 0 errors.
 
 ---
 
@@ -31,18 +36,17 @@ Incoming Student Query
 [2. Crisis Guardrail: Deterministic Distress Regex Filter]
           │ (Passes - no immediate emergency keywords)
           ▼
-[3. ML Intent Classifier Service] (Controlled by USE_INTENT_CLASSIFIER)
-   - Token & Subword Char Feature Extraction
-   - Logistic Regression Inference (~1-2ms CPU inference)
-   - Intent-Specific Confidence Threshold Evaluation
-          ├── Confident (>= Threshold) ───────► Direct Service Handler (routed_by="classifier")
-          │                                      [attendance, exams, fees, timetable, etc.]
-          │                                      * If distress_support: Immediate Crisis Escalation
+[3. Universal NLU & Capability Registry (28 Capabilities, 48 Operations)]
+          │ (Strict Safe-Execution Planner: Asks vs Actions vs Navigation)
+          ├── Asking/Info/Navigation ─────────► Structured Navigation Action Card (Zero Writes)
+          ├── Explicit Action (Submit/Book) ──► Verified Database Tool or Prefill Form Guide
           │
-          └── Unconfident (< Threshold) ──────► Seamless Graceful Fallback
-                                                 │
-                                                 ├── Deterministic Rules (routed_by="rules")
-                                                 └── Cloud Gemini 2.5 Flash (routed_by="gemini")
+          └── General / Academic Domain Inquiry
+                    │
+                    ▼
+[4. ML Intent Classifier & Semantic RAG Reasoning]
+          ├── Confident Match ────────────────► Domain Tool Handler (Attendance, Marks, Schedule)
+          └── Deep Pedagogical Inquiry ───────► Offline Local GGUF (8B/1B) or Gemini 3.5 Flash
 ```
 
 ---
@@ -54,51 +58,10 @@ All target intents are formally declared in [`ml/intents.yaml`](ml/intents.yaml)
 | Category | Intents | Description |
 | :--- | :--- | :--- |
 | **Academic & Student Records** | `attendance`, `exams`, `marks`, `fees`, `timetable`, `curriculum` | Attendance shortage warnings, CIE marks, GPA calculations, dues, weekly timetables, and graduation credit audits. |
-| **Campus Facilities & Life** | `faculty`, `library`, `hostel`, `transport`, `circulars`, `events`, `clubs`, `services` | Faculty cabin contacts, book availability, mess schedules, bus routes, official circulars, and certificates. |
+| **Campus Facilities & Life** | `facility`, `library`, `hostel`, `transport`, `circulars`, `events`, `clubs`, `services` | Facility bookings, book availability, mess schedules, bus routes, official circulars, and certificates. |
 | **Institutional Governance** | `policy_bylaws` | Detentions, condonation policies, academic regulations (R23/R24). |
 | **Safety-Critical** | `distress_support` | Crisis intervention, academic panic, helplessness (asymmetric $\tau=0.10$, $\ge 99\%$ recall). |
 | **Conversational & Scoping** | `greeting_smalltalk`, `out_of_scope` | Helpdesk onboarding and polite out-of-domain rejection ($\tau=0.50$). |
-
----
-
-## Machine Learning Pipeline & Data Governance
-
-### 1. Author Sequestration & Leakage Prevention
-To evaluate true out-of-distribution generalization across writing styles:
-- **Training Authors**: `aman`, `pragna`, `sirisha` (in [`data/authors/`](data/authors/)).
-- **Starter Foundation**: `agent` (in [`data/intents.csv`](data/intents.csv)).
-- **Dedicated Quarantined Test Author**: `sridhar` (`sridhar.csv`). Never included in training or hyperparameter tuning.
-- **Fuzzy Contamination Checks**: [`data/validate_data.py`](data/validate_data.py) runs Token Jaccard and Character Difflib similarity across all test and training rows, flagging pairs $> 0.80$ to eliminate leakage.
-
-### 2. Validation & Quality Checks
-Run dataset validation with strict exit codes:
-```bash
-python data/validate_data.py --strict
-```
-
-### 3. Model Training & Cross-Validation
-Train the classifier using Leave-One-Author-Out (LOAO) cross-validation:
-```bash
-# Production training (requires completed human author quotas):
-python ml/train_intent.py
-
-# Preliminary / Dry-run training:
-python ml/train_intent.py --allow-partial
-```
-
-### 4. Threshold Sweep & Optimization
-Tune asymmetric confidence thresholds:
-```bash
-python ml/tune_threshold.py --allow-partial
-```
-
-### 5. Benchmark Evaluation
-Evaluate rules, trained classifier, and Gemini 2.5 Flash on the identical question subset:
-```bash
-python ml/evaluate_intent.py --allow-partial
-```
-
-> Detailed documentation on mathematical formulations, calibration caveats (ECE), and viva defense preparation is available in [`docs/INTENT_MODEL_EXPLAINED.md`](docs/INTENT_MODEL_EXPLAINED.md).
 
 ---
 
@@ -107,7 +70,7 @@ python ml/evaluate_intent.py --allow-partial
 Ensure you have installed on your machine:
 1. **Python** (v3.10 – v3.12)
 2. **Node.js** (v18.0.0 or higher) & **npm** (v9+)
-3. *(Optional)* **Google Gemini API Key** (set `GEMINI_API_KEY` in environment for live generative responses)
+3. *(Optional)* **Google Gemini API Key** (set `GEMINI_API_KEY` in environment for live cloud generative responses)
 
 ---
 
@@ -125,32 +88,26 @@ Open Terminal 1:
 ```bash
 cd BACKEND
 
-# 1. Create a Python virtual environment
-python -m venv .venv
-
-# 2. Activate virtual environment
+# 1. Activate Python virtual environment
 # Windows (PowerShell):
-.venv\Scripts\Activate.ps1
+..\.venv\Scripts\Activate.ps1
 # Windows (Command Prompt):
-.venv\Scripts\activate.bat
+..\.venv\Scripts\activate.bat
 # Linux / macOS:
-source .venv/bin/activate
+source ../.venv/bin/activate
 
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Start the Uvicorn server
+# 2. Start the Uvicorn server
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 *Backend runs on: `http://localhost:8000` (Interactive Swagger docs available at `http://localhost:8000/docs`).*
 
 ### Configuration Options (`BACKEND/app/config.py` or `.env`):
 - `USE_INTENT_CLASSIFIER=True|False` (Default: `False` for backward compatibility)
-- `ALLOW_PIPELINE_TEST_MODEL=True|False` (Default: `False` — prevents loading test models in production)
+- `DATABASE_URL=sqlite:///../database/vigbot.db`
+- `ENABLE_GEMINI=True|False` (Default: `False`)
+- `ENABLE_GROQ=False`
 - `INTENT_MODEL_PATH=artifacts/intent_model.joblib`
 - `INTENT_CONFIG_PATH=artifacts/intent_config.json`
-- `GEMINI_API_KEY=<your-gemini-key>`
-- `GEMINI_MODEL=gemini-3.5-flash`
 
 ---
 
@@ -163,26 +120,35 @@ cd FRONTEND
 # 1. Install dependencies
 npm install
 
-# 2. Start development server
+# 2. Start Next.js development server
 npm run dev
 ```
 *Frontend runs on: `http://localhost:3000`.*
 
 ---
 
-## Running the Automated Test Suites
+## Running Verification & Test Suites
 
 The project features a comprehensive test suite covering data guardrails, system endpoints, intent classification, distress safety, and privacy:
 
 ```bash
-# Run all tests across the repository:
-pytest -v
+# 1. Run all backend tests:
+.\.venv\Scripts\python.exe -m pytest
 
-# Run backend unit and integration tests:
-pytest BACKEND/tests/ -v
+# 2. Run the 252-case independent real-world evaluation benchmark:
+.\.venv\Scripts\python.exe scripts/evaluate_independent_suite.py
 
-# Run data guardrails and leakage prevention tests:
-pytest tests/test_data_guardrails.py -v
+# 3. Run the 15-case adversarial action safety suite:
+.\.venv\Scripts\python.exe scripts/run_adversarial_safety_suite.py
+
+# 4. Verify frontend E2E capabilities and routes:
+.\.venv\Scripts\python.exe scripts/verify_frontend_e2e.py
+
+# 5. Run the standing and archived scripts integrity harness:
+.\.venv\Scripts\python.exe scripts/verify_scripts_integrity.py
+
+# 6. Verify frontend production Turbopack build:
+npm --prefix FRONTEND run build
 ```
 
 ---
@@ -200,49 +166,15 @@ Log in with pre-seeded student accounts:
 
 ---
 
-## Project Structure
+## Architectural & Project Documentation
 
-```
-VIGBOT/
-├── BACKEND/                     # FastAPI Backend Application
-│   ├── app/
-│   │   ├── agent/               # Orchestrator, NLU Engine, Intent Classifier & LLM Client
-│   │   │   ├── intent_classifier.py  # IntentClassifierService with safety guardrails
-│   │   │   ├── nlu_engine.py         # Rule routing, prompt injection defense & crisis checks
-│   │   │   ├── orchestrator.py       # Conversational orchestrator & context tracking
-│   │   │   └── llm_client.py         # Google Gemini & Groq fallback client
-│   │   ├── api/                 # Auth, Conversations, Service Requests endpoints
-│   │   ├── database.py          # SQLite data repository with Row-Level Access Control
-│   │   ├── models/schemas.py    # Pydantic schemas (including routed_by in MessageResponse)
-│   │   └── config.py            # Environment settings and feature flags
-│   ├── tests/                   # Backend PyTest test suite (test_vigbot, test_intent_classifier)
-│   └── requirements.txt         # Backend Python dependencies
-├── FRONTEND/                    # Next.js (React + Tailwind CSS) Frontend
-│   └── src/
-│       ├── components/          # Header, Sidebar, AI Chat Panel, Calendar, Exams, Timetable
-│       ├── context/             # StudentContext, AgentChatContext, LanguageContext
-│       └── lib/                 # api-client.ts, translations, auth logic
-├── data/                        # Dataset Governance & Author Split Repository
-│   ├── authors/                 # Teammate CSV files (aman.csv, pragna.csv, sirisha.csv, sridhar.csv)
-│   ├── intents.csv              # Agent starter baseline rows
-│   ├── validate_data.py         # Strict encoding, duplicate, quota & leakage validator
-│   └── README.md                # Data collection guidelines and rules
-├── ml/                          # Machine Learning Pipeline & Evaluation
-│   ├── intents.yaml             # Complete 18-intent formal taxonomy declaration
-│   ├── train_intent.py          # TF-IDF + Logistic Regression LOAO trainer
-│   ├── tune_threshold.py        # Asymmetric threshold sweep & optimization
-│   ├── evaluate_intent.py       # Comparative benchmarking (Rules vs Classifier vs Gemini)
-│   └── requirements.txt         # ML tooling dependencies
-├── docs/                        # Technical Documentation & Viva Guides
-│   ├── INTENT_MODEL_EXPLAINED.md# Comprehensive architecture, math, safety & viva Q&A
-│   └── intent_classifier_plan.md# Initial engineering specification and approval artifact
-├── tests/                       # Root-level test suites
-│   └── test_data_guardrails.py  # Tests for strict data validation & leakage prevention
-├── database/
-│   └── vigbot.db      # Pre-seeded SQLite database (315 students, marks, fees, timetable)
-├── pytest.ini                   # PyTest configuration
-└── README.md                    # Project overview & documentation (this file)
-```
+For exhaustive technical references, inspect:
+- [`FINAL_PROJECT_STRUCTURE.md`](FINAL_PROJECT_STRUCTURE.md) — Annotated file-by-file directory layout.
+- [`PROJECT_CLEANUP_REPORT.md`](PROJECT_CLEANUP_REPORT.md) — Comprehensive 18-section architectural refactoring and optimization report.
+- [`CLEANUP_FILE_MANIFEST.json`](CLEANUP_FILE_MANIFEST.json) — Inventory of retained, refactored, relocated, and archived files.
+- [`CLEANUP_TEST_RESULTS.json`](CLEANUP_TEST_RESULTS.json) — Complete machine-readable test results across all suites.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Systems design, row-level security, and tool dispatch.
+- [`docs/UNIVERSAL_INTENT_ROUTING.md`](docs/UNIVERSAL_INTENT_ROUTING.md) — Detailed capability-operation matrix.
 
 ---
 

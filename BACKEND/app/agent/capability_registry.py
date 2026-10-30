@@ -4,7 +4,8 @@ Authoritative registry of all verified frontend features, navigation routes,
 backend APIs, supported operations, and execution permissions.
 """
 
-from typing import Dict, Any, List, Optional
+import re
+from typing import Dict, Any, List, Optional, Tuple
 from enum import Enum
 
 
@@ -1269,86 +1270,83 @@ APPLICATION_CAPABILITIES: Dict[str, Dict[str, Any]] = {
 
 
 # ---------------------------------------------------------------------------
-# SEMANTIC RESOLUTION LOGIC
+# SEMANTIC RESOLUTION LOGIC & PRECOMPILED MATCHERS
 # ---------------------------------------------------------------------------
+
+TYPO_PATTERNS: List[Tuple[re.Pattern, str]] = [
+    (re.compile(r"\battendence\b", re.IGNORECASE), "attendance"),
+    (re.compile(r"\bfess\b", re.IGNORECASE), "fees"),
+    (re.compile(r"\bhostle\b", re.IGNORECASE), "hostel"),
+    (re.compile(r"\bbonafied\b", re.IGNORECASE), "bonafide"),
+    (re.compile(r"\bcerificate\b", re.IGNORECASE), "certificate"),
+    (re.compile(r"\bsyllubas\b", re.IGNORECASE), "syllabus"),
+    (re.compile(r"\bfacalty\b", re.IGNORECASE), "faculty"),
+]
+
+# High-priority domain overrides compiled with word boundaries
+DOMAIN_OVERRIDES: List[Tuple[re.Pattern, str]] = [
+    (re.compile(r"\b(?:ragging|anti-ragging|antiragging|grievance|file complaint|sgrc|harassment|bullying)\b", re.IGNORECASE), "grievance"),
+    (re.compile(r"\b(?:lost and found|lost & found|found item|lost item|lost my|found a|found something|report something if i found|report found|if i found)\b", re.IGNORECASE), "lost-and-found"),
+    (re.compile(r"\b(?:facility booking|seminar hall|cricket ground|book ground|auditorium booking|auditorium|lab booking|booking|bookings)\b", re.IGNORECASE), "bookings"),
+    (re.compile(r"\b(?:curriculum|degree audit|credits required|credit requirement|r23 regulation|syllabus)\b", re.IGNORECASE), "curriculum"),
+    (re.compile(r"\b(?:bonafide|study certificate|id card replacement|duplicate id card|concession)\b", re.IGNORECASE), "services"),
+    (re.compile(r"\b(?:academic calendar|semester start|diwali holiday|pongal vacation|holidays list|calendar)\b", re.IGNORECASE), "calendar"),
+    (re.compile(r"\b(?:gamification|karma points|attendance streak|leaderboard|my badges)\b", re.IGNORECASE), "gamification"),
+    (re.compile(r"\b(?:hostel|mess food|hostel mess|curfew|outpass|outing)\b", re.IGNORECASE), "hostel"),
+    (re.compile(r"\b(?:bus route|bus timings|transport|bus)\b", re.IGNORECASE), "transport"),
+    (re.compile(r"\b(?:classes attended|classes held|attendance)\b", re.IGNORECASE), "attendance"),
+    (re.compile(r"\b(?:fee balance|tuition|fees|fee)\b", re.IGNORECASE), "fees"),
+    (re.compile(r"\b(?:voting|survey|polls|poll|vote)\b", re.IGNORECASE), "polling"),
+    (re.compile(r"\b(?:alumnus|alumna|alumni)\b", re.IGNORECASE), "alumni"),
+    (re.compile(r"\b(?:student profile|my profile|profile)\b", re.IGNORECASE), "student-profile"),
+    (re.compile(r"\b(?:official circular|circulars|circular)\b", re.IGNORECASE), "circulars"),
+    (re.compile(r"\b(?:campus placement|placements|placement|recruitment)\b", re.IGNORECASE), "career"),
+    (re.compile(r"\b(?:examinations|examination|assessments|assessment|exams|exam)\b", re.IGNORECASE), "exams"),
+    (re.compile(r"\b(?:admin console|admin portal|admin panel|staff portal|admin)\b", re.IGNORECASE), "admin"),
+]
+
+# Precompiled per-capability keyword patterns for sub-millisecond scoring
+CAPABILITY_KEYWORD_PATTERNS: List[Tuple[Dict[str, Any], List[Tuple[re.Pattern, int]]]] = []
+
+def _init_capability_keyword_patterns() -> None:
+    global CAPABILITY_KEYWORD_PATTERNS
+    if not CAPABILITY_KEYWORD_PATTERNS:
+        for cap in APPLICATION_CAPABILITIES.values():
+            kw_patterns = []
+            for kw in cap.get("keywords", []):
+                pat = re.compile(r"\b" + re.escape(kw) + r"\b", re.IGNORECASE)
+                weight = len(kw.split()) * 2
+                kw_patterns.append((pat, weight))
+            CAPABILITY_KEYWORD_PATTERNS.append((cap, kw_patterns))
+
+_init_capability_keyword_patterns()
+
 
 def find_matching_capability(query: str) -> Optional[Dict[str, Any]]:
     """
     Resolves the most relevant application capability based on word-boundary matching,
     common misspelling normalization, and domain intention.
     """
-    import re
-    q_lower = query.lower()
+    q_norm = query.lower()
 
     # Normalization of common misspellings
-    q_norm = q_lower
-    typo_map = {
-        r"\battendence\b": "attendance",
-        r"\bfess\b": "fees",
-        r"\bhostle\b": "hostel",
-        r"\bbonafied\b": "bonafide",
-        r"\bcerificate\b": "certificate",
-        r"\bsyllubas\b": "syllabus",
-        r"\bfacalty\b": "faculty"
-    }
-    for pattern, replacement in typo_map.items():
-        q_norm = re.sub(pattern, replacement, q_norm)
+    for pattern, replacement in TYPO_PATTERNS:
+        q_norm = pattern.sub(replacement, q_norm)
 
     # Exact domain overrides for safety-critical and high-confusion capabilities
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["ragging", "anti-ragging", "antiragging"]):
-        return APPLICATION_CAPABILITIES["grievance"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["lost and found", "lost & found", "found item", "lost item", "lost my", "found a", "found something", "report something if i found", "report found", "if i found"]):
-        return APPLICATION_CAPABILITIES["lost-and-found"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["facility booking", "seminar hall", "cricket ground", "book ground", "auditorium booking", "auditorium", "lab booking", "booking", "bookings"]):
-        return APPLICATION_CAPABILITIES["bookings"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["curriculum", "degree audit", "credits required", "credit requirement", "r23 regulation", "syllabus"]):
-        return APPLICATION_CAPABILITIES["curriculum"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["bonafide", "study certificate", "id card replacement", "duplicate id card", "concession"]):
-        return APPLICATION_CAPABILITIES["services"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["academic calendar", "semester start", "diwali holiday", "pongal vacation", "holidays list"]):
-        return APPLICATION_CAPABILITIES["calendar"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["gamification", "karma points", "attendance streak", "leaderboard", "my badges"]):
-        return APPLICATION_CAPABILITIES["gamification"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["hostel", "mess food", "hostel mess", "curfew", "outpass", "outing"]):
-        return APPLICATION_CAPABILITIES["hostel"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["grievance", "file complaint", "sgrc", "harassment", "bullying"]):
-        return APPLICATION_CAPABILITIES["grievance"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["bus", "transport", "bus route", "bus timings"]):
-        return APPLICATION_CAPABILITIES["transport"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["attendance", "classes held", "classes attended"]):
-        return APPLICATION_CAPABILITIES["attendance"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["fee", "fees", "tuition", "fee balance"]):
-        return APPLICATION_CAPABILITIES["fees"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["poll", "polls", "voting", "vote", "survey"]):
-        return APPLICATION_CAPABILITIES["polling"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["alumni", "alumnus", "alumna"]):
-        return APPLICATION_CAPABILITIES["alumni"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["profile", "my profile", "student profile"]):
-        return APPLICATION_CAPABILITIES["student-profile"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["admin panel", "staff portal"]):
-        return APPLICATION_CAPABILITIES["admin"]
+    for pattern, cap_key in DOMAIN_OVERRIDES:
+        if pattern.search(q_norm):
+            return APPLICATION_CAPABILITIES.get(cap_key)
 
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["circular", "circulars", "official circular"]):
-        return APPLICATION_CAPABILITIES["circulars"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["calendar", "academic calendar"]):
-        return APPLICATION_CAPABILITIES["calendar"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["placement", "placements", "campus placement", "recruitment"]):
-        return APPLICATION_CAPABILITIES["career"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["exam", "exams", "examination", "examinations", "assessment", "assessments"]):
-        return APPLICATION_CAPABILITIES["exams"]
-    if any(re.search(r"\b" + re.escape(k) + r"\b", q_norm) for k in ["admin console", "admin panel", "admin portal", "staff portal", "admin"]):
-        return APPLICATION_CAPABILITIES["admin"]
-
-    # Semantic keyword scoring using whole-word boundaries
+    # Semantic keyword scoring using precompiled word-boundary matchers
     best_cap = None
     best_score = 0
 
-    for cap in APPLICATION_CAPABILITIES.values():
+    for cap, kw_patterns in CAPABILITY_KEYWORD_PATTERNS:
         score = 0
-        for kw in cap["keywords"]:
-            # Match whole-word boundary
-            if re.search(r"\b" + re.escape(kw) + r"\b", q_norm):
-                score += len(kw.split()) * 2  # Multi-word matches score higher
+        for pat, weight in kw_patterns:
+            if pat.search(q_norm):
+                score += weight
         if score > best_score:
             best_score = score
             best_cap = cap

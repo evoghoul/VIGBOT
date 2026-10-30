@@ -65,7 +65,7 @@ class NLUEngine:
             "foreign key", "deadlock", "process scheduling", "paging", "virtual memory", "semaphore",
             "osi model", "osi layer", "tcp", "udp", "ip address", "3-way handshake", "dns",
             "polymorphism", "inheritance", "encapsulation", "abstraction", "oop", "oops", "python",
-            "java", "c++", "debugging", "pseudocode", "hash table", "hash map", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram",
+            "java", "c++", "debugging", "pseudocode", "hash table", "hash map", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram",
             # Electronics & Hardware
             "flip flop", "flip-flop", "jk flip", "sr flip", "d flip", "t flip", "logic gate",
             "k-map", "kmap", "karnaugh", "multiplexer", "demultiplexer", "microprocessor",
@@ -938,6 +938,30 @@ class NLUEngine:
         intent = clf_result["intent"]
         is_confident = clf_result["is_confident"]
         routed_by = clf_result["routed_by"]
+
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
+
+        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
+        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        from app.agent.capability_registry import find_matching_capability
+        from app.agent.universal_nlu import UniversalNLU
+        matching_cap = find_matching_capability(query)
+        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
+            if intent in ("library", "services", "general", "out_of_scope"):
+                cross_res = UniversalNLU.resolve_and_execute(session, query)
+                if cross_res is not None:
+                    cross_res["routed_by"] = routed_by
+                    return cross_res
 
         # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
         # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:

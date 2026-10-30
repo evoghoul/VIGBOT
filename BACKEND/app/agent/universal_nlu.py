@@ -154,10 +154,12 @@ class UniversalNLU:
 
         # 3. Status Tracking & Lookup Intent
         status_markers = [
-            "status of", "track my", "has my", "is my", "check status", "ticket status",
+            "status of", "track my ticket", "track my request", "track my application",
+            "has my application", "has my request", "is my application", "is my request",
+            "is my ticket", "is my complaint", "check status", "ticket status",
             "application status", "any update on", "is it approved", "whether it is approved",
             "i already submitted", "what is status", "kahan tak pahuncha", "kya hua",
-            "track ticket", "sr-2026-"
+            "track ticket", "sr-2026-", "anc-"
         ]
         if any(sm in q_norm or sm in q_lower for sm in status_markers):
             return CommunicationIntent.STATUS_LOOKUP
@@ -334,7 +336,13 @@ class UniversalNLU:
                     }
 
             # General status lookup for active submissions
-            if session:
+            q_lower_clean = query.lower()
+            is_explicit_recent_query = any(k in q_lower_clean for k in [
+                "recent request", "my latest request", "my recent application",
+                "status of my request", "status of my application", "check my request status",
+                "application status", "ticket status"
+            ])
+            if session and is_explicit_recent_query:
                 from app.database import DataRepository
                 recent_requests = DataRepository.list_service_requests(session)
                 if recent_requests:

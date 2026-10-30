@@ -9,7 +9,15 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+def find_repo_root() -> Path:
+    p = Path(__file__).resolve().parent
+    while p != p.parent:
+        if (p / 'BACKEND').exists() and (p / 'FRONTEND').exists():
+            return p
+        p = p.parent
+    return Path(__file__).resolve().parent.parent
+
+REPO_ROOT = find_repo_root()
 
 # 1. Update capability_registry.py to include 'auditorium' in exact domain override
 reg_file = REPO_ROOT / "BACKEND" / "app" / "agent" / "capability_registry.py"

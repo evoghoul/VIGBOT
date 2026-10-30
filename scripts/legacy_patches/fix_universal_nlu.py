@@ -9,7 +9,15 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+def find_repo_root() -> Path:
+    p = Path(__file__).resolve().parent
+    while p != p.parent:
+        if (p / 'BACKEND').exists() and (p / 'FRONTEND').exists():
+            return p
+        p = p.parent
+    return Path(__file__).resolve().parent.parent
+
+REPO_ROOT = find_repo_root()
 file_path = REPO_ROOT / "BACKEND" / "app" / "agent" / "universal_nlu.py"
 
 with open(file_path, "r", encoding="utf-8") as f:

@@ -29,11 +29,10 @@ Both should print a version number. This project needs **Node.js 20 or newer**.
 
 ### 1. Get the code
 
-If you received this as a folder, open a terminal in that folder. If you're cloning from GitHub instead:
+Navigate to the `FRONTEND` folder within the StudentHelpdesk repository:
 
 ```bash
-git clone https://github.com/dripston/front-student.git
-cd front-student
+cd FRONTEND
 ```
 
 ### 2. Install dependencies
