@@ -1,1 +1,0 @@
-﻿import sqlite3; conn = sqlite3.connect("database/vigbot.db"); print("req", conn.execute("PRAGMA table_info(service_requests)").fetchall()); print("clubapp", conn.execute("PRAGMA table_info(studentlife_club_application)").fetchall()); print("lended", conn.execute("PRAGMA table_info(library_lended_books)").fetchall())

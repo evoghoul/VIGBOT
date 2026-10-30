@@ -54,7 +54,7 @@ Incoming Student Query
 
 ## Repository Structure
 
-The project follows a clean, modular structure organized into 13 cohesive directories, with an absolute bare-minimum root (`README.md`, `.gitignore`, `pytest.ini`):
+The project follows a clean, modular structure organized into 12 cohesive directories, with an absolute bare-minimum root (`README.md`, `.gitignore`, `pytest.ini`):
 
 ```text
 StudentHelpdesk/
@@ -76,7 +76,6 @@ StudentHelpdesk/
 ├── reports/             # Comprehensive audit reports, test results, and cleanup manifests
 ├── docs/                # Architecture specifications, deployment guides, and integration docs
 ├── bin/                 # External tunnel binaries (cloudflared, ngrok)
-├── archive/             # Non-destructive historical scratchpad scripts and legacy configs
 └── tests/               # Data guardrail tests
 ```
 

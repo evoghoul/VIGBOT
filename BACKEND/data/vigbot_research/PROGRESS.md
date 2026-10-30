@@ -187,8 +187,8 @@ python scripts/resume_vigbot_research.py --status
 | `phase14_validation_report` | `BACKEND/artifacts/PHASE14_INDEPENDENT_VALIDATION.md` | `validation_report` | 0 | 11574 | `f0bdb69ff0bd...` |
 | `benchmark_leakage_audit` | `BACKEND/artifacts/benchmark_leakage_audit.md` | `audit_report` | 0 | 5954 | `cdf056f2c7e5...` |
 | `independent_test_dataset` | `BACKEND/artifacts/independent_test_dataset.json` | `test_dataset` | 252 | 127702 | `4f7c28857c60...` |
-| `independent_test_results` | `BACKEND/artifacts/independent_test_results.json` | `benchmark_results` | 5 | 4816 | `2f737c3e1682...` |
-| `false_action_audit` | `BACKEND/artifacts/false_action_audit.json` | `audit_report` | 8 | 8439 | `21d8dc6aace7...` |
+| `independent_test_results` | `BACKEND/artifacts/independent_test_results.json` | `benchmark_results` | 5 | 4817 | `4205c3fd8717...` |
+| `false_action_audit` | `BACKEND/artifacts/false_action_audit.json` | `audit_report` | 8 | 8439 | `0f0a64dda80c...` |
 | `frontend_e2e_results` | `BACKEND/artifacts/frontend_e2e_results.json` | `e2e_results` | 4 | 8217 | `a8198bf4f4b6...` |
 | `cleanup_manifest` | `CLEANUP_FILE_MANIFEST.json` | `artifact` | - | - | `-...` |
 | `cleanup_test_results` | `CLEANUP_TEST_RESULTS.json` | `artifact` | - | - | `-...` |
