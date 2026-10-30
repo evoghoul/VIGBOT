@@ -169,10 +169,11 @@ Log in with pre-seeded student accounts:
 ## Architectural & Project Documentation
 
 For exhaustive technical references, inspect:
-- [`FINAL_PROJECT_STRUCTURE.md`](FINAL_PROJECT_STRUCTURE.md) — Annotated file-by-file directory layout.
-- [`PROJECT_CLEANUP_REPORT.md`](PROJECT_CLEANUP_REPORT.md) — Comprehensive 18-section architectural refactoring and optimization report.
-- [`CLEANUP_FILE_MANIFEST.json`](CLEANUP_FILE_MANIFEST.json) — Inventory of retained, refactored, relocated, and archived files.
-- [`CLEANUP_TEST_RESULTS.json`](CLEANUP_TEST_RESULTS.json) — Complete machine-readable test results across all suites.
+- [`FINAL_PROJECT_STRUCTURE.md`](reports/FINAL_PROJECT_STRUCTURE.md) — Annotated file-by-file directory layout.
+- [`PROJECT_CLEANUP_REPORT.md`](reports/PROJECT_CLEANUP_REPORT.md) — Comprehensive 18-section architectural refactoring and optimization report.
+- [`PHASE16_FINAL_AUDIT.md`](reports/PHASE16_FINAL_AUDIT.md) — Phase 16 post-cleanup independent audit and runtime verification report.
+- [`CLEANUP_FILE_MANIFEST.json`](reports/CLEANUP_FILE_MANIFEST.json) — Inventory of retained, refactored, relocated, and archived files.
+- [`CLEANUP_TEST_RESULTS.json`](reports/CLEANUP_TEST_RESULTS.json) — Complete machine-readable test results across all suites.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Systems design, row-level security, and tool dispatch.
 - [`docs/UNIVERSAL_INTENT_ROUTING.md`](docs/UNIVERSAL_INTENT_ROUTING.md) — Detailed capability-operation matrix.
 

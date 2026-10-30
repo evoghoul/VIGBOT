@@ -31,16 +31,16 @@ if %ERRORLEVEL% EQU 0 (
 
 :: 3. Detect Available Tunnels
 set "NGROK_BIN="
-if exist "%~dp0bin\ngrok.exe" set "NGROK_BIN=%~dp0bin\ngrok.exe"
-if not defined NGROK_BIN if exist "%~dp0ngrok.exe" set "NGROK_BIN=%~dp0ngrok.exe"
+if exist "%~dp0..\bin\ngrok.exe" set "NGROK_BIN=%~dp0bin\ngrok.exe"
+if not defined NGROK_BIN if exist "%~dp0..\ngrok.exe" set "NGROK_BIN=%~dp0ngrok.exe"
 if not defined NGROK_BIN (
     where ngrok >nul 2>&1
     if not errorlevel 1 set "NGROK_BIN=ngrok"
 )
 
 set "CF_BIN="
-if exist "%~dp0bin\cloudflared.exe" set "CF_BIN=%~dp0bin\cloudflared.exe"
-if not defined CF_BIN if exist "%~dp0cloudflared.exe" set "CF_BIN=%~dp0cloudflared.exe"
+if exist "%~dp0..\bin\cloudflared.exe" set "CF_BIN=%~dp0bin\cloudflared.exe"
+if not defined CF_BIN if exist "%~dp0..\cloudflared.exe" set "CF_BIN=%~dp0cloudflared.exe"
 if not defined CF_BIN (
     where cloudflared >nul 2>&1
     if not errorlevel 1 set "CF_BIN=cloudflared"

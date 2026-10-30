@@ -12,7 +12,8 @@ Write-Host "                     VIGBOT - LIVE TUNNEL LAUNCHER                  
 Write-Host "=====================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$rootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$launcherDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$rootDir = Split-Path -Parent $launcherDir
 $pythonPath = Join-Path $rootDir "BACKEND\.venv\Scripts\python.exe"
 
 # 1. Check Python Venv
