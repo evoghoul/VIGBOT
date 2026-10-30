@@ -14,6 +14,7 @@ VIGBOT pairs verified institutional database lookups, 28 verified application ca
 - **22+1 Official Languages of India**: Full support for all 22 languages recognized under the 8th Schedule of the Constitution of India plus English, with real-time clickable dropdown and instant search filter.
 - **Zero-Delay Mental Health Crisis Guardrail**: Asymmetric safety thresholding for `distress_support` ($\ge 99\%$ recall target) triggering immediate confidential escalation (Tele-MANAS & Crisis Counseling) without ever routing to cloud LLMs.
 - **Row-Level Access Control (RLAC) & Prompt Injection Defense**: Hardened security boundaries preventing cross-student record access, unauthorized queries, and prompt injection attempts before model inference.
+- **Clean Bare-Minimum Architecture**: Fully restructured, deduplicated repository with zero clutter, strict separation of concerns, and an absolute bare-minimum root directory.
 - **Comprehensive Quality & Test Verification**:
   - **Backend Pytest Suite**: 89 passed, 3 skipped, 1 deselected, 0 failures.
   - **Phase 14 Independent Benchmark**: 252 held-out cases with 0 false writes, 0 fabricated confirmations, and 100% navigation success.
@@ -51,6 +52,36 @@ Incoming Student Query
 
 ---
 
+## Repository Structure
+
+The project follows a clean, modular structure organized into 13 cohesive directories, with an absolute bare-minimum root (`README.md`, `.gitignore`, `pytest.ini`):
+
+```text
+StudentHelpdesk/
+├── BACKEND/             # FastAPI backend application, agent orchestrator, Universal NLU, APIs
+│   ├── app/             # Application source (agent/, api/, core/, models/, services/)
+│   ├── artifacts/       # Trained ML models (intent_model.joblib, intent_config.json)
+│   ├── data/            # Domain knowledge bases, policies, and research logs
+│   └── tests/           # Backend unit, integration, and safety tests
+├── FRONTEND/            # Next.js 16 (App Router) + React 19 + Tailwind CSS frontend
+│   ├── src/app/         # 28 capability pages and routes
+│   ├── src/components/  # UI components, chat widget, sidebar, voice, language selector
+│   └── vigbot.db        # Bundled SQLite database for Next.js Server Actions
+├── database/            # Canonical SQLite database (vigbot.db) with 44 application tables
+├── data/                # Dataset store (intents.csv, campus maps, author datasets)
+├── ml/                  # Machine learning training pipelines, evaluation suites, Colab notebooks
+├── models/              # Local quantized LLMs (GGUF format)
+├── launchers/           # One-click startup scripts (Windows .bat/.ps1, Linux/Mac shell)
+├── scripts/             # Standing maintenance, benchmark evaluation, and verification scripts
+├── reports/             # Comprehensive audit reports, test results, and cleanup manifests
+├── docs/                # Architecture specifications, deployment guides, and integration docs
+├── bin/                 # External tunnel binaries (cloudflared, ngrok)
+├── archive/             # Non-destructive historical scratchpad scripts and legacy configs
+└── tests/               # Data guardrail tests
+```
+
+---
+
 ## The 18 Target Intents Taxonomy
 
 All target intents are formally declared in [`ml/intents.yaml`](ml/intents.yaml):
@@ -76,19 +107,31 @@ Ensure you have installed on your machine:
 
 ## Quick Start Guide
 
-Clone the repository:
-```bash
-git clone <your-repository-url>
-cd VIGBOT
+### Option A: One-Click Launch (Recommended)
+
+Start both Backend (FastAPI on `:8000`) and Frontend (Next.js on `:3000`) with a single command:
+
+**Windows (PowerShell):**
+```powershell
+.\launchers\start_live_vigbot.ps1
 ```
 
-### 1. Start the Backend API (FastAPI)
+**Windows (Command Prompt):**
+```cmd
+launchers\start_live_vigbot.bat
+```
+
+---
+
+### Option B: Manual Step-by-Step Launch
+
+#### 1. Start the Backend API (FastAPI)
 
 Open Terminal 1:
 ```bash
 cd BACKEND
 
-# 1. Activate Python virtual environment
+# Activate Python virtual environment
 # Windows (PowerShell):
 ..\.venv\Scripts\Activate.ps1
 # Windows (Command Prompt):
@@ -96,12 +139,12 @@ cd BACKEND
 # Linux / macOS:
 source ../.venv/bin/activate
 
-# 2. Start the Uvicorn server
+# Start the Uvicorn server
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 *Backend runs on: `http://localhost:8000` (Interactive Swagger docs available at `http://localhost:8000/docs`).*
 
-### Configuration Options (`BACKEND/app/config.py` or `.env`):
+##### Configuration Options (`BACKEND/app/config.py` or `.env`):
 - `USE_INTENT_CLASSIFIER=True|False` (Default: `False` for backward compatibility)
 - `DATABASE_URL=sqlite:///../database/vigbot.db`
 - `ENABLE_GEMINI=True|False` (Default: `False`)
@@ -109,18 +152,16 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 - `INTENT_MODEL_PATH=artifacts/intent_model.joblib`
 - `INTENT_CONFIG_PATH=artifacts/intent_config.json`
 
----
-
-### 2. Start the Frontend (Next.js)
+#### 2. Start the Frontend (Next.js)
 
 Open Terminal 2:
 ```bash
 cd FRONTEND
 
-# 1. Install dependencies
+# Install dependencies (first time only)
 npm install
 
-# 2. Start Next.js development server
+# Start Next.js development server
 npm run dev
 ```
 *Frontend runs on: `http://localhost:3000`.*
@@ -132,7 +173,7 @@ npm run dev
 The project features a comprehensive test suite covering data guardrails, system endpoints, intent classification, distress safety, and privacy:
 
 ```bash
-# 1. Run all backend tests:
+# 1. Run all backend tests (89 tests):
 .\.venv\Scripts\python.exe -m pytest
 
 # 2. Run the 252-case independent real-world evaluation benchmark:
@@ -141,10 +182,10 @@ The project features a comprehensive test suite covering data guardrails, system
 # 3. Run the 15-case adversarial action safety suite:
 .\.venv\Scripts\python.exe scripts/run_adversarial_safety_suite.py
 
-# 4. Verify frontend E2E capabilities and routes:
+# 4. Verify frontend E2E capabilities and routes (28 capabilities):
 .\.venv\Scripts\python.exe scripts/verify_frontend_e2e.py
 
-# 5. Run the standing and archived scripts integrity harness:
+# 5. Run the standing and archived scripts integrity harness (12 scripts, 8 patches):
 .\.venv\Scripts\python.exe scripts/verify_scripts_integrity.py
 
 # 6. Verify frontend production Turbopack build:
@@ -169,13 +210,14 @@ Log in with pre-seeded student accounts:
 ## Architectural & Project Documentation
 
 For exhaustive technical references, inspect:
-- [`FINAL_PROJECT_STRUCTURE.md`](reports/FINAL_PROJECT_STRUCTURE.md) — Annotated file-by-file directory layout.
-- [`PROJECT_CLEANUP_REPORT.md`](reports/PROJECT_CLEANUP_REPORT.md) — Comprehensive 18-section architectural refactoring and optimization report.
-- [`PHASE16_FINAL_AUDIT.md`](reports/PHASE16_FINAL_AUDIT.md) — Phase 16 post-cleanup independent audit and runtime verification report.
-- [`CLEANUP_FILE_MANIFEST.json`](reports/CLEANUP_FILE_MANIFEST.json) — Inventory of retained, refactored, relocated, and archived files.
-- [`CLEANUP_TEST_RESULTS.json`](reports/CLEANUP_TEST_RESULTS.json) — Complete machine-readable test results across all suites.
+- [`reports/FINAL_PROJECT_STRUCTURE.md`](reports/FINAL_PROJECT_STRUCTURE.md) — Annotated file-by-file directory layout.
+- [`reports/PROJECT_CLEANUP_REPORT.md`](reports/PROJECT_CLEANUP_REPORT.md) — Comprehensive 18-section architectural refactoring and optimization report.
+- [`reports/PHASE16_FINAL_AUDIT.md`](reports/PHASE16_FINAL_AUDIT.md) — Phase 16 post-cleanup independent audit and runtime verification report.
+- [`reports/CLEANUP_FILE_MANIFEST.json`](reports/CLEANUP_FILE_MANIFEST.json) — Inventory of retained, refactored, relocated, and archived files.
+- [`reports/CLEANUP_TEST_RESULTS.json`](reports/CLEANUP_TEST_RESULTS.json) — Complete machine-readable test results across all suites.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Systems design, row-level security, and tool dispatch.
 - [`docs/UNIVERSAL_INTENT_ROUTING.md`](docs/UNIVERSAL_INTENT_ROUTING.md) — Detailed capability-operation matrix.
+- [`docs/DEPLOYMENT_AND_OPERATIONS_GUIDE.md`](docs/DEPLOYMENT_AND_OPERATIONS_GUIDE.md) — Cloudflare & ngrok tunnel deployment guide.
 
 ---
 
