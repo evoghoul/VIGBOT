@@ -8,7 +8,8 @@
     "files_refactored_and_optimized": 12,
     "scratch_files_archived": 20,
     "legacy_patches_relocated": 8,
-    "zero_byte_redundant_dbs_removed": 5
+    "zero_byte_redundant_dbs_removed": 5,
+    "hanging_files_relocated": 11
   },
   "actions": [
     {
@@ -238,6 +239,72 @@
           "path": "scripts/verify_scripts_integrity.py",
           "status": "enhanced",
           "improvements": "Added multi-stage verification for standing scripts and archived patches across root and local directory execution."
+        }
+      ]
+    },
+    {
+      "category": "Root Hanging Files Relocated into Dedicated Folders",
+      "description": "Moved hanging documentation into docs/, Colab training packs and notebooks into ml/colab/, Maps metadata into data/maps/, and binaries into bin/.",
+      "files": [
+        {
+          "original": "DEPLOYMENT_AND_OPERATIONS_GUIDE.md",
+          "destination": "docs/DEPLOYMENT_AND_OPERATIONS_GUIDE.md",
+          "status": "relocated"
+        },
+        {
+          "original": "FRONTEND_INTEGRATION.md",
+          "destination": "docs/FRONTEND_INTEGRATION.md",
+          "status": "relocated"
+        },
+        {
+          "original": "train_model_colab.ipynb",
+          "destination": "ml/colab/train_model_colab.ipynb",
+          "status": "relocated"
+        },
+        {
+          "original": "generate_colab_notebook.py",
+          "destination": "ml/colab/generate_colab_notebook.py",
+          "status": "relocated"
+        },
+        {
+          "original": "agent65_colab_training_pack.zip",
+          "destination": "ml/colab/agent65_colab_training_pack.zip",
+          "status": "relocated"
+        },
+        {
+          "original": "agent65_training_pack.zip",
+          "destination": "ml/colab/agent65_training_pack.zip",
+          "status": "relocated"
+        },
+        {
+          "original": "maps_index.json",
+          "destination": "data/maps/maps_index.json",
+          "status": "relocated"
+        },
+        {
+          "original": "cloudflared.exe",
+          "destination": "bin/cloudflared.exe",
+          "status": "relocated"
+        },
+        {
+          "original": "ngrok.exe",
+          "destination": "bin/ngrok.exe",
+          "status": "relocated"
+        },
+        {
+          "original": "start_live_agent65.bat",
+          "destination": "archive/legacy_launchers/start_live_agent65.bat",
+          "status": "relocated"
+        },
+        {
+          "original": "start_live_agent65.ps1",
+          "destination": "archive/legacy_launchers/start_live_agent65.ps1",
+          "status": "relocated"
+        },
+        {
+          "original": "FRONTEND/mock_data_dump.json",
+          "destination": "archive/scratch/mock_data_dump.json",
+          "status": "relocated"
         }
       ]
     }

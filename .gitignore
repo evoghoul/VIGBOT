@@ -45,6 +45,7 @@ pnpm-debug.log*
 
 # Editor & OS Artifacts
 .vscode/
+bin/
 *.exe
 *.zip
 *.tar.gz

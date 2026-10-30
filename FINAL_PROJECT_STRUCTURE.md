@@ -9,7 +9,9 @@ This document provides the authoritative structural and architectural overview o
 ```
 C:\StudentHelpdesk\
 ├── archive/                      # Preserved ad-hoc inspection and debugging scripts
+│   ├── legacy_launchers/         # Preserved historical launchers (start_live_agent65)
 │   └── scratch/                  # Isolated scratch files (separated from production)
+├── bin/                          # Standalone tunnel binaries (cloudflared, ngrok)
 ├── BACKEND/                      # FastAPI, Universal NLU, RAG & Database Services
 │   ├── app/                      # Application core (Agent, API, Tools, Database)
 │   ├── artifacts/                # Benchmark suites, intent model, evaluation outputs
@@ -19,14 +21,22 @@ C:\StudentHelpdesk\
 │   ├── Dockerfile                # Production container deployment
 │   ├── main.py                   # FastAPI application entrypoint
 │   └── requirements.txt          # Production Python dependencies
+├── data/                         # Datasets & Skill Indexes
+│   ├── authors/                  # Author-partitioned training data
+│   ├── maps/                     # Google Maps Platform skills index
+│   └── intents.csv               # Production intent training corpus
 ├── database/                     # Production SQLite Database
 │   ├── vigbot.db                 # Canonical active SQLite database (5.21 MB)
 │   └── student_helpdesk.db       # Original schema reference baseline (4.39 MB)
-├── docs/                         # Architecture, security, and verification documentation
+├── docs/                         # Architecture, deployment, and guide documentation
 │   ├── API_DOCUMENTATION.md      # Backend REST API contract
 │   ├── ARCHITECTURE.md           # Systems design and data flows
+│   ├── DATA_SOURCES.md           # Institutional knowledge sources
+│   ├── DEPLOYMENT_AND_OPERATIONS_GUIDE.md # Production deployment guide
 │   ├── FALSE_ACTION_AUDIT.md     # Audit report on zero false writes
+│   ├── FRONTEND_INTEGRATION.md   # Next.js frontend integration specification
 │   ├── IMPLEMENTATION_REPORT.md  # Comprehensive Phase 13/14 report
+│   ├── INTENT_MODEL_EXPLAINED.md # ML intent model architecture & math
 │   └── UNIVERSAL_INTENT_ROUTING.md # NLU routing matrix & specifications
 ├── FRONTEND/                     # Next.js 16.3.4 (Turbopack) Full-Stack Web App
 │   ├── src/app/                  # App Router pages and API routes
@@ -38,7 +48,8 @@ C:\StudentHelpdesk\
 │   ├── package.json              # NPM dependencies and scripts
 │   └── vigbot.db                 # Synchronized SQLite bundle for standalone deployments
 ├── ml/                           # Offline Machine Learning & Dataset Pipelines
-│   ├── train_intent_classifier.py# Scikit-learn TF-IDF + LogisticRegression trainer
+│   ├── colab/                    # Google Colab training notebooks & zip packs
+│   ├── train_intent.py           # Scikit-learn TF-IDF + LogisticRegression trainer
 │   ├── evaluate_capability_suite.py # Capability matrix benchmark runner
 │   └── generate_intent_dataset.py# Synthetic dataset generator
 ├── models/                       # Local offline LLM weights

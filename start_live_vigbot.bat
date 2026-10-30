@@ -47,7 +47,8 @@ if "%tunnel_choice%"=="2" (
 
 :run_cloudflare
 set "CF_BIN="
-if exist "%~dp0cloudflared.exe" set "CF_BIN=%~dp0cloudflared.exe"
+if exist "%~dp0bin\cloudflared.exe" set "CF_BIN=%~dp0bin\cloudflared.exe"
+if not defined CF_BIN if exist "%~dp0cloudflared.exe" set "CF_BIN=%~dp0cloudflared.exe"
 if not defined CF_BIN (
     where cloudflared >nul 2>nul
     if not errorlevel 1 set "CF_BIN=cloudflared"

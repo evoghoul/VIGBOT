@@ -54,7 +54,10 @@ Write-Host "Starting Cloudflare Tunnel on http://localhost:8000..." -ForegroundC
 Write-Host "Copy the generated *.trycloudflare.com URL for Vercel NEXT_PUBLIC_BACKEND_URL" -ForegroundColor Yellow
 Write-Host "=====================================================================" -ForegroundColor Cyan
 
-$cfLocal = Join-Path $rootDir "cloudflared.exe"
+$cfLocal = Join-Path $rootDir "bin\cloudflared.exe"
+if (-not (Test-Path $cfLocal)) {
+    $cfLocal = Join-Path $rootDir "cloudflared.exe"
+}
 if (Test-Path $cfLocal) {
     & $cfLocal tunnel --url http://localhost:8000
 } elseif (Get-Command cloudflared -ErrorAction SilentlyContinue) {
