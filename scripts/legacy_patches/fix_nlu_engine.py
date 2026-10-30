@@ -27,7 +27,7 @@ with open(file_path, "r", encoding="utf-8") as f:
 old_academic = '"hash table", "hash map",'
 new_academic = '"hash table", "hash map", "b tree", "b+ tree", "b+tree", "btree", "indexing", "tree", "avl", "red black", "trie", "hashing", "diagram",'
 
-if old_academic in content:
+if '"b tree"' not in content and old_academic in content:
     content = content.replace(old_academic, new_academic, 1)
     print("Updated is_academic_or_conceptual_query")
 else:
@@ -49,7 +49,7 @@ guard_replacement = '''        # 0. Cross-check guard: If query specifically mat
 
         # 1. Distress safety path: confident prediction provides supportive counseling response without crisis overlay'''
 
-if guard_target in content:
+if '# 0. Cross-check guard' not in content and guard_target in content:
     content = content.replace(guard_target, guard_replacement, 1)
     print("Added cross-check guard to route_classified_intent")
     with open(file_path, "w", encoding="utf-8") as f:
