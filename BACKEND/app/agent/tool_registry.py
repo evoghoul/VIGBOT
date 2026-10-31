@@ -111,6 +111,9 @@ class CampusGraphService:
             "mhp": "MHP_CANTEEN",
             "mhp canteen": "MHP_CANTEEN",
             "food court": "MHP_CANTEEN",
+            "zest": "CHEST_SUPERMARKET",
+            "zest supermarket": "CHEST_SUPERMARKET",
+            "zest store": "CHEST_SUPERMARKET",
             "chest": "CHEST_SUPERMARKET",
             "supermarket": "CHEST_SUPERMARKET",
             "chest supermarket": "CHEST_SUPERMARKET",
@@ -796,7 +799,7 @@ class ToolRegistry:
             # General map overview
             direct_answer = (
                 "The VFSTR campus is structured around Path Alpha (Main Road starting from Main Gate), "
-                "with A-Block and H-Block at the first right turn, NTR Library, MHP Canteen, and Chest Supermarket along the central avenue, "
+                "with A-Block and H-Block at the first right turn, NTR Library, MHP Canteen, and Zest (Supermarket) along the central avenue, "
                 "N-Block and Vignan Vihar Boys Hostel on Path Beta, and E-Block (Pharmacy), U-Block (Law & BBA), and Convocation Hall on Path Gamma/Delta."
             )
             return {
@@ -809,7 +812,7 @@ class ToolRegistry:
                     "key_blocks": {
                         "A-Block": "Freshers / 1st-year students (all combined branches), right side of First Right Turn",
                         "H-Block": "Electronics (ECE) & IT departments, plus Administrative Offices & ID Replacement (opposite A-Block)",
-                        "N-Block": "2nd & 3rd-year computer branch students (CSE, AIML), adjacent to Chest Supermarket",
+                        "N-Block": "2nd & 3rd-year computer branch students (CSE, AIML), located just beside Zest",
                         "Vignan Vihar": "1st-year boys hostel directly in front of N-Block with internal ground-floor mess",
                         "E-Block": "Pharmacy, B.Pharma, Biotech (left turn at Intersection 2)",
                         "U-Block": "Law & BBA students (located behind N-Block straight past Intersection 2)",
@@ -840,7 +843,7 @@ class ToolRegistry:
         if dest_id == "N_BLOCK":
             direct_answer = (
                 f"N-Block is the Computer Science & Engineering Block (housing 2nd and 3rd-year CSE and AI/ML students), "
-                f"located on Path Beta adjacent to the Chest Supermarket and directly facing Vignan Vihar Boys Hostel, "
+                f"located on Path Beta just beside Zest and directly facing Vignan Vihar Boys Hostel, "
                 f"{tot_dist} meters (~3-4 min walk) from {route['start']}."
             )
         elif dest_id == "A_BLOCK":
@@ -891,8 +894,8 @@ class ToolRegistry:
             )
         elif dest_id == "CHEST_SUPERMARKET":
             direct_answer = (
-                f"Chest Supermarket provides groceries, stationery, and daily essentials, "
-                f"located along Path Alpha immediately adjacent to MHP Canteen on the right ({tot_dist} meters from {route['start']})."
+                f"Zest provides groceries, stationery, snacks, and daily essentials, "
+                f"located along Path Alpha immediately adjacent to MHP Canteen on the right, with N-Block situated just beside it ({tot_dist} meters from {route['start']})."
             )
         else:
             direct_answer = (
