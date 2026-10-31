@@ -23,8 +23,17 @@ VIGBOT is fully deployed and operational across cloud infrastructure:
 
 - **Live Cloud Database on Neon Lakebase Postgres**: Decoupled serverless storage running on AWS US East (Ohio), fully seeded with 315 students, 22 faculty, 977 attendance logs, 2,922 marks records, 4,944 timetable slots, and institutional knowledge tables.
 - **Answer-First Rule & 23-Tool Registry**: Every factual query provides a direct, verifiable answer in the first sentence with structured data badges and source citations.
-- **Campus Spatial Directory & Dijkstra Navigation Graph**: Algorithmic pathfinding across 23 campus nodes and 18 directed edges from Main Gate (Node 0) to Convocation Hall, NTR Library, MHP Canteen, Chest Supermarket, E-Block, and U-Block.
-- **Module-Grounded Truth**:
+- **Campus Spatial Directory & Dijkstra Navigation Graph**:
+  - Algorithmic pathfinding across 23 campus nodes and 18 directed edges from Main Gate (Node 0) to Convocation Hall, NTR Library, MHP Canteen, Zest Supermarket, N-Block, E-Block, and U-Block.
+  - **N-Block**: Computer Science & Engineering Block (housing 2nd and 3rd-year senior students in CSE, CS, and AI/ML), located on Path Beta **just beside Zest**, directly facing Vignan Vihar Boys Hostel (~240m from Main Gate).
+  - **Zest (Supermarket)**: Central on-campus supermarket catering to daily student necessities, groceries, and stationery, located along Path Alpha immediately adjacent to MHP Canteen on the right.
+  - **Intelligent Query Adaptation**: Strict distinction between **Informational Building Inquiries** (*"What is N-Block?"* $\to$ structured block profile with cohorts, departments, and facilities) versus **Directional Navigation** (*"Where is N-Block?"* $\to$ step-by-step turn-by-turn walking route).
+- **Row-Level Security (RLS) & Cross-Student Privacy Guardrail**:
+  - Enforces strict **Clause 2.1 - Row-Level Access Control (RLAC)**. Students can only query and view their own verified academic records (attendance, marks, CGPA, fees, profile).
+  - Blocks cross-student snooping attempts by name (e.g. *"what is the attendance of Ayush Kumar?"*) or registration number (e.g. `251FA04E69`), preventing data leakage.
+  - Full support for Vignan registration number patterns (`251FA04E13`, `251FA04E69`, `251FA04131`, `251FA04D46`, etc.).
+  - Sickness / medical distress interceptor providing immediate guidance to the **Campus Health Clinic / Student Wellness Center** (Room 102, Student Activity Building) and 24/7 emergency medical support (+91-98765-43210).
+- **Module-Grounded Institutional Truth**:
   - **Central Library**: Open Sundays from 09:00 AM to 05:00 PM (09:00 - 17:00) for reading rooms and digital study spaces.
   - **Hostel Mess Facilities**: Decentralized internal dining halls located on the ground floor of each individual hostel building.
   - **Hostel Bus Shuttles**: Verified morning (07:45 AM - 11:35 AM) and evening return (01:45 PM - 09:00 PM) schedules for KM, Villas SP, and AP/AR/AA/AO routes.
@@ -34,7 +43,6 @@ VIGBOT is fully deployed and operational across cloud infrastructure:
 - **Low-Latency Intent Classification**: Zero-cost, CPU-bound ML intent classifier (~1-2ms on standard CPU) across 18 specialized domain intents with dynamic confidence thresholding and graceful fallback.
 - **22+1 Official Languages of India**: Full support for all 22 languages recognized under the 8th Schedule of the Constitution of India plus English, with real-time clickable dropdown and instant search filter.
 - **Zero-Delay Mental Health Crisis Guardrail**: Asymmetric safety thresholding for `distress_support` ($\ge 99\%$ recall target) triggering immediate confidential escalation (Tele-MANAS & Crisis Counseling) without ever routing to cloud LLMs.
-- **Row-Level Access Control (RLAC) & Prompt Injection Defense**: Hardened security boundaries preventing cross-student record access, unauthorized queries, and prompt injection attempts before model inference.
 
 ---
 
@@ -53,7 +61,8 @@ Student Query (Browser / Mobile)
           │                                                     │
           ▼                                                     ▼
 [1. Security & RLAC Guardrail]                        [2. Distress Safety Filter]
-(PII Redaction, Prompt Injection Defense)              (Immediate Tele-MANAS Escalation)
+(Cross-Student Snooping Prevention,                    (Immediate Tele-MANAS Escalation &
+ Prompt Injection Defense, Medical Help)               Student Wellness Center Support)
           │                                                     │
           └──────────────────────────┬──────────────────────────┘
                                      │
@@ -63,11 +72,12 @@ Student Query (Browser / Mobile)
                                      │
                                      ▼
                      [4. 23-Tool Registry & Service Graph]
-                     ├── Attendance, Marks, Timetable, Fees (RLAC)
+                     ├── Attendance, Marks, Timetable, Fees (RLAC Protected)
+                     ├── Campus Spatial Directory (Informational vs Directional)
+                     ├── Dijkstra Shortest Path Navigation (23 Nodes, Zest & N-Block)
                      ├── Central Library Sunday Hours (09:00 - 17:00)
                      ├── Decentralized Hostel Dining (Ground Floor)
                      ├── Synchronized Hostel Shuttle Buses
-                     ├── Dijkstra Shortest Path Navigation (23 Nodes)
                      └── Lost ID Replacement 2-Phase State Machine
                                      │
                                      ▼
@@ -129,13 +139,14 @@ npm run dev
 
 Use these verified institutional student credentials to test login, attendance telemetry, marks, timetable, and conversational AI:
 
-| Field | Primary Demo Credential | Alternative Demo Credential |
-| :--- | :--- | :--- |
-| **Roll Number / Username** | `24CSE001` | `24CSE002` |
-| **Password** | `student123` | `student123` |
-| **Student Name** | Asha Reddy | Rahul Verma |
-| **Branch & Section** | B.Tech CSE (Section A) | B.Tech CSE (Section A) |
-| **Attendance State** | Digital Electronics: 68.0% (Needs 14 classes for 75%) | Data Structures: 70.0% (Needs 8 classes for 75%) |
+| Field | Primary Demo Credential | Secondary Demo Credential | Alternative Demo Credential |
+| :--- | :--- | :--- | :--- |
+| **Roll Number / Username** | `251FA04E13` | `24CSE001` | `24CSE002` |
+| **Password** | `student123` | `student123` | `student123` |
+| **Student Name** | Aman Kumar | Asha Reddy | Rahul Verma |
+| **Branch & Section** | B.Tech CSE (Section 7, N-312) | B.Tech CSE (Section A) | B.Tech CSE (Section A) |
+| **Class Teacher** | Mr. T. Latesh Babu | Faculty Advisor | Faculty Advisor |
+| **Attendance State** | OOP through Java: 74.42% (Needs 1 class for 75%) | Digital Electronics: 68.0% (Needs 14 classes for 75%) | Data Structures: 70.0% (Needs 8 classes for 75%) |
 
 ---
 
