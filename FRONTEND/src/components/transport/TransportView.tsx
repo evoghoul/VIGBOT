@@ -6,11 +6,47 @@ import { getTransportRoutes } from "@/actions/transport";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HostelBusTimetable } from "./HostelBusTimetable";
 
+const FALLBACK_ROUTES = [
+  { id: 1, route_name: "Route A - Campus Link", driver_name: "Ramesh Kumar", current_location: "Near Guntur Bus Stand", eta_minutes: 15 },
+  { id: 2, route_name: "Route B - Tenali Express", driver_name: "Suresh Babu", current_location: "Tenali Flyover", eta_minutes: 25 },
+  { id: 3, route_name: "Route C - Vijayawada Metro Connect", driver_name: "Venkatesh Rao", current_location: "Benz Circle", eta_minutes: 40 },
+  { id: 4, route_name: "Route D - Hostel Shuttle", driver_name: "Krishna Reddy", current_location: "Boys Hostel Block C", eta_minutes: 5 }
+];
+
 export function TransportView() {
-  const [routes, setRoutes] = useState<any[]>([]);
+  const [routes, setRoutes] = useState<any[]>(FALLBACK_ROUTES);
 
   useEffect(() => {
-    getTransportRoutes().then(setRoutes);
+    const loadRoutes = async () => {
+      let loaded = false;
+      try {
+        const data = await getTransportRoutes();
+        if (Array.isArray(data) && data.length > 0) {
+          setRoutes(data);
+          loaded = true;
+        }
+      } catch (e) {
+        console.warn("Server action failed, trying direct API:", e);
+      }
+
+      if (!loaded) {
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+          const res = await fetch(`${backendUrl}/community/transport`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.success && Array.isArray(json?.routes) && json.routes.length > 0) {
+              setRoutes(json.routes);
+              loaded = true;
+            }
+          }
+        } catch (e) {
+          console.warn("Direct fetch error:", e);
+        }
+      }
+    };
+
+    loadRoutes();
   }, []);
 
   return (

@@ -50,7 +50,7 @@ export async function createHostelRequest(studentId: string, type: string, detai
     const db = getDb();
     if (!db) return { success: false, error: "Database unavailable" };
     const info = db.prepare("INSERT INTO hostel_requests (student_id, type, details) VALUES (?, ?, ?)")
-                   .run(studentId, type, details);
+      .run(studentId, type, details);
     db.close();
     return { success: true, id: info.lastInsertRowid };
   } catch (error: any) {

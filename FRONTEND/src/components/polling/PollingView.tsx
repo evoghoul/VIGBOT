@@ -9,7 +9,47 @@ export function PollingView() {
   const [voted, setVoted] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
-    getCampusPolls().then(setPolls);
+    const loadPolls = async () => {
+      let loaded = false;
+      try {
+        const data = await getCampusPolls();
+        if (Array.isArray(data) && data.length > 0) {
+          setPolls(data);
+          loaded = true;
+        }
+      } catch (e) {
+        console.warn("getCampusPolls server action failed:", e);
+      }
+
+      if (!loaded) {
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+          const res = await fetch(`${backendUrl}/community/polls`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.success && Array.isArray(json?.polls) && json.polls.length > 0) {
+              setPolls(json.polls.map((row: any) => ({
+                ...row,
+                options: typeof row.options_json === "string" ? JSON.parse(row.options_json || "[]") : (row.options_json || [])
+              })));
+              loaded = true;
+            }
+          }
+        } catch (e) {
+          console.warn("Direct fetch polls failed:", e);
+        }
+      }
+
+      if (!loaded) {
+        setPolls([
+          { id: 9, question: "What should be the theme for TechFest 2026?", options: ["AI Revolution", "Sustainable Future", "Cyber Cosmos", "Retro Gaming"] },
+          { id: 10, question: "Preferred library extended hours during exams?", options: ["Up to 12 AM", "Up to 2 AM", "24/7", "No change"] },
+          { id: 11, question: "Which new cuisine should be added to the canteen?", options: ["Mexican", "Italian", "Healthy/Salads", "Street Food"] }
+        ]);
+      }
+    };
+
+    loadPolls();
   }, []);
 
   const handleVote = (pollId: number) => {

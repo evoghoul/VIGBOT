@@ -55,14 +55,45 @@ export function BookingModal({ facility, isOpen, onClose }: BookingModalProps) {
     const hour = parseInt(selectedTime.split(':')[0]);
     const endTime = `${(hour + 1).toString().padStart(2, '0')}:00`;
 
-    const res = await createBooking({
-      facility_id: facility.id,
-      student_id: "STU-001", // Mock generic student ID
-      date: selectedDate,
-      start_time: selectedTime,
-      end_time: endTime,
-      purpose
-    });
+    let res: { success: boolean; message: string } = { success: false, message: "Failed to create booking." };
+    try {
+      res = await createBooking({
+        facility_id: facility.id,
+        student_id: "251FA04E13",
+        date: selectedDate,
+        start_time: selectedTime,
+        end_time: endTime,
+        purpose
+      });
+    } catch (e) {
+      console.warn("createBooking server action failed:", e);
+    }
+
+    if (!res?.success) {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const postRes = await fetch(`${backendUrl}/community/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            facility_id: facility.id,
+            student_id: "251FA04E13",
+            date: selectedDate,
+            start_time: selectedTime,
+            end_time: endTime,
+            purpose
+          })
+        });
+        if (postRes.ok) {
+          const json = await postRes.json();
+          if (json?.success) {
+            res = { success: true, message: "Booking confirmed!" };
+          }
+        }
+      } catch (e) {
+        console.error("Direct booking error:", e);
+      }
+    }
 
     if (res.success) {
       setMessage({ text: res.message, type: 'success' });

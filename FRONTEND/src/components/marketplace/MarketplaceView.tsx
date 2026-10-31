@@ -18,17 +18,69 @@ export const MarketplaceView = () => {
   }, []);
 
   const fetchListings = async () => {
-    const res = await getMarketplaceListings();
-    if (res.success) {
-      setListings((res.data as any[]) || []);
+    let loaded = false;
+    try {
+      const res = await getMarketplaceListings();
+      if (res?.success && Array.isArray(res?.data) && res.data.length > 0) {
+        setListings(res.data as any[]);
+        loaded = true;
+      }
+    } catch (e) {
+      console.warn("Server action failed:", e);
+    }
+
+    if (!loaded) {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const res = await fetch(`${backendUrl}/community/marketplace`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.success && Array.isArray(json?.data) && json.data.length > 0) {
+            setListings(json.data);
+            loaded = true;
+          }
+        }
+      } catch (e) {
+        console.warn("Direct fetch error:", e);
+      }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
-    const res = await createMarketplaceListing(student.id, newTitle, newCategory, newPrice);
-    if (res.success) {
+    const studentId = student?.id || "251FA04E13";
+    let created = false;
+    try {
+      const res = await createMarketplaceListing(studentId, newTitle, newCategory, newPrice);
+      if (res?.success) created = true;
+    } catch (e) {
+      console.warn("Server action failed:", e);
+    }
+
+    if (!created) {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const res = await fetch(`${backendUrl}/community/marketplace`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: studentId,
+            title: newTitle,
+            category: newCategory,
+            price: newPrice
+          })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.success) created = true;
+        }
+      } catch (e) {
+        console.error("Direct create listing error:", e);
+      }
+    }
+
+    if (created) {
       setIsModalOpen(false);
       setNewTitle("");
       setNewPrice(0);

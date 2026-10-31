@@ -67,3 +67,4 @@ def test_community_neon_cross_student_visibility():
     finally:
         # Clean up lost and found test item
         DataRepository._execute_insert("DELETE FROM lost_and_found WHERE id = ?", (item_id,))
+

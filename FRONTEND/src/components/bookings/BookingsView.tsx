@@ -16,10 +16,38 @@ export function BookingsView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getFacilities().then((data) => {
-      setFacilities(data);
+    const loadFacilities = async () => {
+      setLoading(true);
+      let loaded = false;
+      try {
+        const data = await getFacilities();
+        if (Array.isArray(data) && data.length > 0) {
+          setFacilities(data);
+          loaded = true;
+        }
+      } catch (e) {
+        console.warn("Action getFacilities failed:", e);
+      }
+
+      if (!loaded) {
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+          const res = await fetch(`${backendUrl}/community/facilities`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.success && Array.isArray(json?.facilities) && json.facilities.length > 0) {
+              setFacilities(json.facilities);
+              loaded = true;
+            }
+          }
+        } catch (e) {
+          console.warn("Direct fetch facilities failed:", e);
+        }
+      }
       setLoading(false);
-    });
+    };
+
+    loadFacilities();
   }, []);
 
   const filteredFacilities = facilities.filter(facility => {

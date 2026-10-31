@@ -33,9 +33,31 @@ export const LostAndFoundView = () => {
 
   const loadItems = async () => {
     setLoading(true);
-    const res = await fetchLostAndFoundItems(filterType);
-    if (res.success && res.items) {
-      setItems((res.items as LostAndFoundItem[]) || []);
+    let loaded = false;
+    try {
+      const res = await fetchLostAndFoundItems(filterType);
+      if (res?.success && Array.isArray(res?.items) && res.items.length > 0) {
+        setItems(res.items as LostAndFoundItem[]);
+        loaded = true;
+      }
+    } catch (e) {
+      console.warn("Server action fetch failed:", e);
+    }
+
+    if (!loaded) {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const res = await fetch(`${backendUrl}/community/lost-and-found?filter_type=${filterType}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success && Array.isArray(data?.items)) {
+            setItems(data.items as LostAndFoundItem[]);
+            loaded = true;
+          }
+        }
+      } catch (e) {
+        console.warn("Direct fetch error:", e);
+      }
     }
     setLoading(false);
   };
@@ -45,24 +67,80 @@ export const LostAndFoundView = () => {
   }, [filterType]);
 
   const handleClaim = async (id: number) => {
-    if (!student?.id) return;
+    const studentId = student?.id || "251FA04E13";
     setActionLoading(id);
-    const res = await claimLostAndFoundItem(id, student.id);
-    if (res.success) {
-      // Remove item from view
+    let claimed = false;
+    try {
+      const res = await claimLostAndFoundItem(id, studentId);
+      if (res?.success) claimed = true;
+    } catch (e) {
+      console.warn("Action claim failed, trying direct API:", e);
+    }
+
+    if (!claimed) {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const res = await fetch(`${backendUrl}/community/lost-and-found/${id}/claim`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: studentId })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.success) claimed = true;
+        }
+      } catch (e) {
+        console.error("Direct claim error:", e);
+      }
+    }
+
+    if (claimed) {
       setItems((prev) => prev.filter(item => item.id !== id));
-      // In a real app, trigger a local notification here
       alert("Item claimed! A notification has been sent to the reporter.");
     }
     setActionLoading(null);
   };
 
   const handleReportItem = async (data: any) => {
-    if (!student?.id) return;
-    const res = await reportLostAndFoundItem(student.id, data.type, data.title, data.description, data.tags, data.contactInfo, data.imageUrl);
-    if (res.success) {
+    const studentId = student?.id || "251FA04E13";
+    let reported = false;
+    try {
+      const res = await reportLostAndFoundItem(studentId, data.type, data.title, data.description, data.tags, data.contactInfo, data.imageUrl);
+      if (res?.success) {
+        reported = true;
+      }
+    } catch (e) {
+      console.warn("Server action report failed:", e);
+    }
+
+    if (!reported) {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const res = await fetch(`${backendUrl}/community/lost-and-found`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id: studentId,
+            type: data.type,
+            title: data.title,
+            description: data.description,
+            tags: data.tags || "",
+            contact_info: data.contactInfo,
+            image_url: data.imageUrl || null
+          })
+        });
+        if (res.ok) {
+          const resData = await res.json();
+          if (resData?.success) reported = true;
+        }
+      } catch (e) {
+        console.error("Direct report error:", e);
+      }
+    }
+
+    if (reported) {
       alert("Item reported successfully!");
-      // Reload items
+      setIsModalOpen(false);
       loadItems();
     } else {
       alert("Failed to report item.");

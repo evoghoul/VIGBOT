@@ -35,12 +35,12 @@ export async function getCampusLocations() {
     if (!db) throw new Error("No local database");
     const records = db.prepare("SELECT location_id as id, room_number as name, block as building, floor, type, description, latitude, longitude, features FROM campus_locations ORDER BY room_number ASC").all();
     db.close();
-    
+
     const parsedRecords = records.map((record: any) => ({
       ...record,
       features: record.features ? JSON.parse(record.features) : []
     }));
-    
+
     return { success: true, data: parsedRecords };
   } catch (error: any) {
     const fallbackData = [
