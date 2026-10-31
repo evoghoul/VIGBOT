@@ -80,3 +80,4 @@ def test_nlu_engine_other_blocks():
         assert expected_name in res["content"]
         assert expected_keyword.lower() in res["content"].lower()
         assert res["action"]["target"] == "map"
+

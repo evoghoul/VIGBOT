@@ -124,30 +124,26 @@ class DataRepository:
     
     @staticmethod
     def _execute_query(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
-        use_pg = is_postgres_configured()
-        if use_pg:
-            query = query.replace("?", "%s")
         with get_db_connection() as conn:
-            if use_pg:
-                with conn.cursor() as cur:
-                    cur.execute(query, params)
-                    return [dict(row) for row in cur.fetchall()]
-            else:
+            if isinstance(conn, sqlite3.Connection):
                 cur = conn.execute(query, params)
                 return [dict(row) for row in cur.fetchall()]
+            else:
+                query_pg = query.replace("?", "%s")
+                with conn.cursor() as cur:
+                    cur.execute(query_pg, params)
+                    return [dict(row) for row in cur.fetchall()]
 
     @staticmethod
     def _execute_insert(query: str, params: tuple = ()):
-        use_pg = is_postgres_configured()
-        if use_pg:
-            query = query.replace("?", "%s")
         with get_db_connection() as conn:
-            if use_pg:
-                with conn.cursor() as cur:
-                    cur.execute(query, params)
+            if isinstance(conn, sqlite3.Connection):
+                conn.execute(query, params)
                 conn.commit()
             else:
-                conn.execute(query, params)
+                query_pg = query.replace("?", "%s")
+                with conn.cursor() as cur:
+                    cur.execute(query_pg, params)
                 conn.commit()
 
     @staticmethod

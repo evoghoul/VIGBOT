@@ -38,6 +38,8 @@ class NLUEngine:
         """Identifies exam eligibility, condonation, or attendance what-if questions."""
         is_general_policy = any(p in q_lower for p in ["official policy", "university policy", "what is the policy", "what are the rules", "explain regulation"])
         has_personal_context = any(p in q_lower for p in ["my", "meri", "i am", "am i", "can i", "will i", "mine", "mujhe", "mera", "i have"])
+        if ("fee" in q_lower or "cost" in q_lower or "fine" in q_lower or "amount" in q_lower):
+            return False
         if is_general_policy and not has_personal_context:
             return False
 
@@ -347,57 +349,38 @@ class NLUEngine:
             }
 
         # ---------------- 0.45. UNIVERSAL CAPABILITY, NAVIGATION & DISCOURSE DISPATCH ----------------
-        # Handles navigation requests, status lookups, cancellations, and application features
-        # not covered in the static ML intent model, while safeguarding academic tutoring and distress
-        is_explicit_nav = any(nv in q_lower for nv in ["open", "go to", "take me to", "navigate to", "show tab", "switch to", "view tab", "take me there", "go there", "kholo"])
-        if not cls.is_stress_or_concern(q_lower) and (is_explicit_nav or not cls.is_fast_record_query(q_lower)):
-            try:
-                from app.agent.universal_nlu import UniversalNLU, CommunicationIntent
-                from app.agent.capability_registry import find_matching_capability
-                comm_intent = UniversalNLU.parse_communication_intent(q, conversation_history)
-                matching_cap = UniversalNLU.resolve_contextual_capability(q, conversation_history)
+        # Universally dispatches any query matching the 27 application capabilities, navigation requests,
+        # status lookups, or cancellations to UniversalNLU for rich Answer-First resolution.
+        try:
+            from app.agent.universal_nlu import UniversalNLU, CommunicationIntent
+            from app.agent.capability_registry import find_matching_capability
+            comm_intent = UniversalNLU.parse_communication_intent(q, conversation_history)
+            matching_cap = UniversalNLU.resolve_contextual_capability(q, conversation_history)
 
-                # Core intents covered by ML classifier and dedicated tools:
-                # 'attendance', 'exams', 'marks', 'fees', 'timetable', 'curriculum', 'faculty',
-                # 'library', 'hostel', 'transport', 'circulars', 'events', 'clubs', 'services', 'policy_bylaws'
-                ml_intents_covered = {
-                    "attendance", "exams", "marks", "fees", "timetable", "curriculum", "faculty",
-                    "library", "hostel", "transport", "circulars", "events", "clubs", "services", "policies"
-                }
-
-                # Features outside the 18 ML classifier categories:
-                uncovered_feature = matching_cap and matching_cap["feature_id"] not in ml_intents_covered
-
-                should_intercept = (
-                    comm_intent in (
-                        CommunicationIntent.NAVIGATION_REQUEST,
-                        CommunicationIntent.AMBIGUOUS,
-                        CommunicationIntent.STATUS_LOOKUP,
-                        CommunicationIntent.CANCEL_REQUEST
-                    ) or
-                    uncovered_feature or
-                    (matching_cap and matching_cap["feature_id"] in ["lost-and-found", "bookings", "marketplace", "map", "polling", "alumni"])
+            if matching_cap is not None or comm_intent in (
+                CommunicationIntent.NAVIGATION_REQUEST,
+                CommunicationIntent.AMBIGUOUS,
+                CommunicationIntent.STATUS_LOOKUP,
+                CommunicationIntent.CANCEL_REQUEST
+            ):
+                universal_res = UniversalNLU.resolve_and_execute(
+                    session=session,
+                    query=q,
+                    student_context={"profile": DataRepository.get_student_profile(session) if session else None},
+                    conversation_history=conversation_history
                 )
-
-                if should_intercept:
-                    universal_res = UniversalNLU.resolve_and_execute(
-                        session=session,
-                        query=q,
-                        student_context={"profile": DataRepository.get_student_profile(session) if session else None},
-                        conversation_history=conversation_history
-                    )
-                    if universal_res is not None:
-                        universal_res.setdefault("suggested_follow_ups", cls.generate_dynamic_followups(q, active_subject))
-                        universal_res.setdefault("active_subject", active_subject)
-                        universal_res.setdefault("language", effective_lang)
-                        universal_res.setdefault("llm_provider", "local")
-                        universal_res.setdefault("model_used", "capability-registry")
-                        universal_res.setdefault("used_fallback", False)
-                        default_routed_by = "classifier" if getattr(settings, "USE_INTENT_CLASSIFIER", False) else "rules"
-                        universal_res["routed_by"] = default_routed_by
-                        return universal_res
-            except Exception as e:
-                logger.warning("UniversalNLU early dispatch failed: %s", e)
+                if universal_res is not None:
+                    universal_res.setdefault("suggested_follow_ups", cls.generate_dynamic_followups(q, active_subject))
+                    universal_res.setdefault("active_subject", active_subject)
+                    universal_res.setdefault("language", effective_lang)
+                    universal_res.setdefault("llm_provider", "local")
+                    universal_res.setdefault("model_used", "capability-registry")
+                    universal_res.setdefault("used_fallback", False)
+                    default_routed_by = "classifier" if getattr(settings, "USE_INTENT_CLASSIFIER", False) else "rules"
+                    universal_res["routed_by"] = default_routed_by
+                    return universal_res
+        except Exception as e:
+            logger.warning("UniversalNLU early dispatch failed: %s", e)
 
         # ---------------- 0.5. TRAINED ML INTENT CLASSIFIER (Step 6) ----------------
         if getattr(settings, "USE_INTENT_CLASSIFIER", False):
@@ -944,12 +927,14 @@ class NLUEngine:
         from app.agent.capability_registry import find_matching_capability
         from app.agent.universal_nlu import UniversalNLU
         matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
+        if matching_cap and matching_cap["feature_id"] in (
+            "bookings", "lost-and-found", "marketplace", "polling", "alumni", "map",
+            "wellness", "events", "calendar", "career", "clubs", "policies", "hostel", "transport", "library"
+        ):
+            cross_res = UniversalNLU.resolve_and_execute(session, query)
+            if cross_res is not None:
+                cross_res["routed_by"] = routed_by
+                return cross_res
 
         # 1. Distress safety path: confident prediction provides supportive counseling response without crisis overlay
         if intent == "distress_support":
