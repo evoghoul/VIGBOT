@@ -1,5 +1,8 @@
 "use client";
 
+import { getBackendUrl } from "@/lib/backend-url";
+
+
 import { useState, useEffect } from "react";
 import { BarChart3, CheckCircle2 } from "lucide-react";
 import { getCampusPolls } from "@/actions/polling";
@@ -23,7 +26,7 @@ export function PollingView() {
 
       if (!loaded) {
         try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+          const backendUrl = getBackendUrl();
           const res = await fetch(`${backendUrl}/community/polls`);
           if (res.ok) {
             const json = await res.json();

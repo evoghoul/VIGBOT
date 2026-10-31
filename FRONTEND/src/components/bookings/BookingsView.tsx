@@ -1,5 +1,8 @@
 "use client";
 
+import { getBackendUrl } from "@/lib/backend-url";
+
+
 import { useState, useEffect } from "react";
 import { Facility, getFacilities } from "@/actions/bookings";
 import { Search, MapPin, Users, Activity, Filter, CalendarPlus } from "lucide-react";
@@ -31,7 +34,7 @@ export function BookingsView() {
 
       if (!loaded) {
         try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+          const backendUrl = getBackendUrl();
           const res = await fetch(`${backendUrl}/community/facilities`);
           if (res.ok) {
             const json = await res.json();

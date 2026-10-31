@@ -2,7 +2,8 @@
 
 import { getDb } from "../lib/db-provider";
 
-const BACKEND_BASE_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1").replace(/\/+$/, "");
+import { getBackendUrl } from "../lib/backend-url";
+const BACKEND_BASE_URL = getBackendUrl();
 
 export async function fetchLostAndFoundItems(filterType: 'all' | 'lost' | 'found' = 'all') {
   try {

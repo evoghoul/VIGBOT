@@ -3,7 +3,8 @@
 import { getDb } from "../lib/db-provider";
 import { mockBroadcasts } from '../data/adminMockData';
 
-const BACKEND_BASE_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1").replace(/\/+$/, "");
+import { getBackendUrl } from "../lib/backend-url";
+const BACKEND_BASE_URL = getBackendUrl();
 
 export async function getActiveBroadcasts() {
   try {

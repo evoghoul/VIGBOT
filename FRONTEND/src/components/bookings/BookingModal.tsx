@@ -1,5 +1,8 @@
 "use client";
 
+import { getBackendUrl } from "@/lib/backend-url";
+
+
 import { useState, useEffect } from "react";
 import { X, Calendar as CalendarIcon, Clock, AlertCircle } from "lucide-react";
 import { Facility, Booking, getBookingsForFacility, createBooking } from "@/actions/bookings";
@@ -71,7 +74,7 @@ export function BookingModal({ facility, isOpen, onClose }: BookingModalProps) {
 
     if (!res?.success) {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const backendUrl = getBackendUrl();
         const postRes = await fetch(`${backendUrl}/community/bookings`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchAllTickets, updateTicketStatus } from '@/actions/admin';
+import { fetchAllTickets, updateTicketStatus, deleteTicket } from '@/actions/admin';
 import { getAnalyticsData } from '@/actions/analytics';
 import { getAllBroadcasts, toggleBroadcastStatus, deleteBroadcast, createBroadcast } from '@/actions/broadcasts';
 import {
@@ -104,10 +104,34 @@ interface LostFoundItem {
   image_url: string;
 }
 
+interface ServiceRequestItem {
+  id: number;
+  request_no: string;
+  student_id: string;
+  category: string;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+  sla_due_date?: string;
+  assigned_office?: string;
+}
+
+interface HostelRequestItem {
+  id: number;
+  student_id: string;
+  type: string;
+  details: string;
+  status: string;
+  created_at: string;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [adminUser, setAdminUser] = useState<any>(null);
   
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequestItem[]>([]);
+  const [hostelRequests, setHostelRequests] = useState<HostelRequestItem[]>([]);
   const [grievances, setGrievances] = useState<Grievance[]>([]);
   const [clubApps, setClubApps] = useState<ClubApp[]>([]);
   const [bookings, setBookings] = useState<BookingItem[]>([]);
@@ -115,7 +139,7 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'grievances' | 'clubs' | 'bookings' | 'lost_found' | 'analytics' | 'broadcasts' | 'distress' | 'health' | 'kanban' | 'audit' | 'knowledge' | 'compliance' | 'live_sessions' | 'verifications'>('distress');
+  const [activeTab, setActiveTab] = useState<'service_requests' | 'hostel_requests' | 'grievances' | 'clubs' | 'bookings' | 'lost_found' | 'analytics' | 'broadcasts' | 'distress' | 'health' | 'kanban' | 'audit' | 'knowledge' | 'compliance' | 'live_sessions' | 'verifications'>('service_requests');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [newBroadcastMsg, setNewBroadcastMsg] = useState('');
@@ -144,6 +168,8 @@ export default function AdminDashboard() {
       setClubApps((res.clubApps as ClubApp[]) || []);
       setBookings((res.bookings as BookingItem[]) || []);
       setLostAndFound((res.lostAndFound as LostFoundItem[]) || []);
+      setServiceRequests((res.serviceRequests as ServiceRequestItem[]) || []);
+      setHostelRequests((res.hostelRequests as HostelRequestItem[]) || []);
     }
     
     const analyticsRes = await getAnalyticsData();
@@ -164,12 +190,24 @@ export default function AdminDashboard() {
     router.push('/admin/login');
   };
 
-  const handleStatusUpdate = async (id: string | number, type: 'grievance' | 'club', newStatus: string) => {
+  const handleStatusUpdate = async (id: string | number, type: any, newStatus: string) => {
     const res = await updateTicketStatus(id.toString(), type, newStatus);
     if (res.success) {
-      loadData(); // Refresh the list
+      loadData();
     } else {
       alert(res.error || 'Failed to update status');
+    }
+  };
+
+  const handleDeleteTicket = async (id: string | number, type: any) => {
+    if (!window.confirm(`Permanently delete this ${type.replace('_', ' ')} record? This action cannot be undone.`)) {
+      return;
+    }
+    const res = await deleteTicket(id.toString(), type);
+    if (res.success) {
+      loadData();
+    } else {
+      alert(res.error || 'Failed to delete record');
     }
   };
 
@@ -209,6 +247,20 @@ export default function AdminDashboard() {
   };
 
   if (!adminUser) return null; // Prevent flash of unauthorized content
+
+  const filteredServiceRequests = serviceRequests.filter(s =>
+    (s.request_no && s.request_no.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (s.student_id && s.student_id.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (s.title && s.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (s.category && s.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const filteredHostelRequests = hostelRequests.filter(h =>
+    (h.student_id && h.student_id.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (h.type && h.type.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (h.details && h.details.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const filteredGrievances = grievances.filter(g => 
     g.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -381,6 +433,40 @@ export default function AdminDashboard() {
             </button>
             
             <div className="w-full h-px bg-slate-200 my-4"></div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">Nodal Office & Services</div>
+            
+            <button
+              onClick={() => setActiveTab('service_requests')}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-between w-full text-left ${
+                activeTab === 'service_requests' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <FileCheck className="w-4 h-4" /> Service Requests
+              </span>
+              {serviceRequests.length > 0 && (
+                <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full font-bold">
+                  {serviceRequests.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('hostel_requests')}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-between w-full text-left ${
+                activeTab === 'hostel_requests' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Users className="w-4 h-4" /> Hostel & Mess
+              </span>
+              {hostelRequests.length > 0 && (
+                <span className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-full font-bold">
+                  {hostelRequests.length}
+                </span>
+              )}
+            </button>
+
+            <div className="w-full h-px bg-slate-200 my-4"></div>
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">Standard Views</div>
             
             <button
@@ -439,11 +525,11 @@ export default function AdminDashboard() {
 
           {/* Main Content Area */}
           <div className="flex-1 min-w-0 flex flex-col gap-6">
-            {['grievances', 'clubs', 'bookings', 'lost_found'].includes(activeTab) ? (
+            {['service_requests', 'hostel_requests', 'grievances', 'clubs', 'bookings', 'lost_found'].includes(activeTab) ? (
               <>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <h2 className="text-xl font-bold text-slate-800 capitalize flex items-center gap-2">
-                    {activeTab === 'lost_found' ? 'Lost & Found' : activeTab}
+                    {activeTab === 'service_requests' ? 'Student Service Requests (Nodal Office)' : activeTab === 'hostel_requests' ? 'Hostel & Mess Requests' : activeTab === 'lost_found' ? 'Lost & Found' : activeTab}
                   </h2>
                   <div className="relative w-full sm:w-72">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -476,7 +562,108 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {activeTab === 'grievances' ? (
+                  {activeTab === 'service_requests' ? (
+                    filteredServiceRequests.length > 0 ? filteredServiceRequests.map(s => (
+                      <tr key={s.id || s.request_no} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4 align-top">
+                          <span className="font-mono font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-md text-xs">{s.request_no}</span>
+                          <div className="text-xs text-slate-500 mt-1 font-mono">{s.student_id}</div>
+                        </td>
+                        <td className="px-6 py-4 align-top max-w-md">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold uppercase">{s.category}</span>
+                            <span className="font-semibold text-slate-900 text-sm">{s.title}</span>
+                          </div>
+                          <p className="text-xs text-slate-600 line-clamp-2">{s.description}</p>
+                          {s.assigned_office && (
+                            <div className="text-[11px] text-slate-400 mt-1">Office: {s.assigned_office}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 align-top text-slate-500 whitespace-nowrap text-xs">
+                          <div>{new Date(s.created_at).toLocaleDateString()}</div>
+                          {s.sla_due_date && <div className="text-amber-600 font-medium mt-0.5">SLA: {s.sla_due_date}</div>}
+                        </td>
+                        <td className="px-6 py-4 align-top whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeColor(s.status)}`}>
+                            {getStatusIcon(s.status)}
+                            {s.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 align-top text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <select 
+                              className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                              value={s.status.toUpperCase()}
+                              onChange={(e) => handleStatusUpdate(s.id || s.request_no, 'service_request', e.target.value)}
+                            >
+                              <option value="SUBMITTED">Submitted</option>
+                              <option value="IN_REVIEW">In Review</option>
+                              <option value="APPROVED">Approved</option>
+                              <option value="REJECTED">Rejected</option>
+                              <option value="RESOLVED">Resolved</option>
+                              <option value="CLOSED">Closed</option>
+                            </select>
+                            <button
+                              onClick={() => handleDeleteTicket(s.id || s.request_no, 'service_request')}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              title="Delete Service Request Permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">No service requests found.</td></tr>
+                    )
+                  ) : activeTab === 'hostel_requests' ? (
+                    filteredHostelRequests.length > 0 ? filteredHostelRequests.map(h => (
+                      <tr key={h.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4 align-top">
+                          <div className="font-semibold text-slate-900">{h.student_id}</div>
+                          <div className="text-xs text-slate-500 mt-1 font-mono">Req #{h.id}</div>
+                        </td>
+                        <td className="px-6 py-4 align-top">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-50 text-purple-700 font-medium text-xs border border-purple-100">
+                            {h.type}
+                          </span>
+                          <div className="mt-2 text-xs text-slate-700">{h.details}</div>
+                        </td>
+                        <td className="px-6 py-4 align-top text-slate-500 whitespace-nowrap text-xs">
+                          {h.created_at ? new Date(h.created_at).toLocaleString() : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 align-top whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeColor(h.status)}`}>
+                            {getStatusIcon(h.status)}
+                            {h.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 align-top text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <select 
+                              className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                              value={h.status}
+                              onChange={(e) => handleStatusUpdate(h.id, 'hostel', e.target.value)}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="in_progress">In Progress</option>
+                              <option value="resolved">Resolved</option>
+                              <option value="rejected">Rejected</option>
+                            </select>
+                            <button
+                              onClick={() => handleDeleteTicket(h.id, 'hostel')}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              title="Delete Hostel Request Permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">No hostel requests found.</td></tr>
+                    )
+                  ) : activeTab === 'grievances' ? (
                     filteredGrievances.length > 0 ? filteredGrievances.map(g => (
                       <tr key={g.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4 align-top">
@@ -500,19 +687,28 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 align-top text-right">
-                          <select 
-                            disabled={g.status === 'Withdrawn'}
-                            className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-50"
-                            value={g.status}
-                            onChange={(e) => handleStatusUpdate(g.id, 'grievance', e.target.value)}
-                          >
-                            <option value="Received & Secured">Received & Secured</option>
-                            <option value="Under Investigation">Under Investigation</option>
-                            <option value="Action Taken">Action Taken</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Withdrawn" disabled>Withdrawn</option>
-                          </select>
+                          <div className="flex items-center justify-end gap-2">
+                            <select 
+                              disabled={g.status === 'Withdrawn'}
+                              className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-50"
+                              value={g.status}
+                              onChange={(e) => handleStatusUpdate(g.id, 'grievance', e.target.value)}
+                            >
+                              <option value="Received & Secured">Received & Secured</option>
+                              <option value="Under Investigation">Under Investigation</option>
+                              <option value="Action Taken">Action Taken</option>
+                              <option value="Resolved">Resolved</option>
+                              <option value="Rejected">Rejected</option>
+                              <option value="Withdrawn" disabled>Withdrawn</option>
+                            </select>
+                            <button
+                              onClick={() => handleDeleteTicket(g.id, 'grievance')}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              title="Delete Grievance Permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )) : (
@@ -545,19 +741,28 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 align-top text-right">
-                          <select 
-                            disabled={c.status === 'Withdrawn'}
-                            className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-50"
-                            value={c.status}
-                            onChange={(e) => handleStatusUpdate(c.id, 'club', e.target.value)}
-                          >
-                            <option value="Application Forwarded">Application Forwarded</option>
-                            <option value="Under Review">Under Review</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                            <option value="Waitlisted">Waitlisted</option>
-                            <option value="Withdrawn" disabled>Withdrawn</option>
-                          </select>
+                          <div className="flex items-center justify-end gap-2">
+                            <select 
+                              disabled={c.status === 'Withdrawn'}
+                              className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-50"
+                              value={c.status}
+                              onChange={(e) => handleStatusUpdate(c.id, 'club', e.target.value)}
+                            >
+                              <option value="Application Forwarded">Application Forwarded</option>
+                              <option value="Under Review">Under Review</option>
+                              <option value="Approved">Approved</option>
+                              <option value="Rejected">Rejected</option>
+                              <option value="Waitlisted">Waitlisted</option>
+                              <option value="Withdrawn" disabled>Withdrawn</option>
+                            </select>
+                            <button
+                              onClick={() => handleDeleteTicket(c.id, 'club')}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              title="Delete Club Application Permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )) : (
@@ -589,15 +794,24 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 align-top text-right">
-                          <select 
-                            className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={b.status}
-                            onChange={(e) => handleStatusUpdate(b.id, 'booking' as any, e.target.value)}
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
+                          <div className="flex items-center justify-end gap-2">
+                            <select 
+                              className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              value={b.status}
+                              onChange={(e) => handleStatusUpdate(b.id, 'booking' as any, e.target.value)}
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                            <button
+                              onClick={() => handleDeleteTicket(b.id, 'booking')}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              title="Delete Booking Permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )) : (
@@ -624,15 +838,24 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-6 py-4 align-top text-right">
-                          <select 
-                            className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={l.status}
-                            onChange={(e) => handleStatusUpdate(l.id, 'lost_found' as any, e.target.value)}
-                          >
-                            <option value="open">Open</option>
-                            <option value="claimed">Claimed</option>
-                            <option value="resolved">Resolved</option>
-                          </select>
+                          <div className="flex items-center justify-end gap-2">
+                            <select 
+                              className="text-xs bg-white border border-slate-200 rounded-md px-2 py-1.5 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              value={l.status}
+                              onChange={(e) => handleStatusUpdate(l.id, 'lost_found' as any, e.target.value)}
+                            >
+                              <option value="open">Open</option>
+                              <option value="claimed">Claimed</option>
+                              <option value="resolved">Resolved</option>
+                            </select>
+                            <button
+                              onClick={() => handleDeleteTicket(l.id, 'lost_found')}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              title="Delete Lost & Found Post Permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )) : (

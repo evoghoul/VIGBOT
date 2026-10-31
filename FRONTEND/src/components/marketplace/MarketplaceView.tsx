@@ -1,3 +1,4 @@
+import { getBackendUrl } from "@/lib/backend-url";
 import React, { useEffect, useState } from "react";
 import { Store, Tag, Plus, IndianRupee } from "lucide-react";
 import { getMarketplaceListings, createMarketplaceListing } from "@/actions/marketplace";
@@ -31,7 +32,7 @@ export const MarketplaceView = () => {
 
     if (!loaded) {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const backendUrl = getBackendUrl();
         const res = await fetch(`${backendUrl}/community/marketplace`);
         if (res.ok) {
           const json = await res.json();
@@ -60,7 +61,7 @@ export const MarketplaceView = () => {
 
     if (!created) {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const backendUrl = getBackendUrl();
         const res = await fetch(`${backendUrl}/community/marketplace`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

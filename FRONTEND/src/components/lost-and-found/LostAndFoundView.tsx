@@ -1,5 +1,8 @@
 "use client";
 
+import { getBackendUrl } from "@/lib/backend-url";
+
+
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Tag, Plus, CheckCircle2, User, Loader2, AlertTriangle, AlertCircle } from "lucide-react";
 import { fetchLostAndFoundItems, claimLostAndFoundItem, reportLostAndFoundItem } from "@/actions/lostAndFound";
@@ -46,7 +49,7 @@ export const LostAndFoundView = () => {
 
     if (!loaded) {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const backendUrl = getBackendUrl();
         const res = await fetch(`${backendUrl}/community/lost-and-found?filter_type=${filterType}`);
         if (res.ok) {
           const data = await res.json();
@@ -79,7 +82,7 @@ export const LostAndFoundView = () => {
 
     if (!claimed) {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const backendUrl = getBackendUrl();
         const res = await fetch(`${backendUrl}/community/lost-and-found/${id}/claim`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -115,7 +118,7 @@ export const LostAndFoundView = () => {
 
     if (!reported) {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1";
+        const backendUrl = getBackendUrl();
         const res = await fetch(`${backendUrl}/community/lost-and-found`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

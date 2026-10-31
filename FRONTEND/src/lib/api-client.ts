@@ -1,15 +1,14 @@
-
 /**
  * API Client for connecting Frontend to VIGBOT FastAPI Backend.
  * Uses NEXT_PUBLIC_BACKEND_URL or defaults to the deployed VIGBOT API.
  */
 
-const ACTIVE_BACKEND_BASE_URL = "/api/v1";
-const configuredBackendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, "");
+import { getBackendUrl } from "./backend-url";
 
+const ACTIVE_BACKEND_BASE_URL = "/api/v1";
 // Bypass Vercel's 10s Serverless timeout by calling Render directly from the client.
-// Vercel's rewrites are subject to a strict 10s timeout, causing the fallback to trigger.
-const BACKEND_BASE_URL = configuredBackendUrl || "https://vigbot-api.onrender.com/api/v1";
+const BACKEND_BASE_URL = getBackendUrl();
+
 export interface BackendTokenResponse {
   access_token: string;
   token_type: string;
