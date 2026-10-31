@@ -2,221 +2,140 @@
 
 An autonomous, production-grade AI academic assistant and helpdesk built for **Vignan's Foundation for Science, Technology and Research (VFSTR :: Vadlamudi)**. Grounded in official institutional bylaws, academic records, attendance percentages, timetable slots, exam schedules, and the **2026-27 Semester-I B.Tech Academic Calendar**.
 
-VIGBOT pairs verified institutional database lookups, 28 verified application capabilities, and security guardrails with **Google Gemini (gemini-3.5-flash)** for natural conversation, **Universal NLU** for zero-false-action intent routing, and a **sub-millisecond CPU-bound Intent Classifier** (TF-IDF Word + Subword Character N-Grams + Multinomial Logistic Regression) for high-speed intent routing and crisis safety.
+VIGBOT pairs verified institutional database lookups, 28 verified application capabilities, and security guardrails with a **23-Tool Knowledge Graph Registry**, an algorithmic **Dijkstra Campus Navigation Graph**, and a **sub-millisecond CPU-bound Intent Classifier** (TF-IDF Word + Subword Character N-Grams + Multinomial Logistic Regression) for high-speed intent routing and crisis safety.
+
+---
+
+## 🌐 Live Production Deployment
+
+VIGBOT is fully deployed and operational across cloud infrastructure:
+
+| Component | Platform | Live URL / Identifier | Status |
+| :--- | :--- | :--- | :---: |
+| **Frontend Web App** | Vercel (Next.js 16 Turbopack) | **[student-helpdesk-agent-five.vercel.app](https://student-helpdesk-agent-five.vercel.app)** | **LIVE** |
+| **Backend API** | Render (FastAPI Docker) | **[vigbot-api.onrender.com](https://vigbot-api.onrender.com)** | **LIVE** |
+| **Database** | Neon (Lakebase Postgres) | `vigbot-db` (Branch: `production`) | **LIVE** |
+| **Interactive API Docs** | Swagger UI (FastAPI) | **[vigbot-api.onrender.com/docs](https://vigbot-api.onrender.com/docs)** | **LIVE** |
 
 ---
 
 ## Key Highlights & Production Status
 
+- **Live Cloud Database on Neon Lakebase Postgres**: Decoupled serverless storage running on AWS US East (Ohio), fully seeded with 315 students, 22 faculty, 977 attendance logs, 2,922 marks records, 4,944 timetable slots, and institutional knowledge tables.
+- **Answer-First Rule & 23-Tool Registry**: Every factual query provides a direct, verifiable answer in the first sentence with structured data badges and source citations.
+- **Campus Spatial Directory & Dijkstra Navigation Graph**: Algorithmic pathfinding across 23 campus nodes and 18 directed edges from Main Gate (Node 0) to Convocation Hall, NTR Library, MHP Canteen, Chest Supermarket, E-Block, and U-Block.
+- **Module-Grounded Truth**:
+  - **Central Library**: Open Sundays from 09:00 AM to 05:00 PM (09:00 - 17:00) for reading rooms and digital study spaces.
+  - **Hostel Mess Facilities**: Decentralized internal dining halls located on the ground floor of each individual hostel building.
+  - **Hostel Bus Shuttles**: Verified morning (07:45 AM - 11:35 AM) and evening return (01:45 PM - 09:00 PM) schedules for KM, Villas SP, and AP/AR/AA/AO routes.
+  - **Lost Student ID Replacement**: Authoritative 2-phase state machine (Phase 1: Digital report on sidebar board $\to$ Phase 2: Administrative replacement in H-Block Ground Floor Room H-G04, ₹100 challan, 2-day turnaround).
 - **28 Verified Application Capabilities & 48 Operations**: Full bidirectional integration between conversational AI and 28 frontend tabs/routes (Lost & Found, Facility Bookings, Attendance, SGRC Grievance, Student Services, Fee Management, Exams, Hostels, Transport, etc.).
 - **Zero False Writes & Zero Fabricated Tickets**: Strict distinction between *asking* and *doing*. Informational inquiries ("where do I report...", "how do I book...") never mutate the database, never fabricate tracking numbers, and provide direct one-click navigation pills.
 - **Low-Latency Intent Classification**: Zero-cost, CPU-bound ML intent classifier (~1-2ms on standard CPU) across 18 specialized domain intents with dynamic confidence thresholding and graceful fallback.
 - **22+1 Official Languages of India**: Full support for all 22 languages recognized under the 8th Schedule of the Constitution of India plus English, with real-time clickable dropdown and instant search filter.
 - **Zero-Delay Mental Health Crisis Guardrail**: Asymmetric safety thresholding for `distress_support` ($\ge 99\%$ recall target) triggering immediate confidential escalation (Tele-MANAS & Crisis Counseling) without ever routing to cloud LLMs.
 - **Row-Level Access Control (RLAC) & Prompt Injection Defense**: Hardened security boundaries preventing cross-student record access, unauthorized queries, and prompt injection attempts before model inference.
-- **Clean Bare-Minimum Architecture**: Fully restructured, deduplicated repository with zero clutter, strict separation of concerns, and an absolute bare-minimum root directory.
-- **Comprehensive Quality & Test Verification**:
-  - **Backend Pytest Suite**: 89 passed, 3 skipped, 1 deselected, 0 failures.
-  - **Phase 14 Independent Benchmark**: 252 held-out cases with 0 false writes, 0 fabricated confirmations, and 100% navigation success.
-  - **Adversarial Safety Suite**: 15/15 adversarial attack and injection scenarios passing with zero unauthorized mutations.
-  - **Frontend E2E Verification**: 28/28 capabilities verified against Next.js components.
-  - **Frontend Build**: Next.js 16.3.4 (Turbopack) build succeeded with 0 TypeScript errors.
-  - **Scripts Integrity**: 12 standing scripts and 8 archived legacy patches passing with 0 errors.
 
 ---
 
 ## System Architecture
 
 ```
-Incoming Student Query
+Student Query (Browser / Mobile)
           │
           ▼
-[1. Security Guardrail: Prompt Injection & Cross-Student RLAC Defense]
-          │ (Passes - not an injection or unauthorized cross-student attempt)
-          ▼
-[2. Crisis Guardrail: Deterministic Distress Regex Filter]
-          │ (Passes - no immediate emergency keywords)
-          ▼
-[3. Universal NLU & Capability Registry (28 Capabilities, 48 Operations)]
-          │ (Strict Safe-Execution Planner: Asks vs Actions vs Navigation)
-          ├── Asking/Info/Navigation ─────────► Structured Navigation Action Card (Zero Writes)
-          ├── Explicit Action (Submit/Book) ──► Verified Database Tool or Prefill Form Guide
-          │
-          └── General / Academic Domain Inquiry
-                    │
-                    ▼
-[4. ML Intent Classifier & Semantic RAG Reasoning]
-          ├── Confident Match ────────────────► Domain Tool Handler (Attendance, Marks, Schedule)
-          └── Deep Pedagogical Inquiry ───────► Offline Local GGUF (8B/1B) or Gemini 3.5 Flash
+[Next.js 16 Frontend on Vercel] ──── NEXT_PUBLIC_BACKEND_URL ───┐
+                                                                │
+                                                                ▼
+                                              [FastAPI Backend on Render]
+                                                                │
+          ┌─────────────────────────────────────────────────────┤
+          │                                                     │
+          ▼                                                     ▼
+[1. Security & RLAC Guardrail]                        [2. Distress Safety Filter]
+(PII Redaction, Prompt Injection Defense)              (Immediate Tele-MANAS Escalation)
+          │                                                     │
+          └──────────────────────────┬──────────────────────────┘
+                                     │
+                                     ▼
+                     [3. Hybrid Intent Classifier]
+                     (TF-IDF + Logistic Regression, CPU)
+                                     │
+                                     ▼
+                     [4. 23-Tool Registry & Service Graph]
+                     ├── Attendance, Marks, Timetable, Fees (RLAC)
+                     ├── Central Library Sunday Hours (09:00 - 17:00)
+                     ├── Decentralized Hostel Dining (Ground Floor)
+                     ├── Synchronized Hostel Shuttle Buses
+                     ├── Dijkstra Shortest Path Navigation (23 Nodes)
+                     └── Lost ID Replacement 2-Phase State Machine
+                                     │
+                                     ▼
+                     [5. Neon Lakebase Postgres]
+                     (315 Students, 4,944 Slots, 16 Relational Tables)
 ```
 
 ---
 
-## Repository Structure
+## Environment Variables Reference
 
-The project follows a clean, modular structure organized into 12 cohesive directories, with an absolute bare-minimum root (`README.md`, `.gitignore`, `pytest.ini`):
+### Backend (`BACKEND/.env` or Render Dashboard)
+| Variable | Required? | Example / Default | Description |
+| :--- | :---: | :--- | :--- |
+| `ENVIRONMENT` | **Yes** | `production` (cloud) / `development` (local) | Enforces strict production security assertions. |
+| `SECRET_KEY` | **Yes** | `[64-character random hex string]` | JWT encryption key. Production crashes if left default. |
+| `DATABASE_URL` | **Yes** | `postgresql://user:pass@ep-...neon.tech/neondb?sslmode=require` | Pooled connection string to Neon Lakebase Postgres. |
+| `DATABASE_URL_UNPOOLED` | Optional | `postgresql://user:pass@ep-...neon.tech/neondb?sslmode=require` | Direct connection string for schema migrations. |
+| `USE_IN_MEMORY_DB` | **Yes** | `false` | Set to `false` to use live Neon PostgreSQL. |
+| `USE_INTENT_CLASSIFIER` | **Yes** | `true` | Enables CPU-bound scikit-learn intent classifier. |
+| `ENABLE_GEMINI` | Optional | `false` (default) / `true` | Toggles Google Gemini cloud reasoning fallback. |
+| `GEMINI_API_KEY` | Optional | `AIzaSy...` | Required only if `ENABLE_GEMINI=true`. |
+| `FRONTEND_ORIGINS` | Optional | `https://student-helpdesk-agent-five.vercel.app` | Allowed CORS origins for browser fetch requests. |
 
-```text
-StudentHelpdesk/
-├── BACKEND/             # FastAPI backend application, agent orchestrator, Universal NLU, APIs
-│   ├── app/             # Application source (agent/, api/, core/, models/, services/)
-│   ├── artifacts/       # Trained ML models (intent_model.joblib, intent_config.json)
-│   ├── data/            # Domain knowledge bases, policies, and research logs
-│   └── tests/           # Backend unit, integration, and safety tests
-├── FRONTEND/            # Next.js 16 (App Router) + React 19 + Tailwind CSS frontend
-│   ├── src/app/         # 28 capability pages and routes
-│   ├── src/components/  # UI components, chat widget, sidebar, voice, language selector
-│   └── vigbot.db        # Bundled SQLite database for Next.js Server Actions
-├── database/            # Canonical SQLite database (vigbot.db) with 44 application tables
-├── data/                # Dataset store (intents.csv, campus maps, author datasets)
-├── ml/                  # Machine learning training pipelines, evaluation suites, Colab notebooks
-├── models/              # Local quantized LLMs (GGUF format)
-├── launchers/           # One-click startup scripts (Windows .bat/.ps1, Linux/Mac shell)
-├── scripts/             # Standing maintenance, benchmark evaluation, and verification scripts
-├── reports/             # Comprehensive audit reports, test results, and cleanup manifests
-├── docs/                # Architecture specifications, deployment guides, and integration docs
-├── bin/                 # External tunnel binaries (cloudflared, ngrok)
-└── tests/               # Data guardrail tests
-```
+### Frontend (`FRONTEND/.env.local` or Vercel Dashboard)
+| Variable | Required? | Example / Default | Description |
+| :--- | :---: | :--- | :--- |
+| `NEXT_PUBLIC_BACKEND_URL` | **Yes** | `https://vigbot-api.onrender.com/api/v1` | Public HTTPS endpoint of the FastAPI backend. |
 
 ---
 
-## The 18 Target Intents Taxonomy
+## Quick Start (Local Development)
 
-All target intents are formally declared in [`ml/intents.yaml`](ml/intents.yaml):
-
-| Category | Intents | Description |
-| :--- | :--- | :--- |
-| **Academic & Student Records** | `attendance`, `exams`, `marks`, `fees`, `timetable`, `curriculum` | Attendance shortage warnings, CIE marks, GPA calculations, dues, weekly timetables, and graduation credit audits. |
-| **Campus Facilities & Life** | `facility`, `library`, `hostel`, `transport`, `circulars`, `events`, `clubs`, `services` | Facility bookings, book availability, mess schedules, bus routes, official circulars, and certificates. |
-| **Institutional Governance** | `policy_bylaws` | Detentions, condonation policies, academic regulations (R23/R24). |
-| **Safety-Critical** | `distress_support` | Crisis intervention, academic panic, helplessness (asymmetric $\tau=0.10$, $\ge 99\%$ recall). |
-| **Conversational & Scoping** | `greeting_smalltalk`, `out_of_scope` | Helpdesk onboarding and polite out-of-domain rejection ($\tau=0.50$). |
-
----
-
-## Prerequisites
-
-Ensure you have installed on your machine:
-1. **Python** (v3.10 – v3.12)
-2. **Node.js** (v18.0.0 or higher) & **npm** (v9+)
-3. *(Optional)* **Google Gemini API Key** (set `GEMINI_API_KEY` in environment for live cloud generative responses)
-
----
-
-## Quick Start Guide
-
-### Option A: One-Click Launch (Recommended)
-
-Start both Backend (FastAPI on `:8000`) and Frontend (Next.js on `:3000`) with a single command:
-
-**Windows (PowerShell):**
-```powershell
-.\launchers\start_live_vigbot.ps1
-```
-
-**Windows (Command Prompt):**
-```cmd
-launchers\start_live_vigbot.bat
-```
-
----
-
-### Option B: Manual Step-by-Step Launch
-
-#### 1. Start the Backend API (FastAPI)
-
-Open Terminal 1:
+### 1. Start the Backend API (FastAPI)
 ```bash
 cd BACKEND
 
-# Activate Python virtual environment
-# Windows (PowerShell):
-..\.venv\Scripts\Activate.ps1
-# Windows (Command Prompt):
-..\.venv\Scripts\activate.bat
+# Windows PowerShell:
+.\.venv\Scripts\Activate.ps1
 # Linux / macOS:
 source ../.venv/bin/activate
 
-# Start the Uvicorn server
+# Run Uvicorn server
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-*Backend runs on: `http://localhost:8000` (Interactive Swagger docs available at `http://localhost:8000/docs`).*
+*API runs at `http://localhost:8000` (Docs: `http://localhost:8000/docs`).*
 
-##### Configuration Options (`BACKEND/app/config.py` or `.env`):
-- `USE_INTENT_CLASSIFIER=True|False` (Default: `False` for backward compatibility)
-- `DATABASE_URL=sqlite:///../database/vigbot.db`
-- `ENABLE_GEMINI=True|False` (Default: `False`)
-- `ENABLE_GROQ=False`
-- `INTENT_MODEL_PATH=artifacts/intent_model.joblib`
-- `INTENT_CONFIG_PATH=artifacts/intent_config.json`
-
-#### 2. Start the Frontend (Next.js)
-
-Open Terminal 2:
+### 2. Start the Frontend (Next.js)
 ```bash
 cd FRONTEND
-
-# Install dependencies (first time only)
 npm install
-
-# Start Next.js development server
 npm run dev
 ```
-*Frontend runs on: `http://localhost:3000`.*
-
----
-
-## Running Verification & Test Suites
-
-The project features a comprehensive test suite covering data guardrails, system endpoints, intent classification, distress safety, and privacy:
-
-```bash
-# 1. Run all backend tests (89 tests):
-.\.venv\Scripts\python.exe -m pytest
-
-# 2. Run the 252-case independent real-world evaluation benchmark:
-.\.venv\Scripts\python.exe scripts/evaluate_independent_suite.py
-
-# 3. Run the 15-case adversarial action safety suite:
-.\.venv\Scripts\python.exe scripts/run_adversarial_safety_suite.py
-
-# 4. Verify frontend E2E capabilities and routes (28 capabilities):
-.\.venv\Scripts\python.exe scripts/verify_frontend_e2e.py
-
-# 5. Run the standing and archived scripts integrity harness (12 scripts, 8 patches):
-.\.venv\Scripts\python.exe scripts/verify_scripts_integrity.py
-
-# 6. Verify frontend production Turbopack build:
-npm --prefix FRONTEND run build
-```
+*Web app runs at `http://localhost:3000`.*
 
 ---
 
 ## Demo Student Login Credentials
 
-Log in with pre-seeded student accounts:
+Use these verified institutional student credentials to test login, attendance telemetry, marks, timetable, and conversational AI:
 
 | Field | Primary Demo Credential | Alternative Demo Credential |
 | :--- | :--- | :--- |
-| **Roll Number / Username** | `251FA04E13` | `24CSE001` |
-| **Password** | `251FA04E13` (or `student123`) | `student123` |
-| **Student Name** | Aman Kumar | Asha Reddy |
-| **Branch & Section** | B.Tech CSE (Section 7) | B.Tech CSE (Section A) |
-
----
-
-## Architectural & Project Documentation
-
-For exhaustive technical references, inspect:
-- [`reports/FINAL_PROJECT_STRUCTURE.md`](reports/FINAL_PROJECT_STRUCTURE.md) — Annotated file-by-file directory layout.
-- [`reports/PROJECT_CLEANUP_REPORT.md`](reports/PROJECT_CLEANUP_REPORT.md) — Comprehensive 18-section architectural refactoring and optimization report.
-- [`reports/PHASE16_FINAL_AUDIT.md`](reports/PHASE16_FINAL_AUDIT.md) — Phase 16 post-cleanup independent audit and runtime verification report.
-- [`reports/CLEANUP_FILE_MANIFEST.json`](reports/CLEANUP_FILE_MANIFEST.json) — Inventory of retained, refactored, relocated, and archived files.
-- [`reports/CLEANUP_TEST_RESULTS.json`](reports/CLEANUP_TEST_RESULTS.json) — Complete machine-readable test results across all suites.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Systems design, row-level security, and tool dispatch.
-- [`docs/UNIVERSAL_INTENT_ROUTING.md`](docs/UNIVERSAL_INTENT_ROUTING.md) — Detailed capability-operation matrix.
-- [`docs/DEPLOYMENT_AND_OPERATIONS_GUIDE.md`](docs/DEPLOYMENT_AND_OPERATIONS_GUIDE.md) — Cloudflare & ngrok tunnel deployment guide.
+| **Roll Number / Username** | `24CSE001` | `24CSE002` |
+| **Password** | `student123` | `student123` |
+| **Student Name** | Asha Reddy | Rahul Verma |
+| **Branch & Section** | B.Tech CSE (Section A) | B.Tech CSE (Section A) |
+| **Attendance State** | Digital Electronics: 68.0% (Needs 14 classes for 75%) | Data Structures: 70.0% (Needs 8 classes for 75%) |
 
 ---
 
