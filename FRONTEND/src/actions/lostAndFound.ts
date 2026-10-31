@@ -2,11 +2,27 @@
 
 import { getDb } from "../lib/db-provider";
 
-
+const BACKEND_BASE_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1").replace(/\/+$/, "");
 
 export async function fetchLostAndFoundItems(filterType: 'all' | 'lost' | 'found' = 'all') {
   try {
+    const res = await fetch(`${BACKEND_BASE_URL}/community/lost-and-found?filter_type=${filterType}`, {
+      cache: 'no-store'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.items)) {
+        return { success: true, items: data.items };
+      }
+    }
+  } catch (backendError) {
+    console.warn("Backend fetch failed for lost-and-found, attempting local fallback:", backendError);
+  }
+
+  // Local fallback (offline development)
+  try {
     const db = getDb();
+    if (!db) return { success: true, items: [] };
     let query = `SELECT * FROM lost_and_found WHERE status = 'open'`;
     const params = [];
     
@@ -37,7 +53,39 @@ export async function reportLostAndFoundItem(
   imageUrl?: string
 ) {
   try {
+    const res = await fetch(`${BACKEND_BASE_URL}/community/lost-and-found`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        student_id: studentId,
+        type,
+        title,
+        description,
+        tags: tags || "",
+        contact_info: contactInfo,
+        image_url: imageUrl || null
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return { success: true, id: data.id };
+      }
+    }
+    const errData = await res.json().catch(() => null);
+    if (errData?.error) {
+      console.error("Backend error reporting item:", errData.error);
+    }
+  } catch (backendError) {
+    console.warn("Backend report failed, attempting local fallback:", backendError);
+  }
+
+  // Local fallback (offline development)
+  try {
     const db = getDb();
+    if (!db) return { success: false, error: "Database unavailable" };
     const datePosted = new Date().toISOString();
     const result = db.prepare(`
       INSERT INTO lost_and_found (student_id, type, title, description, tags, contact_info, status, date_posted, image_url)
@@ -54,8 +102,27 @@ export async function reportLostAndFoundItem(
 
 export async function claimLostAndFoundItem(itemId: number, studentId: string) {
   try {
+    const res = await fetch(`${BACKEND_BASE_URL}/community/lost-and-found/${itemId}/claim`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ student_id: studentId })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return { success: true };
+      }
+    }
+  } catch (backendError) {
+    console.warn("Backend claim failed, attempting local fallback:", backendError);
+  }
+
+  // Local fallback
+  try {
     const db = getDb();
-    
+    if (!db) return { success: false, error: "Database unavailable" };
     const item: any = db.prepare(`SELECT * FROM lost_and_found WHERE id = ?`).get(itemId);
     
     if (!item) {
@@ -70,10 +137,6 @@ export async function claimLostAndFoundItem(itemId: number, studentId: string) {
     `).run(itemId);
     
     db.close();
-    
-    // Simulating sending a notification / email here
-    console.log(`Notification: Student ${studentId} claimed item ${itemId} (${item.title}). Contacting ${item.contact_info}.`);
-    
     return { success: true };
   } catch (error) {
     console.error("Error claiming item:", error);

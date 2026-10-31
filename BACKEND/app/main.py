@@ -13,7 +13,8 @@ from app.api import (
     auth_router,
     conversations_router,
     services_router,
-    analytics_router
+    analytics_router,
+    community_router
 )
 
 app = FastAPI(
@@ -55,6 +56,7 @@ app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(conversations_router, prefix=settings.API_V1_PREFIX)
 app.include_router(services_router, prefix=settings.API_V1_PREFIX)
 app.include_router(analytics_router, prefix=settings.API_V1_PREFIX)
+app.include_router(community_router, prefix=settings.API_V1_PREFIX)
 
 from app.models.schemas import StudentProfile
 from app.database import DataRepository, DatabaseSession

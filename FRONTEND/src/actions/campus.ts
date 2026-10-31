@@ -2,15 +2,40 @@
 
 import { getDb } from "../lib/db-provider";
 
-
+const BACKEND_BASE_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || "https://vigbot-api.onrender.com/api/v1").replace(/\/+$/, "");
 
 export async function getCampusLocations() {
   try {
+    const res = await fetch(`${BACKEND_BASE_URL}/community/locations`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.locations)) {
+        return {
+          success: true,
+          data: data.locations.map((record: any) => ({
+            id: record.location_id,
+            name: record.room_number,
+            building: record.block,
+            floor: record.floor,
+            type: record.type,
+            description: record.description,
+            latitude: record.latitude,
+            longitude: record.longitude,
+            features: typeof record.features === "string" ? JSON.parse(record.features || "[]") : (record.features || [])
+          }))
+        };
+      }
+    }
+  } catch (backendError) {
+    console.warn("Backend fetch failed for campus locations:", backendError);
+  }
+
+  try {
     const db = getDb();
+    if (!db) throw new Error("No local database");
     const records = db.prepare("SELECT location_id as id, room_number as name, block as building, floor, type, description, latitude, longitude, features FROM campus_locations ORDER BY room_number ASC").all();
     db.close();
     
-    // Parse the features JSON string if it exists
     const parsedRecords = records.map((record: any) => ({
       ...record,
       features: record.features ? JSON.parse(record.features) : []
@@ -18,8 +43,6 @@ export async function getCampusLocations() {
     
     return { success: true, data: parsedRecords };
   } catch (error: any) {
-    console.error("Error fetching campus locations:", error);
-    // Fallback data if DB fails (e.g. on Vercel)
     const fallbackData = [
       { id: 'LOC_MAIN', name: 'N-Block', building: 'Main Block', floor: 'G to 4', type: 'Administrative', description: 'Main administrative and CSE department block', latitude: null, longitude: null, features: [] },
       { id: 'LOC_LIB', name: 'Central Library', building: 'Library', floor: 'G to 2', type: 'Facility', description: '24/7 AC Library with thousands of books', latitude: null, longitude: null, features: [] },
