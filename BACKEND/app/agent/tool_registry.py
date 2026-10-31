@@ -772,6 +772,79 @@ class ToolRegistry:
             }
         }
 
+    CAMPUS_BLOCK_PROFILES = {
+        "N_BLOCK": {
+            "title": "N-Block (Computer Science & Engineering Block)",
+            "purpose": "Primary academic facility housing the Department of Computer Science & Engineering (CSE) and Artificial Intelligence & Machine Learning (AI/ML).",
+            "cohort": "2nd-year and 3rd-year senior students in CSE, Computer Science, and AI & ML.",
+            "location": "Located on Path Beta just beside Zest, directly facing Vignan Vihar Boys Hostel (~240m from Main Gate).",
+            "facilities": "Advanced AI & Deep Learning Research Labs, Central Computing Centers, Interactive Smart Classrooms, and Faculty Cabins."
+        },
+        "A_BLOCK": {
+            "title": "A-Block (Freshers Academic Block)",
+            "purpose": "Dedicated foundation academic block for all 1st-year undergraduate engineering students.",
+            "cohort": "1st-year Freshers across all combined engineering branches (common foundation curriculum).",
+            "location": "Located at the first right turn along Path Alpha, directly opposite H-Block (80m from Main Gate).",
+            "facilities": "Dean of First Year Office, Basic Science Labs (Engineering Physics & Chemistry), Programming Labs, Drawing Halls, and Lecture Theatres."
+        },
+        "H_BLOCK": {
+            "title": "H-Block (ECE, IT & University Administration)",
+            "purpose": "Houses Electronics (ECE) and Information Technology (IT) departments, alongside central administrative services.",
+            "cohort": "Senior students in ECE and IT programs, plus students visiting administrative cells.",
+            "location": "Located directly opposite A-Block at the first right turn along Path Alpha (80m from Main Gate).",
+            "facilities": "Student ID Card Replacement Office (ground-floor hallway), Advanced VLSI & Embedded Systems Labs, Communication Labs, Accounts Cell, and Examination Cell."
+        },
+        "U_BLOCK": {
+            "title": "U-Block (School of Law & Management Studies)",
+            "purpose": "Academic center for legal studies, management programs, and humanities.",
+            "cohort": "Students enrolled in Law (BBA LL.B, LL.B) and Business Administration (BBA, MBA).",
+            "location": "Located behind N-Block along Path Gamma past Intersection 2 (~320m from Main Gate).",
+            "facilities": "State-of-the-art Moot Court Hall, Business Case Study Discussion Rooms, Management Analytics Lab, and Faculty Chambers."
+        },
+        "E_BLOCK": {
+            "title": "E-Block (School of Pharmacy & Biotechnology)",
+            "purpose": "Dedicated academic facility for Pharmaceutical Sciences and Biotechnology Engineering.",
+            "cohort": "Pharmacy (B.Pharm, M.Pharm, Pharm.D) and Biotechnology engineering students.",
+            "location": "Located at the left turn at Intersection 2 along Path Gamma (~310m from Main Gate).",
+            "facilities": "Pharmaceutical Chemistry Labs, Pharmacology Research Labs, Cell Culture & Wet Labs, Bio-analytics Suite, and Animal House Facility."
+        },
+        "CHEST_SUPERMARKET": {
+            "title": "Zest (Campus Supermarket & Store)",
+            "purpose": "Central on-campus supermarket catering to daily student and staff necessities.",
+            "cohort": "Open to all university students, hostel residents, faculty, and campus visitors.",
+            "location": "Situated along Path Alpha immediately adjacent to MHP Canteen on the right, with N-Block situated just beside it (~175m from Main Gate).",
+            "facilities": "Groceries, beverages, snacks, packaged meals, daily academic stationery, project charts, personal care essentials, and toiletries."
+        },
+        "VIGNAN_VIHAR": {
+            "title": "Vignan Vihar (1st-Year Boys Hostel)",
+            "purpose": "Primary on-campus residential hall dedicated to 1st-year male students.",
+            "cohort": "1st-year undergraduate male students.",
+            "location": "Situated on Path Beta, directly in front of N-Block (~270m from Main Gate).",
+            "facilities": "Furnished residential rooms, 24/7 warden desk, security checkpost, high-speed Wi-Fi, and a large internal ground-floor student dining mess."
+        },
+        "NTR_LIBRARY": {
+            "title": "NTR Central Library",
+            "purpose": "Central university knowledge repository, learning commons, and research archive.",
+            "cohort": "Open to all students, researchers, faculty, and staff.",
+            "location": "Situated along Path Alpha just past Intersection 1 on the right (110m from Main Gate).",
+            "facilities": "Multi-tier book stacks covering engineering, sciences, management, and literature; Air-conditioned reference halls; Digital learning lab with online journal access; Group discussion rooms and quiet study zones."
+        },
+        "MHP_CANTEEN": {
+            "title": "MHP Campus Canteen",
+            "purpose": "Main university food court and central dining cafeteria.",
+            "cohort": "Open to all university students, faculty, and campus visitors.",
+            "location": "Situated along Path Alpha on the right side, between NTR Library and Zest (150m from Main Gate).",
+            "facilities": "Fresh breakfast, South Indian thalis, North Indian curries, snacks, fresh fruit juices, and extensive indoor/outdoor student seating."
+        },
+        "CONVOCATION_HALL": {
+            "title": "Convocation Hall & University Auditorium",
+            "purpose": "Premier indoor auditorium for grand university events, guest lectures, and cultural fests.",
+            "cohort": "University-wide events, conferences, and annual convocation ceremonies.",
+            "location": "Situated adjacent to U-Block along Path Delta, leading towards Second Gate and VLITS Block (~380m from Main Gate).",
+            "facilities": "2,500+ seat air-conditioned main auditorium, stage lighting and acoustics, VIP green rooms, and conference seminar suites."
+        }
+    }
+
     # 14. CAMPUS MAP & NAVIGATION GRAPH (Module 4 Grounded)
     @staticmethod
     def get_campus_location_and_navigation(origin: Optional[str] = None, destination: Optional[str] = None) -> ToolResult:
@@ -910,11 +983,13 @@ class ToolRegistry:
             "sidebar_page": "map",
             "direct_answer": direct_answer,
             "data": {
+                "dest_id": dest_id,
                 "origin": route["start"],
                 "destination": dest_name,
                 "total_distance_meters": tot_dist,
                 "steps": steps,
-                "building_details": route["destination_details"]
+                "building_details": route["destination_details"],
+                "building_profile": ToolRegistry.CAMPUS_BLOCK_PROFILES.get(dest_id)
             }
         }
 

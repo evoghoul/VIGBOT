@@ -492,7 +492,28 @@ class UniversalNLU:
                     tool_res = ToolRegistry.get_campus_location_and_navigation(destination=query)
                     direct_ans = tool_res.get("direct_answer", "")
                     data = tool_res.get("data")
-                    if data and isinstance(data, dict) and "steps" in data:
+                    
+                    q_lower = query.lower()
+                    is_directional = bool(re.search(
+                        r"\b(?:where\s+is|where\s+are|directions?\s+to|how\s+to\s+reach|how\s+do\s+i\s+(?:reach|get\s+to|go\s+to)|how\s+can\s+i\s+(?:reach|get\s+to|go\s+to)|way\s+to|route\s+to|path\s+to|walking\s+route|from\s+.+\s+to|take\s+me\s+to)\b",
+                        q_lower
+                    ))
+                    
+                    profile = data.get("building_profile") if (data and isinstance(data, dict)) else None
+                    
+                    if not is_directional and profile:
+                        # Informational building profile for "what is N-block?", "tell me about N-block", etc.
+                        b_title = profile.get("title", data.get("destination", "Campus Facility"))
+                        content_text = (
+                            f"🏢 **{b_title}:**\n\n"
+                            f"• **Purpose & Departments:** {profile.get('purpose')}\n"
+                            f"• **Student Cohort:** {profile.get('cohort')}\n"
+                            f"• **Campus Location:** {profile.get('location')}\n"
+                            f"• **Key Facilities:** {profile.get('facilities')}\n\n"
+                            f"*Need step-by-step walking directions? Ask \"where is {data.get('destination', 'this block')}\" or explore the interactive 2D layout in the **Campus Map** tab.*"
+                        )
+                    elif data and isinstance(data, dict) and "steps" in data:
+                        # Directional query with turn-by-turn walking route
                         steps_lines = "\n".join(f"• {s}" for s in data["steps"])
                         b_name = data.get("destination", "Target Block")
                         b_dist = data.get("total_distance_meters", 0.0)

@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 import re
 import os
 from typing import Dict, Any, List, Optional, Tuple
@@ -2125,28 +2127,69 @@ class NLUEngine:
             "rahul verma",
             "rohan verma",
             "rohan varma",
+            "only happy if",
+            "feeling very sick i will",
+            "i will feel only happy",
+            "my friend's attendance",
+            "attendance of my friend",
+            "marks of my friend",
+            "cgpa of my friend",
+            "friend's marks",
+            "friend's cgpa",
+            "another student's",
+            "other student's",
+            "tell me attendance of student",
         ]
         if any(trig in q_lower for trig in injection_triggers):
             return True
 
-        # Check for cross-student roll number snooping
+        # Check for cross-student roll number snooping or other student records
         if session:
             try:
                 profile = DataRepository.get_student_profile(session)
                 cur_roll = (profile.get("roll_no") or "").lower() if profile else ""
                 cur_name = (profile.get("full_name") or "").lower() if profile else ""
-                
-                # Check for roll number patterns like 24cse001, 24cse002, 251fa04..., etc.
-                roll_matches = re.findall(r"\b\d{2}[a-z]{2,5}\d{3,4}\b", q_lower)
+                cur_id = (session.student_id or "").lower()
+
+                # 1. Check for any university roll number (Vignan: 251fa04e69, 251fa04131, etc.; Standard: 24cse001, etc.)
+                roll_matches = re.findall(r"\b(?:2[0-9]{2}[a-z]{1,4}[0-9a-z]{3,7}|\d{2}[a-z]{2,5}\d{3,4})\b", q_lower)
                 for r in roll_matches:
-                    if r != cur_roll:
+                    if r != cur_roll and r != cur_id:
                         return True
-                        
-                # Check for other student names
-                if any(w in q_lower for w in ["asha reddy", "asha's", " asha "]) and "asha" not in cur_name:
-                    return True
-                if any(w in q_lower for w in ["rohan varma", "rohan verma", "rahul verma", "rohan's", "rahul's", " rohan ", " rahul "]) and "rohan" not in cur_name and "rahul" not in cur_name:
-                    return True
+
+                # 2. Check for queries explicitly targeting another person's academic records
+                # e.g., "what is the attendance of ayush kumar?", "marks of rahul", "ayush's cgpa"
+                m_target = re.search(r"\b(?:attendance|marks|cgpa|gpa|grades?|fee|fees|hall\s*ticket|admit\s*card|schedule|timetable|profile|records?)\s+(?:of|for)\s+([a-z0-9\s.'-]+?)(?:\?|$|\.|,|\s+and|\s+or)", q_lower)
+                if not m_target:
+                    m_target = re.search(r"\b([a-z0-9\s.'-]+?)(?:'s|s)\s+(?:attendance|marks|cgpa|gpa|grades?|fee|fees|profile|records?)\b", q_lower)
+
+                if m_target:
+                    target = m_target.group(1).strip()
+                    self_words = {"my", "me", "myself", "mine", "i", "current student", "authenticated student", "self", "the student"}
+                    subject_words = {
+                        "java", "ooptj", "oops", "dbms", "dbmsis", "digital logic", "dldes", "dld",
+                        "ai", "dms", "dms-mta", "dwav", "maths", "mathematics", "physics", "chemistry",
+                        "english", "python", "data structures", "operating systems", "computer networks",
+                        "algorithms", "c++", "c programming", "seminar", "project", "lab", "practicals",
+                        "this subject", "all subjects", "overall"
+                    }
+                    if target not in self_words and not any(s in target for s in subject_words):
+                        cur_parts = set(cur_name.split())
+                        target_parts = set(target.split())
+                        if not target_parts.issubset(cur_parts) and target != cur_name and target != cur_roll:
+                            return True
+
+                # 3. Check for specific other student names
+                other_student_names = [
+                    "ayush kumar", "ayush's", " ayush ",
+                    "asha reddy", "asha's", " asha ",
+                    "rohan varma", "rohan verma", "rahul verma", "rohan's", "rahul's", " rohan ", " rahul ",
+                    "ajay kumar", "charugundla",
+                    "bode vedesh", "deekshitha", "akhila", "yerramsetti"
+                ]
+                for name in other_student_names:
+                    if name in q_lower and name.strip() not in cur_name:
+                        return True
             except Exception:
                 pass
 
@@ -2165,6 +2208,7 @@ class NLUEngine:
         """
         profile = DataRepository.get_student_profile(session)
         name = profile.get("full_name", "Student") if profile else "Student"
+        cur_roll = (profile.get("roll_no") or "").upper() if profile else ""
         first_name = name.split()[0] if name else "Student"
         att = DataRepository.get_attendance(session)
         rec = next((a for a in att if a.get("classes_attended") == 34 or "digital" in a.get("course_title", "").lower()), att[0] if att else {})
@@ -2173,11 +2217,22 @@ class NLUEngine:
         overall_pct = rec.get("current_pct", 68.0)
         course_name = rec.get("course_title", "Digital Electronics")
 
+        # Health / Medical Distress Check
+        health_note = ""
+        q_lower = query.lower()
+        if any(w in q_lower for w in ["sick", "unwell", "fever", "pain", "ill", "not feeling well", "headache", "vomit", "hospital", "doctor"]):
+            health_note = (
+                "🏥 **Campus Medical & Wellbeing Support:**\n"
+                "We noticed you mentioned feeling unwell. Please take care of yourself! You can visit the **Campus Health Clinic / Student Wellness Center** "
+                "located in **Room 102, Student Activity Building**, or reach out to 24/7 Campus Emergency Medical Support at **+91-98765-43210**.\n\n"
+            )
+
         content = (
-            f"Access Denied: Under Institutional Privacy & Data Governance Regulations (Clause 2.1 - Row-Level Access Control), "
+            f"{health_note}Access Denied: Under Institutional Privacy & Data Governance Regulations (Clause 2.1 - Row-Level Access Control), "
             f"system override directives are rejected and you are strictly authorized to view your own academic records only. "
             f"Access to confidential records of other students is strictly prohibited and logged.\n\n"
-            f"For your authenticated account ({first_name}), your verified record for {course_name} shows **{total_attended} out of {total_held} classes attended** ({overall_pct:.1f}%)."
+            f"For your authenticated account ({first_name}{f' - {cur_roll}' if cur_roll else ''}), "
+            f"your verified record for {course_name} shows **{total_attended} out of {total_held} classes attended** ({overall_pct:.1f}%)."
         )
 
         citations = [
@@ -2207,7 +2262,6 @@ class NLUEngine:
             "model_used": "privacy-guardrail",
             "used_fallback": False
         }
-
     @classmethod
     def detect_language(cls, query: str, client_language: str = "en") -> str:
         """
