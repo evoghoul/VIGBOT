@@ -470,6 +470,52 @@ class UniversalNLU:
                         "• **University Anti-Ragging Squad / Proctor Office:** Admin Block, Room 101\n\n"
                         "You can also submit an official confidential complaint directly via the Student Grievance portal below."
                     )
+                elif cap_id == "map":
+                    from app.agent.tool_registry import ToolRegistry
+                    tool_res = ToolRegistry.get_campus_location_and_navigation(destination=query)
+                    direct_ans = tool_res.get("direct_answer", "")
+                    data = tool_res.get("data")
+                    if data and isinstance(data, dict) and "steps" in data:
+                        steps_lines = "\n".join(f"• {s}" for s in data["steps"])
+                        b_name = data.get("destination", "Target Block")
+                        b_dist = data.get("total_distance_meters", 0.0)
+                        origin = data.get("origin", "Main Gate")
+                        content_text = (
+                            f"📍 **{b_name} Location & Campus Directions:**\n\n"
+                            f"{direct_ans}\n\n"
+                            f"**🚶 Turn-by-Turn Walking Route from {origin} ({b_dist}m):**\n"
+                            f"{steps_lines}\n\n"
+                            f"You can also explore the interactive 2D layout in the **Campus Map** tab."
+                        )
+                    else:
+                        content_text = f"{direct_ans}\n\nYou can explore the interactive building layout on the **Campus Map** tab."
+
+                    return {
+                        "content": content_text,
+                        "category": "MAP",
+                        "topic": f"Campus Navigation: {data.get('destination', 'Campus Map') if (data and isinstance(data, dict)) else 'Campus Map'}",
+                        "source_agent": "VIGBOT (Campus Spatial Guide)",
+                        "redirect_path": "map",
+                        "action": {
+                            "type": "navigate",
+                            "label": "Open Campus Map",
+                            "target": "map",
+                            "route": "/?tab=map"
+                        },
+                        "structured_card": {
+                            "type": "navigation",
+                            "title": "Campus Map & Navigation",
+                            "subtitle": "Interactive building map & route planner",
+                            "badge": "Spatial Guide",
+                            "badgeVariant": "blue",
+                            "actionLabel": "Open Campus Map",
+                            "actionIntent": "navigate:map",
+                            "target": "map"
+                        },
+                        "suggested_follow_ups": ["Where is A-Block?", "Where is U-Block?", "How to reach NTR Library?"],
+                        "citations": ["VFSTR Campus Spatial Directory", "Campus Navigation Graph (Dijkstra)"],
+                        "routed_by": "universal_nlu"
+                    }
                 else:
                     content_text = f"{guidance}\n\nYou can access it directly using the button below."
 

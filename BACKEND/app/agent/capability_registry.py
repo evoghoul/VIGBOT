@@ -820,8 +820,15 @@ APPLICATION_CAPABILITIES: Dict[str, Dict[str, Any]] = {
         "backend_table": "campus_locations",
         "backend_tool": "knowledge_tool",
         "keywords": [
-            "map", "campus map", "directions", "where is room", "where is block", "u block",
-            "a block", "h block", "library location", "canteen", "atm", "seminar hall location"
+            "map", "campus map", "directions", "where is room", "where is block",
+            "u block", "u-block", "ublock", "a block", "a-block", "ablock",
+            "h block", "h-block", "hblock", "n block", "n-block", "nblock",
+            "e block", "e-block", "eblock", "vignan vihar", "convocation hall",
+            "convocation", "mhp canteen", "chest supermarket", "ntr library",
+            "library location", "canteen", "atm", "seminar hall location",
+            "where is", "where is n-block", "where is n block", "where is a-block",
+            "where is u-block", "where is h-block", "where is e-block",
+            "navigation", "how to reach", "how do i get to", "way to", "directions to"
         ],
         "supported_operations": [
             OperationType.VIEW,
@@ -1285,6 +1292,7 @@ TYPO_PATTERNS: List[Tuple[re.Pattern, str]] = [
 
 # High-priority domain overrides compiled with word boundaries
 DOMAIN_OVERRIDES: List[Tuple[re.Pattern, str]] = [
+    (re.compile(r"\b(?:[nauhe][- ]?block|[nauhe]block|vignan\s+vihar|convocation(?:\s+hall)?|ntr(?:\s+library)?|mhp(?:\s+canteen)?|chest(?:\s+supermarket)?|second\s+gate|vlits|lara|campus\s+map|map\s+of\s+campus)\b|\b(?:where\s+is|where\s+are|directions?\s+to|how\s+to\s+reach|how\s+do\s+i\s+(?:reach|get\s+to|go\s+to)|how\s+can\s+i\s+(?:reach|get\s+to|go\s+to)|way\s+to|route\s+to|path\s+to|location\s+of)\b.*?\b(?:block|building|room|lab|gate|canteen|library|hall|mess|hostel|supermarket|ground|entrance|exit|ece|cse|aiml|law|bba|pharmacy|biotech)\b", re.IGNORECASE), "map"),
     (re.compile(r"\b(?:ragging|anti-ragging|antiragging|grievance|file complaint|sgrc|harassment|bullying)\b", re.IGNORECASE), "grievance"),
     (re.compile(r"\b(?:lost and found|lost & found|found item|lost item|lost my|found a|found something|report something if i found|report found|if i found)\b", re.IGNORECASE), "lost-and-found"),
     (re.compile(r"\b(?:facility booking|seminar hall|cricket ground|book ground|auditorium booking|auditorium|lab booking|booking|bookings)\b", re.IGNORECASE), "bookings"),

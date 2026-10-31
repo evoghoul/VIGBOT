@@ -15,6 +15,7 @@ import json
 import sqlite3
 import heapq
 import os
+import re
 from pathlib import Path
 from app.database import DataRepository, DatabaseSession, get_db_connection
 
@@ -92,8 +93,11 @@ class CampusGraphService:
             "first year": "A_BLOCK",
             "a block": "A_BLOCK",
             "a-block": "A_BLOCK",
+            "ablock": "A_BLOCK",
             "h block": "H_BLOCK",
             "h-block": "H_BLOCK",
+            "hblock": "H_BLOCK",
+            "ece block": "H_BLOCK",
             "ece": "H_BLOCK",
             "it": "H_BLOCK",
             "id card": "H_BLOCK",
@@ -105,25 +109,38 @@ class CampusGraphService:
             "ntr library": "NTR_LIBRARY",
             "canteen": "MHP_CANTEEN",
             "mhp": "MHP_CANTEEN",
+            "mhp canteen": "MHP_CANTEEN",
             "food court": "MHP_CANTEEN",
             "chest": "CHEST_SUPERMARKET",
             "supermarket": "CHEST_SUPERMARKET",
+            "chest supermarket": "CHEST_SUPERMARKET",
             "grocery": "CHEST_SUPERMARKET",
             "small ground": "GROUND_SMALL",
             "n block": "N_BLOCK",
             "n-block": "N_BLOCK",
+            "nblock": "N_BLOCK",
+            "cse block": "N_BLOCK",
+            "aiml block": "N_BLOCK",
             "cse": "N_BLOCK",
             "aiml": "N_BLOCK",
             "computer": "N_BLOCK",
             "vignan vihar": "VIGNAN_VIHAR",
             "boys hostel": "VIGNAN_VIHAR",
             "vihar": "VIGNAN_VIHAR",
+            "mess": "VIGNAN_VIHAR",
+            "hostel mess": "VIGNAN_VIHAR",
             "e block": "E_BLOCK",
             "e-block": "E_BLOCK",
+            "eblock": "E_BLOCK",
+            "pharmacy block": "E_BLOCK",
             "pharmacy": "E_BLOCK",
+            "biotech block": "E_BLOCK",
             "biotech": "E_BLOCK",
             "u block": "U_BLOCK",
             "u-block": "U_BLOCK",
+            "ublock": "U_BLOCK",
+            "law block": "U_BLOCK",
+            "bba block": "U_BLOCK",
             "law": "U_BLOCK",
             "bba": "U_BLOCK",
             "convocation": "CONVOCATION_HALL",
@@ -137,7 +154,9 @@ class CampusGraphService:
             "gate 2": "SECOND_GATE"
         }
 
-        for alias, node_id in alias_map.items():
+        # Check aliases sorted by length descending so specific multi-word aliases match first
+        sorted_aliases = sorted(alias_map.items(), key=lambda x: len(x[0]), reverse=True)
+        for alias, node_id in sorted_aliases:
             if alias in q:
                 return node_id
 
@@ -753,9 +772,25 @@ class ToolRegistry:
     # 14. CAMPUS MAP & NAVIGATION GRAPH (Module 4 Grounded)
     @staticmethod
     def get_campus_location_and_navigation(origin: Optional[str] = None, destination: Optional[str] = None) -> ToolResult:
+        # Automatically parse origin and destination if passed as a natural language query
+        parsed_origin, parsed_dest = None, destination
+        if destination:
+            m_to_from = re.search(r'(?:to|reach|go to)\s+(?:the\s+)?(.+?)\s+from\s+(?:the\s+)?(.+)', destination, re.I)
+            if m_to_from:
+                parsed_origin = m_to_from.group(2).strip()
+                parsed_dest = re.sub(r'^(?:reach|go to|get to)\s+', '', m_to_from.group(1).strip(), flags=re.I)
+            else:
+                m_from_to = re.search(r'from\s+(?:the\s+)?(.+?)\s+(?:to|towards)\s+(?:the\s+)?(.+)', destination, re.I)
+                if m_from_to:
+                    parsed_origin = m_from_to.group(1).strip()
+                    parsed_dest = m_from_to.group(2).strip()
+
+        effective_origin = origin or parsed_origin or "main gate"
+        effective_dest = parsed_dest or destination or ""
+
         # Default origin to Main Gate if omitted
-        start_id = CampusGraphService.resolve_node_id(origin or "main gate") or "NODE_0_MAIN_GATE"
-        dest_id = CampusGraphService.resolve_node_id(destination or "")
+        start_id = CampusGraphService.resolve_node_id(effective_origin) or "NODE_0_MAIN_GATE"
+        dest_id = CampusGraphService.resolve_node_id(effective_dest)
 
         if not dest_id:
             # General map overview
@@ -801,16 +836,63 @@ class ToolRegistry:
         tot_dist = route["total_distance_meters"]
         steps = route["steps"]
 
-        # Special answer-first phrasing for U-Block
-        if dest_id == "U_BLOCK":
+        # Specialized Answer-First phrasing for all major campus blocks and landmarks
+        if dest_id == "N_BLOCK":
             direct_answer = (
-                f"U-Block is located behind N-Block on the campus aerial grid (housing Law and BBA students), "
-                f"accessible from {route['start']} in {tot_dist} meters ({route['step_count']} steps) by proceeding past Chest supermarket and continuing straight past Intersection 2."
+                f"N-Block is the Computer Science & Engineering Block (housing 2nd and 3rd-year CSE and AI/ML students), "
+                f"located on Path Beta adjacent to the Chest Supermarket and directly facing Vignan Vihar Boys Hostel, "
+                f"{tot_dist} meters (~3-4 min walk) from {route['start']}."
             )
-        elif dest_id == "H_BLOCK" and start_id == "A_BLOCK":
+        elif dest_id == "A_BLOCK":
             direct_answer = (
-                f"H-Block is located directly opposite A-Block across the sub-path (distance: 15 meters). "
-                f"The Student ID Card Replacement Office is on the left side of the main ground-floor hallway."
+                f"A-Block is the Freshers Block (housing 1st-year students across all engineering branches), "
+                f"located {tot_dist} meters from {route['start']} at the first right turn along Path Alpha, directly opposite H-Block."
+            )
+        elif dest_id == "H_BLOCK":
+            if start_id == "A_BLOCK":
+                direct_answer = (
+                    "H-Block is located directly opposite A-Block across the sub-path (distance: 15 meters). "
+                    "The Student ID Card Replacement Office is on the left side of the main ground-floor hallway."
+                )
+            else:
+                direct_answer = (
+                    f"H-Block houses Electronics (ECE), Information Technology (IT), Administrative Offices, and the Student ID Card Replacement Office, "
+                    f"located {tot_dist} meters from {route['start']} at the first right turn along Path Alpha, directly opposite A-Block."
+                )
+        elif dest_id == "U_BLOCK":
+            direct_answer = (
+                f"U-Block houses the School of Law and Management (BBA & Law students), "
+                f"located {tot_dist} meters from {route['start']} positioned directly behind N-Block and adjacent to Convocation Hall past Intersection 2."
+            )
+        elif dest_id == "E_BLOCK":
+            direct_answer = (
+                f"E-Block houses Pharmacy, B.Pharma, and Biotechnology, "
+                f"located {tot_dist} meters from {route['start']} at a left turn off Intersection 2 along Path Gamma."
+            )
+        elif dest_id == "VIGNAN_VIHAR":
+            direct_answer = (
+                f"Vignan Vihar is the 1st-year boys hostel (featuring an internal ground-floor mess), "
+                f"located directly in front of N-Block on Path Beta ({tot_dist} meters from {route['start']})."
+            )
+        elif dest_id == "CONVOCATION_HALL":
+            direct_answer = (
+                f"Convocation Hall is the central university auditorium for major academic events, convocations, and symposiums, "
+                f"located adjacent to U-Block leading towards the Second Gate ({tot_dist} meters from {route['start']})."
+            )
+        elif dest_id == "NTR_LIBRARY":
+            direct_answer = (
+                f"NTR Central Library is located on Path Alpha just past Intersection 1 on your right ({tot_dist} meters from {route['start']}), "
+                f"offering multi-floor book stacks, reference halls, and digital learning zones."
+            )
+        elif dest_id == "MHP_CANTEEN":
+            direct_answer = (
+                f"MHP Campus Canteen is the central university food court, "
+                f"located along Path Alpha past the Library on the right ({tot_dist} meters from {route['start']})."
+            )
+        elif dest_id == "CHEST_SUPERMARKET":
+            direct_answer = (
+                f"Chest Supermarket provides groceries, stationery, and daily essentials, "
+                f"located along Path Alpha immediately adjacent to MHP Canteen on the right ({tot_dist} meters from {route['start']})."
             )
         else:
             direct_answer = (

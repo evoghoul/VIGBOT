@@ -27,7 +27,7 @@ client = TestClient(app)
 
 @pytest.fixture
 def test_session():
-    return DatabaseSession(student_id="24CSE001", user_id="user_24CSE001")
+    return DatabaseSession(student_id="cccccccc-0000-0000-0000-000000000001", user_id="eeeeeeee-0000-0000-0000-000000000001")
 
 
 @pytest.fixture

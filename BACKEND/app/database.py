@@ -448,15 +448,17 @@ class DataRepository:
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         sla = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
         
+        sid = DataRepository._resolve_student_id(session)
         query = "INSERT INTO service_requests (service_request_id, request_no, student_id, category, title, description, priority, status, assigned_office, sla_due_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        DataRepository._execute_insert(query, (req_id, req_no, session.student_id, data["category"], data["title"], data["description"], data.get("priority", "NORMAL"), "SUBMITTED", "Registrar Student Affairs", sla, now, now))
+        DataRepository._execute_insert(query, (req_id, req_no, sid, data["category"], data["title"], data["description"], data.get("priority", "NORMAL"), "SUBMITTED", "Registrar Student Affairs", sla, now, now))
         
         res = DataRepository._execute_query("SELECT * FROM service_requests WHERE service_request_id = ?", (req_id,))
         return res[0] if res else None
 
     @staticmethod
     def list_service_requests(session: DatabaseSession) -> List[Dict[str, Any]]:
-        return DataRepository._execute_query("SELECT * FROM service_requests WHERE student_id = ?", (session.student_id,))
+        sid = DataRepository._resolve_student_id(session)
+        return DataRepository._execute_query("SELECT * FROM service_requests WHERE student_id = ?", (sid,))
 
     @staticmethod
     def create_club_application(session: DatabaseSession, club_id: str, student_name: str) -> Dict[str, Any]:

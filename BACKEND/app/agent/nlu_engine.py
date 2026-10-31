@@ -940,103 +940,7 @@ class NLUEngine:
         routed_by = clf_result["routed_by"]
 
         # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
-        from app.agent.capability_registry import find_matching_capability
-        from app.agent.universal_nlu import UniversalNLU
-        matching_cap = find_matching_capability(query)
-        if matching_cap and matching_cap["feature_id"] in ("bookings", "lost-and-found", "marketplace", "polling", "alumni", "map"):
-            if intent in ("library", "services", "general", "out_of_scope"):
-                cross_res = UniversalNLU.resolve_and_execute(session, query)
-                if cross_res is not None:
-                    cross_res["routed_by"] = routed_by
-                    return cross_res
-
-        # 0. Cross-check guard: If query specifically matches an explicit distinctive capability
-        # (e.g. facility bookings, lost-and-found, marketplace) that the ML classifier confounds with library/services:
+        # (e.g. facility bookings, lost-and-found, marketplace, map) that the ML classifier confounds with library/services:
         from app.agent.capability_registry import find_matching_capability
         from app.agent.universal_nlu import UniversalNLU
         matching_cap = find_matching_capability(query)
@@ -1348,6 +1252,17 @@ class NLUEngine:
             # 2. FALSE-ACTION GUARD: If inquiry is asking where to go/find, or resolves to 'OTHER',
             # return guidance and navigation action. NEVER create a ticket for an informational query!
             is_where_info = any(w in q_lower for w in ["where do i go", "where can i find", "where to go", "where is", "tell me where", "where can i get", "where can i report"])
+            if is_where_info:
+                from app.agent.tool_registry import CampusGraphService
+                if (
+                    any(blk in q_lower for blk in ["block", "canteen", "library", "hostel", "mess", "supermarket", "convocation", "vignan vihar", "gate", "ground", "hall"])
+                    or CampusGraphService.resolve_node_id(query) is not None
+                ):
+                    map_res = UniversalNLU.resolve_and_execute(session, query)
+                    if map_res:
+                        map_res["routed_by"] = routed_by
+                        return map_res
+
             if sr_cat == "OTHER" or is_where_info:
                 cap = APPLICATION_CAPABILITIES.get("services")
                 guidance = cap["guidance_text"] if cap else "You can submit administrative requests in the **Student Services** section."
