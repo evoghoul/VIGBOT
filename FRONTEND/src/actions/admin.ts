@@ -27,9 +27,9 @@ export async function adminLogin(username: string, passwordHash: string) {
     const db = getDb();
     if (!db) {
       if (username.trim() === "admin" && (passwordHash === "admin123" || passwordHash === "pbkdf2_sha256$29000$mock$hashedpassword")) {
-        return { 
-          success: true, 
-          admin: { id: "ADM001", username: "admin", name: "Default Nodal Officer", role: "Admin" } 
+        return {
+          success: true,
+          admin: { id: "ADM001", username: "admin", name: "Default Nodal Officer", role: "Admin" }
         };
       }
       return { success: false, error: "Invalid credentials" };
@@ -72,11 +72,11 @@ export async function fetchAllTickets() {
   try {
     const db = getDb();
     if (!db) {
-      return { 
-        success: true, 
-        grievances: mockGrievances, 
-        clubApps: mockClubApps, 
-        bookings: mockBookings, 
+      return {
+        success: true,
+        grievances: mockGrievances,
+        clubApps: mockClubApps,
+        bookings: mockBookings,
         lostAndFound: mockLostAndFound,
         serviceRequests: [],
         hostelRequests: []
@@ -89,16 +89,16 @@ export async function fetchAllTickets() {
     let serviceRequests = [];
     try {
       serviceRequests = db.prepare(`SELECT * FROM service_requests ORDER BY created_at DESC`).all();
-    } catch (e) {}
+    } catch (e) { }
 
     db.close();
     return { success: true, grievances, clubApps, bookings, lostAndFound, serviceRequests, hostelRequests: [] };
   } catch (error) {
-    return { 
-      success: true, 
-      grievances: mockGrievances, 
-      clubApps: mockClubApps, 
-      bookings: mockBookings, 
+    return {
+      success: true,
+      grievances: mockGrievances,
+      clubApps: mockClubApps,
+      bookings: mockBookings,
       lostAndFound: mockLostAndFound,
       serviceRequests: [],
       hostelRequests: []
@@ -108,10 +108,10 @@ export async function fetchAllTickets() {
 
 export async function updateTicketStatus(ticketId: string | number, type: 'club' | 'grievance' | 'booking' | 'lost_found' | 'service_request' | 'hostel', newStatus: string) {
   try {
-    const endpoint = type === 'service_request' 
+    const endpoint = type === 'service_request'
       ? `${BACKEND_BASE_URL}/admin/service-requests/${ticketId}`
       : `${BACKEND_BASE_URL}/admin/tickets/${type}/${ticketId}`;
-      
+
     const res = await fetch(endpoint, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -129,7 +129,7 @@ export async function updateTicketStatus(ticketId: string | number, type: 'club'
     const db = getDb();
     if (!db) return { success: true };
     let stmt;
-    
+
     if (type === 'grievance') {
       stmt = db.prepare(`UPDATE studentlife_grievance SET status = ? WHERE tracking_id = ?`);
     } else if (type === 'club') {
@@ -144,7 +144,7 @@ export async function updateTicketStatus(ticketId: string | number, type: 'club'
       db.close();
       return { success: result.changes > 0 };
     }
-    
+
     if (stmt) {
       const result = stmt.run(newStatus, ticketId);
       db.close();
@@ -162,7 +162,7 @@ export async function deleteTicket(ticketId: string | number, type: 'club' | 'gr
     const endpoint = type === 'service_request'
       ? `${BACKEND_BASE_URL}/admin/service-requests/${ticketId}`
       : `${BACKEND_BASE_URL}/admin/tickets/${type}/${ticketId}`;
-      
+
     const res = await fetch(endpoint, {
       method: 'DELETE'
     });

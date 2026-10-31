@@ -147,7 +147,7 @@ def _seed_lost_and_found(cur, conn):
         "251fa04e13@vignan.ac.in",
         "open",
         "2026-09-16T16:20:00.052421",
-        "https://picsum.photos/seed/bottle/400/300"
+        "/milton_bottle.png"
     ],
     [
         16,
@@ -208,7 +208,7 @@ def _seed_facilities(cur, conn):
         "Sports",
         "Indoor synthetic court with proper lighting",
         4,
-        "https://picsum.photos/seed/badminton/800/600"
+        "/badminton_court_1.jpg"
     ],
     [
         2,
@@ -216,7 +216,7 @@ def _seed_facilities(cur, conn):
         "Academic",
         "Quiet study room with whiteboards and AC",
         6,
-        "https://picsum.photos/seed/study/800/600"
+        "/study_room_a.jpg"
     ],
     [
         3,
@@ -224,7 +224,7 @@ def _seed_facilities(cur, conn):
         "Sports",
         "Outdoor cement court",
         10,
-        "https://picsum.photos/seed/basketball/800/600"
+        "/basketball_court.jpg"
     ],
     [
         4,
@@ -232,7 +232,7 @@ def _seed_facilities(cur, conn):
         "Extracurricular",
         "Soundproof room with drumkit and keyboards",
         8,
-        "https://picsum.photos/seed/music/800/600"
+        "/music_room.jpg"
     ]
 ]
     for r in rows:

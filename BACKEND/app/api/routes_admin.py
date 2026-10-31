@@ -235,3 +235,4 @@ async def delete_generic_ticket(ticket_type: str, ticket_id: str):
         }
     except Exception as e:
         return {"success": False, "error": f"Failed to delete ticket: {str(e)}"}
+

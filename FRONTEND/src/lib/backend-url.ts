@@ -12,3 +12,4 @@ export function getBackendUrl(): string {
   }
   return base;
 }
+

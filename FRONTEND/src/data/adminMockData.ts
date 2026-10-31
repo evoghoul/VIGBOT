@@ -18,7 +18,7 @@ export const mockBookings = [
 export const mockLostAndFound = [
   { id: 18, student_id: "251FA04E13", type: "found", title: "Apple AirPods Pro", description: "Found in AI Lab near the window seats", tags: "airpods, apple", contact_info: "251fa04e13@vignan.ac.in", status: "open", date_posted: "2026-09-18T14:20:00.052421", image_url: null },
   { id: 17, student_id: "OTHER_STU", type: "lost", title: "Hostel Keys with Marvel keychain", description: "Lost somewhere near the canteen", tags: "keys, marvel", contact_info: "other@vignan.ac.in", status: "open", date_posted: "2026-09-18T04:20:00.052421", image_url: "/captain_america_key.jpg" },
-  { id: 15, student_id: "251FA04E13", type: "lost", title: "Blue Milton Water Bottle", description: "Lost near the central library seating area.", tags: "bottle, blue", contact_info: "251fa04e13@vignan.ac.in", status: "open", date_posted: "2026-09-16T16:20:00.052421", image_url: "https://picsum.photos/seed/bottle/400/300" },
+  { id: 15, student_id: "251FA04E13", type: "lost", title: "Blue Milton Water Bottle", description: "Lost near the central library seating area.", tags: "bottle, blue", contact_info: "251fa04e13@vignan.ac.in", status: "open", date_posted: "2026-09-16T16:20:00.052421", image_url: "/milton_bottle.png" },
   { id: 16, student_id: "OTHER_STU", type: "found", title: "Scientific Calculator", description: "Found Casio calculator in N-312", tags: "calculator", contact_info: "admin@vignan.ac.in", status: "claimed", date_posted: "2026-09-08T16:20:00.052421", image_url: null }
 ];
 
