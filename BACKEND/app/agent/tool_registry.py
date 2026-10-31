@@ -41,7 +41,8 @@ class CampusGraphService:
         nodes = {}
         adj = {}
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT location_id, room_number, block, floor, description, type, features FROM campus_locations")
             for r in cur.fetchall():
@@ -345,11 +346,13 @@ class ToolRegistry:
     @staticmethod
     def get_library_info(day_of_week: Optional[str] = None, resource_query: Optional[str] = None) -> ToolResult:
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
 
             target_day = (day_of_week or "Sunday").strip().capitalize()
-            cur.execute("SELECT * FROM library_operating_hours WHERE day_of_week=?", (target_day,))
+            q1 = "SELECT * FROM library_operating_hours WHERE day_of_week=%s" if not isinstance(conn, sqlite3.Connection) else "SELECT * FROM library_operating_hours WHERE day_of_week=?"
+            cur.execute(q1, (target_day,))
             day_record = cur.fetchone()
 
             cur.execute("SELECT * FROM library_operating_hours")
@@ -357,7 +360,8 @@ class ToolRegistry:
 
             resources = []
             if resource_query:
-                cur.execute("SELECT * FROM library_resources WHERE title LIKE ? OR course_code LIKE ?", (f"%{resource_query}%", f"%{resource_query}%"))
+                q2 = "SELECT * FROM library_resources WHERE title LIKE %s OR course_code LIKE %s" if not isinstance(conn, sqlite3.Connection) else "SELECT * FROM library_resources WHERE title LIKE ? OR course_code LIKE ?"
+                cur.execute(q2, (f"%{resource_query}%", f"%{resource_query}%"))
                 resources = [dict(r) for r in cur.fetchall()]
 
         if not day_record:
@@ -474,7 +478,8 @@ class ToolRegistry:
     @staticmethod
     def get_curriculum_audit(session: DatabaseSession) -> ToolResult:
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT * FROM curriculum LIMIT 1")
             row = cur.fetchone()
@@ -580,7 +585,8 @@ class ToolRegistry:
     @staticmethod
     def get_hostel_and_mess_info(session: Optional[DatabaseSession] = None, residence_name: Optional[str] = None) -> ToolResult:
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT * FROM hostels")
             all_hostels = [dict(r) for r in cur.fetchall()]
@@ -716,9 +722,11 @@ class ToolRegistry:
     @staticmethod
     def get_official_circulars(limit: int = 5) -> ToolResult:
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
-            cur.execute("SELECT * FROM circulars ORDER BY issued_date DESC LIMIT ?", (limit,))
+            qc = "SELECT * FROM circulars ORDER BY issued_date DESC LIMIT %s" if not isinstance(conn, sqlite3.Connection) else "SELECT * FROM circulars ORDER BY issued_date DESC LIMIT ?"
+            cur.execute(qc, (limit,))
             circulars = [dict(r) for r in cur.fetchall()]
 
         if not circulars:
@@ -829,7 +837,8 @@ class ToolRegistry:
     @staticmethod
     def get_bus_schedule(route_or_hostel: Optional[str] = None, shift: Optional[str] = None) -> ToolResult:
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT * FROM hostel_bus_schedules")
             hostel_schedules = [dict(r) for r in cur.fetchall()]
@@ -941,7 +950,8 @@ class ToolRegistry:
         # Check if query is about lost identity card
         if any(k in q for k in ["id", "id card", "identity", "hall ticket", "card"]):
             with get_db_connection() as conn:
-                conn.row_factory = sqlite3.Row
+                if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
                 cur = conn.cursor()
                 cur.execute("SELECT * FROM administrative_procedures WHERE procedure_id='lost_id_card_replacement'")
                 proc = dict(cur.fetchone())
@@ -975,7 +985,8 @@ class ToolRegistry:
 
         # General lost and found community board query
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT * FROM lost_and_found WHERE status='active' ORDER BY id DESC LIMIT 5")
             active_items = [dict(r) for r in cur.fetchall()]
@@ -1001,7 +1012,8 @@ class ToolRegistry:
     @staticmethod
     def get_facility_booking_info(facility_name: Optional[str] = None, date: Optional[str] = None) -> ToolResult:
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT * FROM facilities")
             facilities = [dict(r) for r in cur.fetchall()]
@@ -1075,7 +1087,8 @@ class ToolRegistry:
     @staticmethod
     def get_marketplace_listings(category: Optional[str] = None) -> ToolResult:
         with get_db_connection() as conn:
-            conn.row_factory = sqlite3.Row
+            if isinstance(conn, sqlite3.Connection):
+                    conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute("SELECT * FROM marketplace_listings WHERE status='available' LIMIT 5")
             listings = [dict(r) for r in cur.fetchall()]
