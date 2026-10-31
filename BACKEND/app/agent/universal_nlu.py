@@ -513,7 +513,14 @@ class UniversalNLU:
                             "target": "map"
                         },
                         "suggested_follow_ups": ["Where is A-Block?", "Where is U-Block?", "How to reach NTR Library?"],
-                        "citations": ["VFSTR Campus Spatial Directory", "Campus Navigation Graph (Dijkstra)"],
+                        "citations": [
+                            {
+                                "title": "VFSTR Campus Spatial Directory",
+                                "clause": "Campus Spatial Grid",
+                                "effective_date": "2026-10-30",
+                                "summary": "Algorithmic Dijkstra turn-by-turn navigation paths."
+                            }
+                        ],
                         "routed_by": "universal_nlu"
                     }
                 else:
