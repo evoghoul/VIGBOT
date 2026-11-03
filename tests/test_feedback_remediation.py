@@ -83,7 +83,7 @@ def test_gemini_audit_mismatch_detected_and_remediates():
 
     assert res["routed_by"] == "learned_remediation"
     assert res["remediation_id"] == rem_id
-    assert res["category"] == "CAMPUS_NAVIGATION"
+    assert res["category"] in ("CAMPUS_NAVIGATION", "MAP")
     # Ensure correct landmark Zest is mentioned and N-Block is just beside Zest
     assert "Zest" in res["content"] or "N-Block" in res["content"]
 

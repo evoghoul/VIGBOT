@@ -77,3 +77,4 @@ def test_emotional_manipulation_injection_defense():
     assert "Clause 2.1" in content
     assert "Access Denied" in content
     assert "251FA04E69" not in content
+
