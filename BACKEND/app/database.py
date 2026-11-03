@@ -103,6 +103,26 @@ def get_db_connection():
             keywords TEXT
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS learned_query_remediations (
+            remediation_id TEXT PRIMARY KEY,
+            feedback_id TEXT,
+            conversation_id TEXT,
+            user_query TEXT NOT NULL,
+            bot_output TEXT,
+            student_comment TEXT,
+            mismatch_detected BOOLEAN DEFAULT TRUE,
+            mismatch_reason TEXT,
+            intended_intent TEXT NOT NULL,
+            remediation_type TEXT NOT NULL,
+            trigger_patterns TEXT NOT NULL,
+            target_entity TEXT,
+            routing_action TEXT NOT NULL,
+            remediation_payload TEXT,
+            status TEXT DEFAULT 'ACTIVE',
+            created_at TEXT NOT NULL
+        )
+    """)
     conn.commit()
     return conn
 
@@ -637,6 +657,69 @@ class DataRepository:
             try: m["structured_card"] = json.loads(m["structured_card"])
             except: pass
         return m
+
+    @staticmethod
+    def save_learned_remediation(remediation: Dict[str, Any]) -> str:
+        """Stores a newly learned cognitive query remediation from Gemini feedback evaluation."""
+        rem_id = remediation.get("remediation_id") or f"rem-{uuid.uuid4().hex[:10]}"
+        now = remediation.get("created_at") or datetime.datetime.now(datetime.timezone.utc).isoformat()
+        
+        triggers = remediation.get("trigger_patterns", [])
+        if isinstance(triggers, list):
+            triggers_str = json.dumps(triggers)
+        else:
+            triggers_str = str(triggers)
+
+        payload = remediation.get("remediation_payload", {})
+        if isinstance(payload, dict):
+            payload_str = json.dumps(payload)
+        else:
+            payload_str = str(payload or "{}")
+
+        query = """
+            INSERT INTO learned_query_remediations (
+                remediation_id, feedback_id, conversation_id, user_query, bot_output,
+                student_comment, mismatch_detected, mismatch_reason, intended_intent,
+                remediation_type, trigger_patterns, target_entity, routing_action,
+                remediation_payload, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        DataRepository._execute_insert(query, (
+            rem_id,
+            remediation.get("feedback_id") or "",
+            remediation.get("conversation_id") or "",
+            remediation.get("user_query") or "",
+            remediation.get("bot_output") or "",
+            remediation.get("student_comment") or "",
+            bool(remediation.get("mismatch_detected", True)),
+            remediation.get("mismatch_reason") or "",
+            remediation.get("intended_intent") or "GENERAL",
+            remediation.get("remediation_type") or "DIRECT_ANSWER",
+            triggers_str,
+            remediation.get("target_entity") or "",
+            remediation.get("routing_action") or "DIRECT_ANSWER",
+            payload_str,
+            remediation.get("status") or "ACTIVE",
+            now
+        ))
+        return rem_id
+
+    @staticmethod
+    def get_active_learned_remediations() -> List[Dict[str, Any]]:
+        """Retrieves all active learned query remediations for dynamic NLU interception."""
+        rows = DataRepository._execute_query("SELECT * FROM learned_query_remediations WHERE status = 'ACTIVE' ORDER BY created_at DESC")
+        for r in rows:
+            if isinstance(r.get("trigger_patterns"), str):
+                try:
+                    r["trigger_patterns"] = json.loads(r["trigger_patterns"])
+                except Exception:
+                    r["trigger_patterns"] = [r["trigger_patterns"]]
+            if isinstance(r.get("remediation_payload"), str):
+                try:
+                    r["remediation_payload"] = json.loads(r["remediation_payload"])
+                except Exception:
+                    r["remediation_payload"] = {}
+        return rows
 
 
 class _CrisisEscalationsProxy:

@@ -307,6 +307,20 @@ class NLUEngine:
             res["routed_by"] = "rules"
             return res
 
+        # ---------------- 0.05. LEARNED COGNITIVE REMEDIATIONS (Self-Improving Feedback Loop) ----------------
+        from app.agent.feedback_remediator import FeedbackRemediationService
+        matched_rem = FeedbackRemediationService.match_query(q)
+        if matched_rem is not None:
+            logger.info("[NLUEngine] Intercepted query with learned remediation '%s' (intent: %s)",
+                        matched_rem.get("remediation_id"), matched_rem.get("intended_intent"))
+            return FeedbackRemediationService.apply_remediation(
+                remediation=matched_rem,
+                session=session,
+                query=q,
+                effective_lang=effective_lang,
+                active_subject=active_subject
+            )
+
         # ---------------- 0.1. EXAM ELIGIBILITY & ATTENDANCE RECOVERY ----------------
         if cls.is_exam_eligibility_query(q_lower):
             elig_res = cls.handle_attendance_eligibility(session, q, q_lower, effective_lang, active_subject)

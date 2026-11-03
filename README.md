@@ -43,6 +43,11 @@ VIGBOT is fully deployed and operational across cloud infrastructure:
 - **Low-Latency Intent Classification**: Zero-cost, CPU-bound ML intent classifier (~1-2ms on standard CPU) across 18 specialized domain intents with dynamic confidence thresholding and graceful fallback.
 - **22+1 Official Languages of India**: Full support for all 22 languages recognized under the 8th Schedule of the Constitution of India plus English, with real-time clickable dropdown and instant search filter.
 - **Zero-Delay Mental Health Crisis Guardrail**: Asymmetric safety thresholding for `distress_support` ($\ge 99\%$ recall target) triggering immediate confidential escalation (Tele-MANAS & Crisis Counseling) without ever routing to cloud LLMs.
+- **Autonomous Gemini Cognitive Feedback Auditor & Query Self-Remediation Loop**:
+  - Automatically activates whenever a student clicks thumbs down / dislike on a conversation turn in helpdesk chat.
+  - Passes the turn to Google Gemini (`gemini-3.5-flash`) in the background with strict PII sanitization.
+  - **Strict Intent-Output Mismatch Guardrail**: Gemini rigorously evaluates whether the bot genuinely failed to fulfill the student's intent (e.g. asking for walking directions but receiving certificate services, or wrong building profiles) versus a policy-enforced truth (e.g. attendance below mandatory 75% cutoff, fee dues, or legitimate cross-student privacy denial under Clause 2.1).
+  - Only when a genuine mismatch is diagnosed does Gemini persist a learned remediation rule into Neon PostgreSQL (`learned_query_remediations`). Subsequent matching queries are automatically intercepted and routed to the corrected handler, tool, and grounded response!
 
 ---
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from typing import List
 import os
 import json
@@ -105,13 +105,15 @@ async def submit_message_feedback(
     conversation_id: str,
     message_id: str,
     fb: MessageFeedbackCreate,
+    background_tasks: BackgroundTasks,
     current_student: dict = Depends(get_current_student)
 ):
     session = DatabaseSession(student_id=current_student["student_id"], user_id=current_student["user_id"])
     
     # 1. Record feedback in database
+    feedback_record = None
     try:
-        DataRepository.record_message_feedback(
+        feedback_record = DataRepository.record_message_feedback(
             session=session,
             conversation_id=conversation_id,
             message_id=message_id,
@@ -122,7 +124,68 @@ async def submit_message_feedback(
         logger.warning(f"Could not record feedback in DB: {e}")
 
     saved_for_training = False
-    # 2. When rating is "up" (thumbs up), store ONLY this specific conversation turn to train the local AI model
+
+    # Extract conversation messages and target turn
+    history = []
+    try:
+        history = DataRepository.get_conversation_messages(session, conversation_id)
+    except Exception as e:
+        logger.warning(f"Could not fetch conversation messages: {e}")
+
+    assistant_response = fb.response_text or ""
+    student_query = ""
+
+    if history:
+        target_idx = -1
+        for idx, m in enumerate(history):
+            if m.get("message_id") == message_id:
+                target_idx = idx
+                break
+        if target_idx != -1:
+            assistant_response = history[target_idx].get("content", "")
+            # Find closest preceding student query
+            for m in reversed(history[:target_idx]):
+                if m.get("sender_role") == "STUDENT":
+                    student_query = m.get("content", "")
+                    break
+        else:
+            if not assistant_response and history:
+                assistant_response = history[-1].get("content", "")
+            for m in reversed(history):
+                if m.get("sender_role") == "STUDENT":
+                    student_query = m.get("content", "")
+                    break
+    elif fb.messages:
+        for m in reversed(fb.messages):
+            if m.get("role") in ("user", "student") and not student_query:
+                student_query = m.get("content", "")
+            if m.get("role") in ("assistant", "bot") and not assistant_response:
+                assistant_response = m.get("content", "")
+
+    # 2. When rating is "down" (disliked): Trigger Gemini Background Auditor for Intent-Output Mismatch
+    if fb.rating.lower() in ["down", "thumbs_down", "thumbsdown", "-1", "negative"]:
+        from app.agent.feedback_remediator import FeedbackRemediationService
+        fb_id = (feedback_record.get("feedback_id") if feedback_record else None) or f"fb-{message_id}"
+        
+        background_tasks.add_task(
+            FeedbackRemediationService.evaluate_and_remediate,
+            feedback_id=fb_id,
+            conversation_id=conversation_id,
+            user_query=student_query or "helpdesk inquiry",
+            bot_output=assistant_response or "helpdesk response",
+            student_comment=fb.comment,
+            history=history
+        )
+        logger.info(f"Scheduled background Gemini audit for disliked turn {message_id} (Query: '{student_query[:40]}...')")
+
+        return MessageFeedbackResponse(
+            status="success",
+            saved_for_training=False,
+            rating=fb.rating,
+            message="Feedback recorded. Cognitive auditor initiated in background."
+        )
+
+    # 3. When rating is "up" (thumbs up), store ONLY this specific conversation turn to train the local AI model
     if fb.rating.lower() in ["up", "thumbs_up", "thumbsup", "1", "positive"]:
         try:
             history = DataRepository.get_conversation_messages(session, conversation_id)
