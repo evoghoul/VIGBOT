@@ -82,7 +82,27 @@ class CampusGraphService:
         if not q:
             return None
 
+        # 1. Direct Node ID match (e.g. N_BLOCK, CHEST_SUPERMARKET, NTR_LIBRARY)
+        q_raw = query.strip()
+        q_upper = q_raw.upper()
+        if q_upper in cls._nodes:
+            return q_upper
+        q_under = q_raw.replace("-", "_").replace(" ", "_").upper()
+        if q_under in cls._nodes:
+            return q_under
+
         alias_map = {
+            "n_block": "N_BLOCK",
+            "a_block": "A_BLOCK",
+            "h_block": "H_BLOCK",
+            "e_block": "E_BLOCK",
+            "u_block": "U_BLOCK",
+            "zest_supermarket": "CHEST_SUPERMARKET",
+            "chest_supermarket": "CHEST_SUPERMARKET",
+            "mhp_canteen": "MHP_CANTEEN",
+            "ntr_library": "NTR_LIBRARY",
+            "vignan_vihar": "VIGNAN_VIHAR",
+            "convocation_hall": "CONVOCATION_HALL",
             "main gate": "NODE_0_MAIN_GATE",
             "gate 0": "NODE_0_MAIN_GATE",
             "gate": "NODE_0_MAIN_GATE",
@@ -158,10 +178,16 @@ class CampusGraphService:
         }
 
         # Check aliases sorted by length descending so specific multi-word aliases match first
+        q_clean = re.sub(r'^(?:where\s+is|where\s+are|directions?\s+to|how\s+to\s+reach|how\s+do\s+i\s+(?:reach|get\s+to|go\s+to)|take\s+me\s+to)\s+', '', q, flags=re.I).strip()
+        q_variants = [q, q.replace("_", " "), q.replace("-", " ")]
+        if q_clean and q_clean != q:
+            q_variants.extend([q_clean, q_clean.replace("_", " "), q_clean.replace("-", " ")])
+
         sorted_aliases = sorted(alias_map.items(), key=lambda x: len(x[0]), reverse=True)
-        for alias, node_id in sorted_aliases:
-            if alias in q:
-                return node_id
+        for variant in q_variants:
+            for alias, node_id in sorted_aliases:
+                if alias in variant or variant == alias:
+                    return node_id
 
         # Fallback to name or description matching
         for nid, meta in cls._nodes.items():

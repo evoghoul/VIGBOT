@@ -291,8 +291,8 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
                 trig_norm = re.sub(r"[?!.,;:()\[\]{}]", "", trig_clean).strip()
                 if not trig_norm:
                     continue
-                # Exact or substring or regex match
-                if trig_norm in q_norm or q_norm in trig_norm:
+                # Exact or substring match (trigger contained in query)
+                if trig_norm == q_norm or trig_norm in q_norm:
                     return rem
                 try:
                     if re.search(r"\b" + re.escape(trig_norm) + r"\b", q_norm, re.I):
@@ -350,20 +350,32 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
             else:
                 # Turn-by-Turn Route
                 steps = data.get("steps", []) if isinstance(data, dict) else []
-                steps_formatted = "\n".join(f"• **Step {i+1}:** {s}" for i, s in enumerate(steps))
+                step_lines = []
+                for i, s in enumerate(steps):
+                    s_clean = s.strip()
+                    if s_clean.lower().startswith("step "):
+                        step_lines.append(f"• {s_clean}")
+                    else:
+                        step_lines.append(f"• **Step {i+1}:** {s_clean}")
+                steps_formatted = "\n".join(step_lines)
+
                 tot_dist = data.get("total_distance_meters", 240) if isinstance(data, dict) else 240
-                dest_name = data.get("destination", dest) if isinstance(data, dict) else dest
+                dest_name = data.get("destination") or dest.replace("_", "-")
+
+                walking_section = ""
+                if steps_formatted:
+                    walking_section = f"\n\n🚶‍♂️ **Turn-by-Turn Walking Route from Main Gate ({tot_dist:.0f}m):**\n{steps_formatted}"
+
                 content = (
                     f"### 📍 {dest_name} Location & Campus Directions:\n\n"
-                    f"{direct_answer}\n\n"
-                    f"🚶‍♂️ **Turn-by-Turn Walking Route from Main Gate ({tot_dist:.0f}m):**\n"
-                    f"{steps_formatted}\n\n"
+                    f"{direct_answer}"
+                    f"{walking_section}\n\n"
                     f"🗺️ *You can also inspect the full interactive layout in the Campus Map tab.*"
                 )
                 topic = f"{dest_name} Directions"
 
             return {
-                "category": "CAMPUS_NAVIGATION",
+                "category": "MAP",
                 "topic": topic,
                 "source_agent": "VIGBOT Cognitive Remediation Engine",
                 "content": content,
@@ -376,10 +388,19 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
                     }
                 ],
                 "structured_card": {
-                    "type": "navigation_route",
+                    "type": "navigation",
                     "title": f"Route to {data.get('destination', dest)}",
                     "path": "/campus-map",
-                    "action_text": "Open Campus Map"
+                    "action_text": "Open Campus Map",
+                    "actionIntent": "navigate:map",
+                    "target": "map"
+                },
+                "redirect_path": "map",
+                "action": {
+                    "type": "navigate",
+                    "label": "Open Campus Map",
+                    "target": "map",
+                    "route": "/?tab=map"
                 },
                 "suggested_follow_ups": follow_ups,
                 "active_subject": active_subject,

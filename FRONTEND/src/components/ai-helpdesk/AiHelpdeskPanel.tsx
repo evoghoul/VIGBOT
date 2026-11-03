@@ -876,7 +876,9 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                         title="Click to inspect live inference tier, privacy redaction and model verification"
                         className={cn(
                           "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all border cursor-pointer",
-                          turn.responseMeta?.routed_by === "gemini"
+                          turn.responseMeta?.routed_by === "learned_remediation"
+                            ? "bg-violet-50 text-violet-700 border-violet-300 hover:bg-violet-100 shadow-2xs"
+                            : turn.responseMeta?.routed_by === "gemini"
                             ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
                             : turn.responseMeta?.routed_by === "classifier" || turn.responseMeta?.routed_by === "classifier_pipeline_test"
                             ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
@@ -888,6 +890,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                           {(() => {
                             const rBy = turn.responseMeta?.routed_by;
                             const modelId = turn.responseMeta?.model_used || "Cloud LLM";
+                            if (rBy === "learned_remediation") return "Cognitive Remediation: Self-Learned Rule";
                             if (rBy === "rules") return "Tier 1: Deterministic Guardrail & Rules";
                             if (rBy === "classifier" || rBy === "classifier_pipeline_test") return "Tier 2: Local ML Intent Classifier (TF-IDF + LR)";
                             if (rBy === "gemini" || rBy === "groq" || turn.responseMeta?.llm_provider === "gemini" || turn.responseMeta?.llm_provider === "groq") {
@@ -1104,6 +1107,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                   {(() => {
                     const r = verifyingTurn.responseMeta?.routed_by;
                     const mId = verifyingTurn.responseMeta?.model_used || "Cloud LLM";
+                    if (r === "learned_remediation") return "Cognitive Remediation (Self-Learned Rule)";
                     if (r === "rules") return "Tier 1: Deterministic Guardrail & Rules";
                     if (r === "classifier" || r === "classifier_pipeline_test") return "Tier 2: Local ML Intent Classifier (TF-IDF + LR)";
                     if (r === "gemini" || r === "groq" || verifyingTurn.responseMeta?.llm_provider === "gemini" || verifyingTurn.responseMeta?.llm_provider === "groq") {
@@ -1123,6 +1127,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
                     {(() => {
                       const rBy = verifyingTurn.responseMeta?.routed_by;
                       const modelId = verifyingTurn.responseMeta?.model_used || "Cloud LLM";
+                      if (rBy === "learned_remediation") return "Cognitive Remediation Loop";
                       if (rBy === "rules") return "Deterministic Rules & Guardrails";
                       if (rBy === "classifier" || rBy === "classifier_pipeline_test") return "Local CPU Scikit-Learn";
                       if (rBy === "gemini" || rBy === "groq" || verifyingTurn.responseMeta?.llm_provider === "cloud" || verifyingTurn.responseMeta?.llm_provider === "gemini" || verifyingTurn.responseMeta?.llm_provider === "groq") {
