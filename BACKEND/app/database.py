@@ -123,6 +123,25 @@ def get_db_connection():
             created_at TEXT NOT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS system_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS gemini_usage_log (
+            id TEXT PRIMARY KEY,
+            endpoint TEXT NOT NULL,
+            model TEXT NOT NULL,
+            prompt_tokens INT DEFAULT 0,
+            candidate_tokens INT DEFAULT 0,
+            status_code INT NOT NULL,
+            latency_ms INT DEFAULT 0,
+            created_at TEXT NOT NULL
+        )
+    """)
     conn.commit()
     return conn
 
@@ -720,6 +739,158 @@ class DataRepository:
                 except Exception:
                     r["remediation_payload"] = {}
         return rows
+
+    @staticmethod
+    def get_all_learned_remediations() -> List[Dict[str, Any]]:
+        """Retrieves all learned query remediations and policy defense audits for Nodal Officer review."""
+        rows = DataRepository._execute_query("SELECT * FROM learned_query_remediations ORDER BY created_at DESC LIMIT 200")
+        for r in rows:
+            if isinstance(r.get("trigger_patterns"), str):
+                try:
+                    r["trigger_patterns"] = json.loads(r["trigger_patterns"])
+                except Exception:
+                    r["trigger_patterns"] = [r["trigger_patterns"]]
+            if isinstance(r.get("remediation_payload"), str):
+                try:
+                    r["remediation_payload"] = json.loads(r["remediation_payload"])
+                except Exception:
+                    r["remediation_payload"] = {}
+        return rows
+
+    @staticmethod
+    def update_remediation_status(remediation_id: str, new_status: str) -> bool:
+        """Toggles or updates the status of a learned remediation (e.g. ACTIVE, INACTIVE)."""
+        try:
+            DataRepository._execute_insert(
+                "UPDATE learned_query_remediations SET status = ? WHERE remediation_id = ?",
+                (new_status.upper(), remediation_id)
+            )
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def delete_remediation(remediation_id: str) -> bool:
+        """Deletes a learned remediation rule permanently."""
+        try:
+            DataRepository._execute_insert(
+                "DELETE FROM learned_query_remediations WHERE remediation_id = ?",
+                (remediation_id,)
+            )
+            return True
+        except Exception:
+            return False
+
+    @staticmethod
+    def get_system_setting(key: str, default: Optional[str] = None) -> Optional[str]:
+        """Retrieves a dynamic system setting from database."""
+        try:
+            rows = DataRepository._execute_query(
+                "SELECT value FROM system_settings WHERE key = ? LIMIT 1",
+                (key,)
+            )
+            if rows:
+                return rows[0]["value"]
+            return default
+        except Exception:
+            return default
+
+    @staticmethod
+    def set_system_setting(key: str, value: str) -> None:
+        """Upserts a dynamic system setting in database across SQLite and Postgres."""
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        try:
+            DataRepository._execute_insert(
+                """INSERT INTO system_settings (key, value, updated_at)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at""",
+                (key, str(value), now)
+            )
+        except Exception:
+            # Fallback for drivers that don't support ON CONFLICT
+            try:
+                DataRepository._execute_insert("DELETE FROM system_settings WHERE key = ?", (key,))
+                DataRepository._execute_insert("INSERT INTO system_settings (key, value, updated_at) VALUES (?, ?, ?)", (key, str(value), now))
+            except Exception:
+                pass
+
+    @staticmethod
+    def get_all_system_settings() -> Dict[str, str]:
+        """Retrieves all dynamic system settings."""
+        try:
+            rows = DataRepository._execute_query("SELECT key, value FROM system_settings")
+            return {r["key"]: r["value"] for r in rows}
+        except Exception:
+            return {}
+
+    @staticmethod
+    def log_gemini_call(endpoint: str, model: str, prompt_tokens: int = 0, candidate_tokens: int = 0, status_code: int = 200, latency_ms: int = 0) -> None:
+        """Logs a Gemini API call for real-time quota, rate-limit, and latency surveillance."""
+        call_id = f"call-{uuid.uuid4().hex[:10]}"
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        try:
+            DataRepository._execute_insert(
+                """INSERT INTO gemini_usage_log (id, endpoint, model, prompt_tokens, candidate_tokens, status_code, latency_ms, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (call_id, endpoint, model, prompt_tokens, candidate_tokens, status_code, latency_ms, now)
+            )
+        except Exception:
+            pass
+
+    @staticmethod
+    def get_gemini_usage_stats() -> Dict[str, Any]:
+        """
+        Calculates live daily and per-minute Gemini API usage against standard Free Tier limits
+        (15 RPM / 1,500 RPD).
+        """
+        today_date = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        one_min_ago = (now_utc - datetime.timedelta(seconds=60)).isoformat()
+        
+        daily_limit = 1500
+        rpm_limit = 15
+
+        daily_count = 0
+        rpm_count = 0
+        total_count = 0
+        recent_calls = []
+
+        try:
+            # Daily count
+            d_rows = DataRepository._execute_query(
+                "SELECT COUNT(*) as cnt FROM gemini_usage_log WHERE created_at LIKE ?",
+                (f"{today_date}%",)
+            )
+            daily_count = d_rows[0]["cnt"] if d_rows else 0
+
+            # Last 60 seconds count
+            m_rows = DataRepository._execute_query(
+                "SELECT COUNT(*) as cnt FROM gemini_usage_log WHERE created_at >= ?",
+                (one_min_ago,)
+            )
+            rpm_count = m_rows[0]["cnt"] if m_rows else 0
+
+            # Total all-time
+            t_rows = DataRepository._execute_query("SELECT COUNT(*) as cnt FROM gemini_usage_log")
+            total_count = t_rows[0]["cnt"] if t_rows else 0
+
+            # Recent 8 calls
+            recent_calls = DataRepository._execute_query(
+                "SELECT id, endpoint, model, status_code, latency_ms, created_at FROM gemini_usage_log ORDER BY created_at DESC LIMIT 8"
+            )
+        except Exception:
+            pass
+
+        return {
+            "daily_requests_used": daily_count,
+            "daily_requests_limit": daily_limit,
+            "daily_requests_remaining": max(0, daily_limit - daily_count),
+            "minute_requests_used": rpm_count,
+            "minute_requests_limit": rpm_limit,
+            "minute_requests_remaining": max(0, rpm_limit - rpm_count),
+            "total_requests_all_time": total_count,
+            "recent_calls": recent_calls
+        }
 
 
 class _CrisisEscalationsProxy:

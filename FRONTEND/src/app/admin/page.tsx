@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchAllTickets, updateTicketStatus, deleteTicket } from '@/actions/admin';
+import { 
+  fetchAllTickets, 
+  updateTicketStatus, 
+  deleteTicket,
+  fetchCognitiveRemediations,
+  updateRemediationStatus,
+  deleteRemediationRule,
+  fetchGeminiStatus,
+  updateGeminiConfig,
+  pingGeminiConnection
+} from '@/actions/admin';
 import { getAnalyticsData } from '@/actions/analytics';
 import { getAllBroadcasts, toggleBroadcastStatus, deleteBroadcast, createBroadcast } from '@/actions/broadcasts';
 import {
@@ -58,7 +68,19 @@ import {
   MessageCircle,
   Video,
   UserPlus,
-  Bell
+  Bell,
+  Sparkles,
+  KeyRound,
+  Zap,
+  Check,
+  ExternalLink,
+  Shield,
+  ThumbsDown,
+  ToggleLeft,
+  ToggleRight,
+  Sliders,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -139,7 +161,7 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'service_requests' | 'hostel_requests' | 'grievances' | 'clubs' | 'bookings' | 'lost_found' | 'analytics' | 'broadcasts' | 'distress' | 'health' | 'kanban' | 'audit' | 'knowledge' | 'compliance' | 'live_sessions' | 'verifications'>('service_requests');
+  const [activeTab, setActiveTab] = useState<'service_requests' | 'hostel_requests' | 'grievances' | 'clubs' | 'bookings' | 'lost_found' | 'analytics' | 'broadcasts' | 'distress' | 'health' | 'kanban' | 'audit' | 'knowledge' | 'compliance' | 'live_sessions' | 'verifications' | 'remediation'>('service_requests');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [newBroadcastMsg, setNewBroadcastMsg] = useState('');
@@ -366,6 +388,22 @@ export default function AdminDashboard() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <div className="w-full lg:w-56 shrink-0 flex flex-col gap-1 h-fit">
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">AI & Cognitive Governance</div>
+            <button
+              onClick={() => setActiveTab('remediation')}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-all flex items-center justify-between w-full text-left ${
+                activeTab === 'remediation' ? 'bg-purple-100 text-purple-900 font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Sparkles className="w-4 h-4 text-purple-600" /> AI Remediation & Gemini
+              </span>
+              <span className="text-[10px] bg-purple-200 text-purple-900 px-1.5 py-0.5 rounded-full font-bold">
+                Live
+              </span>
+            </button>
+
+            <div className="w-full h-px bg-slate-200 my-2"></div>
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">Modules</div>
             <button
               onClick={() => setActiveTab('compliance')}
@@ -870,7 +908,8 @@ export default function AdminDashboard() {
               </>
             ) : (
               <div className="w-full">
-                {activeTab === 'compliance' && <ComplianceTab />}
+                {activeTab === 'remediation' && <CognitiveRemediationTab />}
+            {activeTab === 'compliance' && <ComplianceTab />}
                 {activeTab === 'live_sessions' && <LiveSessionsTab />}
                 {activeTab === 'verifications' && <VerificationsTab />}
                 {activeTab === 'broadcasts' && <BroadcastsTab />}
@@ -1569,3 +1608,683 @@ function KnowledgeTab() {
 }
 
 
+
+
+// ============================================================================
+// COGNITIVE REMEDIATION & GEMINI GOVERNANCE TAB (NODAL OFFICER SURVEILLANCE)
+// ============================================================================
+function CognitiveRemediationTab() {
+  const [remediations, setRemediations] = useState<any[]>([]);
+  const [summary, setSummary] = useState({
+    total_audited: 0,
+    active_rules: 0,
+    policy_protected: 0,
+    inactive_rules: 0,
+    raw_feedback_count: 0
+  });
+  const [recentFeedback, setRecentFeedback] = useState<any[]>([]);
+  const [geminiStatus, setGeminiStatus] = useState<any>({
+    enable_gemini: false,
+    masked_api_key: '',
+    has_key: false,
+    active_model: 'gemini-2.5-flash',
+    available_models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.5-flash'],
+    quota: {
+      daily_requests_used: 0,
+      daily_requests_limit: 1500,
+      daily_requests_remaining: 1500,
+      minute_requests_used: 0,
+      minute_requests_limit: 15,
+      minute_requests_remaining: 15,
+      total_requests_all_time: 0,
+      recent_calls: []
+    }
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'POLICY_PROTECTED' | 'INACTIVE'>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Key Switcher & Config State
+  const [showConfigBox, setShowConfigBox] = useState(false);
+  const [newApiKey, setNewApiKey] = useState('');
+  const [showKeyText, setShowKeyText] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const [enableGeminiToggle, setEnableGeminiToggle] = useState(false);
+  const [updatingConfig, setUpdatingConfig] = useState(false);
+  const [configMessage, setConfigMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Ping State
+  const [pinging, setPinging] = useState(false);
+  const [pingResult, setPingResult] = useState<{ success: boolean; latency_ms?: number; message?: string; error?: string } | null>(null);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [remRes, gemRes] = await Promise.all([
+        fetchCognitiveRemediations(),
+        fetchGeminiStatus()
+      ]);
+
+      if (remRes.success) {
+        setRemediations(remRes.remediations || []);
+        if (remRes.summary) setSummary(remRes.summary);
+        if (remRes.recentFeedback) setRecentFeedback(remRes.recentFeedback);
+      }
+
+      if (gemRes.success) {
+        setGeminiStatus(gemRes);
+        setSelectedModel(gemRes.active_model || 'gemini-2.5-flash');
+        setEnableGeminiToggle(Boolean(gemRes.enable_gemini));
+      }
+    } catch (e) {
+      console.error('Failed to load cognitive remediation data:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleToggleStatus = async (remId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    const res = await updateRemediationStatus(remId, nextStatus);
+    if (res.success) {
+      setRemediations(prev =>
+        prev.map(r => (r.remediation_id === remId ? { ...r, status: nextStatus } : r))
+      );
+      setSummary(prev => ({
+        ...prev,
+        active_rules: nextStatus === 'ACTIVE' ? prev.active_rules + 1 : Math.max(0, prev.active_rules - 1),
+        inactive_rules: nextStatus === 'INACTIVE' ? prev.inactive_rules + 1 : Math.max(0, prev.inactive_rules - 1)
+      }));
+    } else {
+      alert(res.error || 'Failed to update rule status.');
+    }
+  };
+
+  const handleDeleteRule = async (remId: string) => {
+    if (!window.confirm(`Permanently delete remediation rule ${remId}? The bot will revert to default routing for these queries.`)) {
+      return;
+    }
+    const res = await deleteRemediationRule(remId);
+    if (res.success) {
+      setRemediations(prev => prev.filter(r => r.remediation_id !== remId));
+      loadData();
+    } else {
+      alert(res.error || 'Failed to delete remediation rule.');
+    }
+  };
+
+  const handleSaveGeminiConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdatingConfig(true);
+    setConfigMessage(null);
+
+    const payload: { apiKey?: string; enableGemini: boolean; model: string } = {
+      enableGemini: enableGeminiToggle,
+      model: selectedModel
+    };
+    if (newApiKey.trim()) {
+      payload.apiKey = newApiKey.trim();
+    }
+
+    const res = await updateGeminiConfig(payload);
+    setUpdatingConfig(false);
+
+    if (res.success) {
+      setConfigMessage({ text: res.message || 'Gemini configuration successfully verified and saved!', type: 'success' });
+      setNewApiKey('');
+      loadData();
+    } else {
+      setConfigMessage({ text: res.error || 'Failed to update Gemini configuration.', type: 'error' });
+    }
+  };
+
+  const handlePingGemini = async () => {
+    setPinging(true);
+    setPingResult(null);
+    const res = await pingGeminiConnection();
+    setPinging(false);
+    setPingResult(res);
+  };
+
+  // Filtered Remediations
+  const filteredRemediations = remediations.filter(r => {
+    if (filter === 'ACTIVE' && r.status !== 'ACTIVE') return false;
+    if (filter === 'POLICY_PROTECTED' && r.status !== 'POLICY_PROTECTED') return false;
+    if (filter === 'INACTIVE' && r.status !== 'INACTIVE') return false;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchQuery = (r.user_query || '').toLowerCase().includes(q);
+      const matchReason = (r.mismatch_reason || '').toLowerCase().includes(q);
+      const matchTarget = (r.target_entity || '').toLowerCase().includes(q);
+      const matchIntent = (r.intended_intent || '').toLowerCase().includes(q);
+      const matchTriggers = Array.isArray(r.trigger_patterns) && r.trigger_patterns.some((t: string) => t.toLowerCase().includes(q));
+      return matchQuery || matchReason || matchTarget || matchIntent || matchTriggers;
+    }
+    return true;
+  });
+
+  const quota = geminiStatus.quota || {};
+  const dailyUsed = quota.daily_requests_used || 0;
+  const dailyLimit = quota.daily_requests_limit || 1500;
+  const dailyRemaining = quota.daily_requests_remaining ?? 1500;
+  const usedPct = Math.min(100, Math.round((dailyUsed / dailyLimit) * 100));
+
+  return (
+    <div className="space-y-6">
+      {/* Top Banner Header */}
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 text-white shadow-md relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-purple-500/20 text-purple-200 border border-purple-400/30 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-purple-300 animate-pulse" /> Cognitive Remediation Hub
+              </span>
+              <span className="text-xs text-purple-200/80 font-mono">Neon PostgreSQL Sync</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-white">AI Feedback Surveillance & Gemini Governance</h2>
+            <p className="text-sm text-purple-200/80 max-w-2xl">
+              Monitor queries disliked by students in real-time, inspect Gemini intent-audit diagnoses, review self-learned Dijkstra routing rules pushed to Neon, and manage Google Gemini API quotas & active credentials.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              onClick={handlePingGemini}
+              disabled={pinging}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all cursor-pointer disabled:opacity-50"
+              title="Send lightweight diagnostic ping to Google Gemini API"
+            >
+              <Zap className={`w-3.5 h-3.5 text-amber-300 ${pinging ? 'animate-spin' : ''}`} />
+              {pinging ? 'Pinging Gemini...' : 'Ping Gemini API'}
+            </button>
+
+            <button
+              onClick={() => setShowConfigBox(!showConfigBox)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-purple-500 hover:bg-purple-600 text-white shadow-sm transition-all cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              {showConfigBox ? 'Hide API Key Manager' : 'Switch Gemini API Key'}
+            </button>
+
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/15 text-slate-200 border border-white/10 transition-all cursor-pointer"
+              title="Refresh live data from Neon DB"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Live Ping Notification Banner */}
+        {pingResult && (
+          <div className={`mt-4 p-3 rounded-xl text-xs flex items-center justify-between border ${
+            pingResult.success ? 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100' : 'bg-rose-500/20 border-rose-400/40 text-rose-100'
+          }`}>
+            <div className="flex items-center gap-2">
+              {pingResult.success ? <CheckCircle className="w-4 h-4 text-emerald-300" /> : <AlertCircle className="w-4 h-4 text-rose-300" />}
+              <span>{pingResult.message || pingResult.error}</span>
+            </div>
+            {pingResult.latency_ms !== undefined && (
+              <span className="font-mono font-bold bg-black/20 px-2 py-0.5 rounded text-[10px]">
+                {pingResult.latency_ms} ms roundtrip
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Top 4 Telemetry Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Gemini Free Tier Quota */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily API Quota</div>
+            <div className="p-1.5 bg-blue-50 text-blue-700 rounded-lg">
+              <Activity className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-black text-slate-900 tracking-tight flex items-baseline gap-1">
+              <span>{dailyRemaining.toLocaleString()}</span>
+              <span className="text-xs font-semibold text-slate-400 font-sans">/ {dailyLimit.toLocaleString()} RPD</span>
+            </div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Remaining Google Gemini Free Calls</div>
+          </div>
+          {/* Visual Progress Bar */}
+          <div className="space-y-1">
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  usedPct > 80 ? 'bg-rose-500' : usedPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'
+                }`}
+                style={{ width: `${Math.max(5, usedPct)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+              <span>{dailyUsed} calls used today</span>
+              <span>15 RPM Limit</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Engine Status & Active Key */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gemini Engine Status</div>
+            <div className="flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-full ${geminiStatus.enable_gemini ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              <span className="text-xs font-bold text-slate-700">
+                {geminiStatus.enable_gemini ? 'ENABLED' : 'PAUSED'}
+              </span>
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-bold text-slate-900 font-mono truncate">
+              {geminiStatus.masked_api_key || 'No Key Configured'}
+            </div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Active Credential (Masked)</div>
+          </div>
+          <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Active Model:</span>
+            <span className="font-bold font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200/60 text-[10px]">
+              {geminiStatus.active_model || 'gemini-2.5-flash'}
+            </span>
+          </div>
+        </div>
+
+        {/* Card 3: Active Remediations in Neon */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Rules in Neon</div>
+            <div className="p-1.5 bg-purple-50 text-purple-700 rounded-lg">
+              <Bot className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-black text-purple-700 tracking-tight">
+              {summary.active_rules} <span className="text-xs font-bold text-slate-400 font-sans">Rules</span>
+            </div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Self-Learned Query Interceptors</div>
+          </div>
+          <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Runtime Routing:</span>
+            <span className="font-bold text-emerald-700">Tier 0 Intercept</span>
+          </div>
+        </div>
+
+        {/* Card 4: Policy Defense Guardrails */}
+        <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Policy Guardrails Upheld</div>
+            <div className="p-1.5 bg-emerald-50 text-emerald-700 rounded-lg">
+              <Shield className="w-4 h-4" />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-black text-emerald-700 tracking-tight">
+              {summary.policy_protected} <span className="text-xs font-bold text-slate-400 font-sans">Protected</span>
+            </div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Clause 2.1 RLAC & Rules Upheld</div>
+          </div>
+          <div className="pt-1 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Integrity Check:</span>
+            <span className="font-bold text-blue-700">100% Zero-Leak</span>
+          </div>
+        </div>
+      </div>
+
+      {/* API Key Switcher & Configuration Drawer */}
+      {showConfigBox && (
+        <div className="bg-white rounded-2xl border-2 border-purple-200 p-6 shadow-sm space-y-5 animate-in fade-in-50 duration-200">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 text-purple-700 rounded-xl">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Switch Google Gemini API Key & Engine Config</h3>
+                <p className="text-xs text-slate-500">
+                  Validated live with Google before persisting to Neon DB <code className="font-mono text-purple-700">system_settings</code>. Survives Render reboots.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowConfigBox(false)}
+              className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveGeminiConfig} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Input New API Key */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>Google Gemini API Key</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyText(!showKeyText)}
+                    className="text-[11px] text-purple-700 hover:underline cursor-pointer"
+                  >
+                    {showKeyText ? 'Hide Key' : 'Reveal Key'}
+                  </button>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showKeyText ? 'text' : 'password'}
+                    placeholder="Paste new API Key (e.g. AIzaSy... or AQ.Ab8RN6...)"
+                    value={newApiKey}
+                    onChange={e => setNewApiKey(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-xs font-mono transition-all"
+                  />
+                </div>
+                <p className="text-[11px] text-slate-400">Leave blank if only updating model or enablement status.</p>
+              </div>
+
+              {/* Model Selection */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700">Target Gemini Model</label>
+                <select
+                  value={selectedModel}
+                  onChange={e => setSelectedModel(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-xs font-mono bg-white cursor-pointer"
+                >
+                  {(geminiStatus.available_models || ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.5-flash']).map((m: string) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-400">gemini-2.5-flash / gemini-1.5-flash recommended for fastest sub-second audits.</p>
+              </div>
+            </div>
+
+            {/* Enable Gemini Toggle */}
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-slate-800">Enable Autonomous Gemini Feedback Loop</div>
+                <div className="text-[11px] text-slate-500">
+                  When active, student downvotes automatically trigger the Gemini cognitive audit in the background and persist verified remediations to Neon.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEnableGeminiToggle(!enableGeminiToggle)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  enableGeminiToggle ? 'bg-purple-600' : 'bg-slate-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    enableGeminiToggle ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Status Toast */}
+            {configMessage && (
+              <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+                configMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
+              }`}>
+                {configMessage.type === 'success' ? <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+                <span>{configMessage.text}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfigBox(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={updatingConfig}
+                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              >
+                {updatingConfig ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                {updatingConfig ? 'Validating with Google...' : 'Verify & Switch API Key'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Filter and Search Bar */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+          <button
+            onClick={() => setFilter('ALL')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              filter === 'ALL' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            All Audited ({summary.total_audited})
+          </button>
+          <button
+            onClick={() => setFilter('ACTIVE')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              filter === 'ACTIVE' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <CheckCircle className="w-3 h-3" /> Active in Neon ({summary.active_rules})
+          </button>
+          <button
+            onClick={() => setFilter('POLICY_PROTECTED')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+              filter === 'POLICY_PROTECTED' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Shield className="w-3 h-3" /> Policy Upheld ({summary.policy_protected})
+          </button>
+          <button
+            onClick={() => setFilter('INACTIVE')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              filter === 'INACTIVE' ? 'bg-slate-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            Inactive ({summary.inactive_rules})
+          </button>
+        </div>
+
+        <div className="relative w-full sm:w-72">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search query, landmark, reason..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+          />
+        </div>
+      </div>
+
+      {/* Disliked Queries & Remediations List */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 space-y-3">
+            <RefreshCw className="w-8 h-8 text-purple-600 animate-spin mx-auto" />
+            <div className="text-sm font-semibold text-slate-700">Loading live audit trail from Neon PostgreSQL...</div>
+          </div>
+        ) : filteredRemediations.length === 0 ? (
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 space-y-2">
+            <Bot className="w-10 h-10 text-slate-300 mx-auto" />
+            <div className="text-base font-bold text-slate-800">No Audited Queries Found</div>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              No disliked queries matching the active filter. When a student downvotes a query in the chat, the autonomous Gemini loop audits it here.
+            </p>
+          </div>
+        ) : (
+          filteredRemediations.map((rem: any) => {
+            const isActive = rem.status === 'ACTIVE';
+            const isPolicy = rem.status === 'POLICY_PROTECTED';
+            const triggers: string[] = Array.isArray(rem.trigger_patterns) ? rem.trigger_patterns : [];
+
+            return (
+              <div
+                key={rem.remediation_id}
+                className={`bg-white rounded-2xl border transition-all shadow-2xs hover:shadow-xs overflow-hidden ${
+                  isActive ? 'border-emerald-200/90' : isPolicy ? 'border-purple-200/90' : 'border-slate-200'
+                }`}
+              >
+                {/* Header Strip */}
+                <div className="p-4 sm:px-6 bg-slate-50/80 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      isActive ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                      isPolicy ? 'bg-purple-100 text-purple-800 border border-purple-300' :
+                      'bg-slate-200 text-slate-700 border border-slate-300'
+                    }`}>
+                      {isActive && <CheckCircle className="w-3 h-3 text-emerald-600" />}
+                      {isPolicy && <Shield className="w-3 h-3 text-purple-600" />}
+                      {rem.status || 'UNKNOWN'}
+                    </span>
+
+                    <span className="font-bold font-mono text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                      {rem.intended_intent || 'GENERAL'}
+                    </span>
+
+                    <span className="font-mono text-[11px] text-slate-400">
+                      ID: {rem.remediation_id}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+                    <span>{rem.created_at ? new Date(rem.created_at).toLocaleString() : ''}</span>
+                    
+                    <button
+                      onClick={() => handleToggleStatus(rem.remediation_id, rem.status)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors border ${
+                        isActive ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
+                        'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                      }`}
+                      title={isActive ? 'Pause rule from intercepting' : 'Activate rule for NLU interception'}
+                    >
+                      {isActive ? 'Pause Rule' : 'Activate Rule'}
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteRule(rem.remediation_id)}
+                      className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Delete rule permanently"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Card Content */}
+                <div className="p-5 sm:p-6 space-y-4">
+                  {/* Student Disliked Query Section */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <ThumbsDown className="w-3.5 h-3.5 text-rose-500" />
+                      <span>Student Disliked Query</span>
+                    </div>
+                    <div className="text-base font-extrabold text-slate-900 bg-rose-50/50 p-3 rounded-xl border border-rose-100/80 font-sans">
+                      "{rem.user_query}"
+                    </div>
+                    {rem.student_comment && (
+                      <div className="text-xs text-rose-800 bg-rose-100/60 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5">
+                        <span className="font-bold uppercase text-[10px] tracking-wide">Student Feedback:</span>
+                        <span>"{rem.student_comment}"</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Side-by-Side: Delivered vs Gemini Audit */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Left: Bot Output Delivered */}
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                        <span>Delivered Bot Output (Disliked)</span>
+                        <span className="text-[10px] font-mono text-slate-400">Conversation Turn</span>
+                      </div>
+                      <div className="text-xs text-slate-700 font-sans line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                        {rem.bot_output || 'No output recorded'}
+                      </div>
+                    </div>
+
+                    {/* Right: Gemini Audit Diagnosis */}
+                    <div className={`p-4 rounded-xl border space-y-2 ${
+                      rem.mismatch_detected ? 'bg-purple-50/70 border-purple-200' : 'bg-emerald-50/70 border-emerald-200'
+                    }`}>
+                      <div className="text-xs font-bold uppercase tracking-wider flex items-center justify-between">
+                        <span className={rem.mismatch_detected ? 'text-purple-900' : 'text-emerald-900'}>
+                          Gemini Autonomous Audit Diagnosis
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          rem.mismatch_detected ? 'bg-purple-200 text-purple-900' : 'bg-emerald-200 text-emerald-900'
+                        }`}>
+                          {rem.mismatch_detected ? 'Mismatch Detected' : 'Policy Upheld'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-800 font-medium leading-relaxed">
+                        {rem.mismatch_reason || 'No audit explanation provided.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* What Gemini Instructed & Pushed to Neon */}
+                  {rem.mismatch_detected && (
+                    <div className="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-2.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="font-bold text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                          <Bot className="w-4 h-4 text-indigo-600" />
+                          Gemini Remediation Pushed to Neon
+                        </span>
+                        <div className="flex items-center gap-2 font-mono text-[11px]">
+                          <span className="text-indigo-700 font-semibold">Routing Action:</span>
+                          <span className="bg-white px-2 py-0.5 rounded border border-indigo-200 font-bold text-indigo-900">
+                            {rem.routing_action || 'TOOL_ROUTING'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {rem.target_entity && (
+                        <div className="text-xs text-slate-700 flex items-center gap-2">
+                          <span className="font-bold text-slate-500">Target Entity:</span>
+                          <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-purple-700">
+                            {rem.target_entity}
+                          </span>
+                        </div>
+                      )}
+
+                      {triggers.length > 0 && (
+                        <div className="space-y-1.5">
+                          <div className="text-[11px] font-bold text-slate-500">Learned Trigger Variations:</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {triggers.map((t, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white text-indigo-900 border border-indigo-200/80 shadow-2xs"
+                              >
+                                "{t}"
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

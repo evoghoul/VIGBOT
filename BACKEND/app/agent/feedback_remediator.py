@@ -45,7 +45,11 @@ class FeedbackRemediationService:
 
     @classmethod
     def get_gemini_api_key(cls) -> str:
-        """Resolves the Gemini API key from settings, environment, or .env."""
+        """Resolves the Gemini API key from database system_settings, settings, environment, or .env."""
+        from app.database import DataRepository
+        stored_key = DataRepository.get_system_setting("GEMINI_API_KEY")
+        if stored_key and not stored_key.startswith("YOUR_"):
+            return stored_key.strip()
         key = getattr(settings, "GEMINI_API_KEY", "").strip()
         if key and not key.startswith("YOUR_"):
             return key
@@ -159,10 +163,13 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
                     "responseMimeType": "application/json"
                 }
             }
+            t0 = time.time()
             try:
                 data_bytes = json.dumps(payload).encode("utf-8")
                 req = urllib.request.Request(url, data=data_bytes, headers={"Content-Type": "application/json"})
                 with urllib.request.urlopen(req, timeout=25) as resp:
+                    latency = int((time.time() - t0) * 1000)
+                    DataRepository.log_gemini_call(endpoint="auditEngine", model=model, status_code=200, latency_ms=latency)
                     resp_data = json.loads(resp.read().decode("utf-8"))
                     candidates = resp_data.get("candidates", [])
                     if candidates and "content" in candidates[0] and "parts" in candidates[0]["content"]:
@@ -172,6 +179,8 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
                         cleaned_json = re.sub(r"\s*```$", "", cleaned_json).strip()
                         return json.loads(cleaned_json)
             except urllib.error.HTTPError as he:
+                latency = int((time.time() - t0) * 1000)
+                DataRepository.log_gemini_call(endpoint="auditEngine", model=model, status_code=he.code, latency_ms=latency)
                 if he.code == 404:
                     logger.warning(f"[FeedbackRemediator] Gemini model {model} 404, trying next...")
                     continue
@@ -218,7 +227,27 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
 
             # IFF necessary: only update query handling if intent and output genuinely mismatched
             if not (mismatch and remediation_needed):
-                logger.info(f"[FeedbackRemediator] Dislike was on a policy-compliant or correct answer. NO remediation rule created.")
+                logger.info(f"[FeedbackRemediator] Dislike was on a policy-compliant or correct answer. Storing POLICY_PROTECTED audit log.")
+                policy_audit_record = {
+                    "feedback_id": feedback_id,
+                    "conversation_id": conversation_id,
+                    "user_query": user_query,
+                    "bot_output": bot_output,
+                    "student_comment": student_comment or "",
+                    "mismatch_detected": False,
+                    "mismatch_reason": reason or "Disliked query verified: bot correctly upheld university academic policy or RLS student data privacy rules.",
+                    "intended_intent": audit_result.get("intended_intent") or "POLICY_GUARD",
+                    "remediation_type": "POLICY_DEFENSE",
+                    "trigger_patterns": [user_query.strip().lower()],
+                    "target_entity": audit_result.get("target_entity") or "",
+                    "routing_action": "RULE:policy_enforcement",
+                    "remediation_payload": {
+                        "grounded_response_template": bot_output,
+                        "suggested_follow_ups": audit_result.get("suggested_follow_ups") or []
+                    },
+                    "status": "POLICY_PROTECTED"
+                }
+                DataRepository.save_learned_remediation(policy_audit_record)
                 return None
 
             # Prepare trigger patterns

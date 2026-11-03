@@ -203,3 +203,122 @@ export async function deleteTicket(ticketId: string | number, type: 'club' | 'gr
     return { success: false, error: "Failed to delete ticket" };
   }
 }
+
+
+// -------------------------------------------------------------
+// Cognitive Remediations & Gemini Governance Server Actions
+// -------------------------------------------------------------
+export async function fetchCognitiveRemediations() {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/remediations`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return {
+          success: true,
+          summary: data.summary,
+          remediations: data.remediations || [],
+          recentFeedback: data.recent_feedback || []
+        };
+      }
+    }
+  } catch (error) {
+    console.warn("fetchCognitiveRemediations failed:", error);
+  }
+  return {
+    success: false,
+    summary: { total_audited: 0, active_rules: 0, policy_protected: 0, inactive_rules: 0, raw_feedback_count: 0 },
+    remediations: [],
+    recentFeedback: []
+  };
+}
+
+export async function updateRemediationStatus(remediationId: string, status: string) {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/remediations/${remediationId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (error) {
+    console.warn("updateRemediationStatus failed:", error);
+  }
+  return { success: false, error: "Network error updating remediation status." };
+}
+
+export async function deleteRemediationRule(remediationId: string) {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/remediations/${remediationId}`, {
+      method: 'DELETE'
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (error) {
+    console.warn("deleteRemediationRule failed:", error);
+  }
+  return { success: false, error: "Network error deleting remediation rule." };
+}
+
+export async function fetchGeminiStatus() {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/gemini/status`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return data;
+      }
+    }
+  } catch (error) {
+    console.warn("fetchGeminiStatus failed:", error);
+  }
+  return {
+    success: false,
+    enable_gemini: false,
+    masked_api_key: "",
+    has_key: false,
+    active_model: "gemini-2.5-flash",
+    available_models: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"],
+    quota: {
+      daily_requests_used: 0,
+      daily_requests_limit: 1500,
+      daily_requests_remaining: 1500,
+      minute_requests_used: 0,
+      minute_requests_limit: 15,
+      minute_requests_remaining: 15,
+      total_requests_all_time: 0,
+      recent_calls: []
+    }
+  };
+}
+
+export async function updateGeminiConfig(config: { apiKey?: string; enableGemini?: boolean; model?: string }) {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/gemini/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: config.apiKey,
+        enable_gemini: config.enableGemini,
+        model: config.model
+      })
+    });
+    return await res.json();
+  } catch (error) {
+    return { success: false, error: `Failed to update Gemini config: ${String(error)}` };
+  }
+}
+
+export async function pingGeminiConnection() {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/gemini/ping`, {
+      method: 'POST'
+    });
+    return await res.json();
+  } catch (error) {
+    return { success: false, error: `Ping failed: ${String(error)}` };
+  }
+}
