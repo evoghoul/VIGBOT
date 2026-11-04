@@ -46,7 +46,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`h-full ${jakarta.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
+      className={`h-full ${jakarta.variable} ${geistMono.variable}`}
+    >
       <body className="min-h-full flex flex-col antialiased bg-background text-foreground selection:bg-blue-100 selection:text-blue-900">
         <StudentProvider>
           {children}
