@@ -85,7 +85,12 @@ import {
   ChevronDown,
   Layers,
   Cpu,
-  Server
+  Server,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Menu,
+  X,
+  Copy
 } from 'lucide-react';
 
 interface ServiceRequest {
@@ -176,6 +181,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<string>('');
   const [sidebarFilter, setSidebarFilter] = useState('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Data states
   const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
@@ -480,31 +487,79 @@ export default function AdminDashboard() {
     }
   ];
 
+  const getActiveTabInfo = () => {
+    for (const sec of navSections) {
+      const match = sec.items.find(it => it.id === activeTab);
+      if (match) return { section: sec.title, label: match.label, icon: match.icon };
+    }
+    return { section: 'Command Center', label: 'Dashboard', icon: <Lock className="w-4 h-4 text-blue-400" /> };
+  };
+  const activeInfo = getActiveTabInfo();
+
   return (
     <div className="min-h-dvh bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-white">
-      {/* Institutional Command Header */}
-      <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 shadow-sm">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+      {/* Institutional Command Header - Sleek dark navy matching Login */}
+      <header className="bg-slate-900 border-b border-slate-700/80 sticky top-0 z-40 shadow-xl shadow-black/25 backdrop-blur-md">
+        <div className="w-full px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
-            {/* Left: Brand & Title */}
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center shadow-inner">
-                <Lock className="w-5 h-5 text-blue-400" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-bold text-base leading-tight text-white tracking-tight">Nodal Officer Portal</h1>
-                  <span className="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 rounded-full font-mono font-semibold">
-                    v2.4 SECURE
-                  </span>
+            {/* Left: Mobile Drawer Trigger + Desktop Rail Collapse + Brand & Breadcrumb */}
+            <div className="flex items-center gap-3">
+              {/* Mobile Drawer Trigger (lg:hidden) */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl border border-slate-700/80 transition-colors cursor-pointer"
+                title="Open navigation drawer"
+                aria-label="Open navigation drawer"
+              >
+                <Menu className="w-5 h-5 text-blue-400" />
+              </button>
+
+              {/* Desktop Sidebar Collapse Toggle (hidden lg:flex) */}
+              <button
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="hidden lg:flex p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl border border-slate-700/80 hover:border-slate-600 transition-all cursor-pointer group"
+                title={isSidebarCollapsed ? "Expand sidebar rail" : "Collapse sidebar rail"}
+                aria-label="Toggle sidebar collapse"
+              >
+                {isSidebarCollapsed ? (
+                  <PanelLeftOpen className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                ) : (
+                  <PanelLeftClose className="w-4 h-4 text-slate-400 group-hover:text-blue-400 group-hover:scale-110 transition-all" />
+                )}
+              </button>
+
+              {/* Brand Logo & Lock Badge matching Login */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center shadow-inner shrink-0">
+                  <Lock className="w-5 h-5 text-blue-400" />
                 </div>
-                <p className="text-[11px] text-slate-400 font-medium tracking-wide">VFSTR Institutional Command Center</p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-bold text-base leading-tight text-white tracking-tight">Nodal Officer Portal</h1>
+                    <span className="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 rounded-full font-mono font-semibold">
+                      v2.4 SECURE
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 font-medium tracking-wide">VFSTR Institutional Command Center</p>
+                </div>
+              </div>
+
+              {/* Active Tab Breadcrumb */}
+              <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 font-medium pl-3 ml-1 border-l border-slate-800">
+                <span className="text-slate-500">Command Center</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+                <span className="text-slate-400">{activeInfo.section}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+                <span className="text-white font-semibold flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/80 px-2.5 py-1 rounded-lg">
+                  {activeInfo.icon}
+                  {activeInfo.label}
+                </span>
               </div>
             </div>
 
             {/* Middle: Live telemetry indicators */}
-            <div className="hidden xl:flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/80 text-[11px] text-slate-300">
+            <div className="hidden md:flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] text-slate-300 shadow-inner">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -513,14 +568,14 @@ export default function AdminDashboard() {
                 <span className="font-semibold text-emerald-400">Synced</span>
               </div>
 
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/80 text-[11px] text-slate-300">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] text-slate-300 shadow-inner">
                 <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
                 <span className="text-slate-400 font-medium">Security:</span>
                 <span className="font-semibold text-blue-300 font-mono">RLS Clause 2.1</span>
               </div>
 
               {currentTime && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/80 text-[11px] font-mono text-slate-300">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-slate-300 shadow-inner">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
                   <span>{currentTime}</span>
                 </div>
@@ -529,7 +584,7 @@ export default function AdminDashboard() {
 
             {/* Right: User profile & Logout */}
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs shadow-xs">
+              <div className="flex items-center gap-2.5 bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs shadow-xs">
                 <div className="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-300 flex items-center justify-center font-bold text-xs">
                   {adminUser.name.charAt(0)}
                 </div>
@@ -551,172 +606,382 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* Main Command Body with Sticky Left Rail */}
-      <div className="flex-1 flex flex-col lg:flex-row w-full min-h-[calc(100dvh-4rem)]">
-        {/* Persistent Formal Left Navigation Rail */}
-        <aside className="w-full lg:w-72 shrink-0 bg-slate-900/95 border-b lg:border-b-0 lg:border-r border-slate-800 lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)] lg:overflow-y-auto flex flex-col justify-between p-4 space-y-5 shadow-xl">
-          <div className="space-y-4">
-            {/* Quick Module Filter */}
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Filter navigation..."
-                value={sidebarFilter}
-                onChange={e => setSidebarFilter(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
-              />
+      {/* Mobile Drawer (Visible on < lg screens when toggled) */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative w-80 max-w-[85vw] bg-slate-900 border-r border-slate-700 flex flex-col justify-between p-4 shadow-2xl z-10 overflow-y-auto animate-in slide-in-from-left duration-200">
+            <div className="space-y-4">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center">
+                    <Lock className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-white">Nodal Navigation</h2>
+                    <p className="text-[10px] text-slate-400">Institutional Modules</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Module Filter Input */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Filter navigation..."
+                  value={sidebarFilter}
+                  onChange={e => setSidebarFilter(e.target.value)}
+                  className="w-full pl-8 pr-7 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+                {sidebarFilter && (
+                  <button
+                    onClick={() => setSidebarFilter('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Navigation Sections */}
+              <div className="space-y-4">
+                {navSections.map((sec, secIdx) => {
+                  const filteredItems = sec.items.filter(item =>
+                    item.label.toLowerCase().includes(sidebarFilter.toLowerCase())
+                  );
+                  if (filteredItems.length === 0) return null;
+
+                  return (
+                    <div key={secIdx} className="space-y-1">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1.5">
+                        {sec.title}
+                      </div>
+
+                      <div className="space-y-0.5">
+                        {filteredItems.map(item => {
+                          const isSelected = activeTab === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                setActiveTab(item.id as any);
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className={`w-full px-3 py-2.5 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left group cursor-pointer relative ${
+                                isSelected
+                                  ? 'bg-blue-600/15 text-blue-200 border border-blue-500/40 shadow-xs font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-500 before:rounded-r-md'
+                                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70 border border-transparent'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2.5 truncate pl-1">
+                                <span className={`shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-blue-400' : 'text-slate-400'}`}>
+                                  {item.icon}
+                                </span>
+                                <span className="truncate">{item.label}</span>
+                              </span>
+
+                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                {item.badge && (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-800 text-slate-400'}`}>
+                                    {item.badge}
+                                  </span>
+                                )}
+                                {item.count !== undefined && item.count > 0 && (
+                                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-800 text-slate-400'}`}>
+                                    {item.count}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Navigation Groups */}
-            <div className="space-y-4">
-              {navSections.map((sec, secIdx) => {
-                const filteredItems = sec.items.filter(item =>
-                  item.label.toLowerCase().includes(sidebarFilter.toLowerCase())
-                );
-                if (filteredItems.length === 0) return null;
-
-                return (
-                  <div key={secIdx} className="space-y-1">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1.5">
-                      {sec.title}
-                    </div>
-
-                    <div className="space-y-0.5">
-                      {filteredItems.map(item => {
-                        const isSelected = activeTab === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            onClick={() => setActiveTab(item.id as any)}
-                            className={`w-full px-3 py-2 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left group cursor-pointer ${
-                              isSelected
-                                ? item.isAi
-                                  ? 'bg-purple-500/15 text-purple-200 border border-purple-500/30 shadow-xs font-semibold'
-                                  : 'bg-blue-600/15 text-blue-300 border border-blue-500/30 shadow-xs font-semibold'
-                                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
-                            }`}
-                          >
-                            <span className="flex items-center gap-2.5 truncate">
-                              <span className="shrink-0 transition-transform group-hover:scale-110">
-                                {item.icon}
-                              </span>
-                              <span className="truncate">{item.label}</span>
-                            </span>
-
-                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                              {item.badge && (
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-800 text-slate-400'}`}>
-                                  {item.badge}
-                                </span>
-                              )}
-                              {item.count !== undefined && item.count > 0 && (
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-800 text-slate-400'}`}>
-                                  {item.count}
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+            {/* Mobile Drawer Telemetry Pod */}
+            <div className="pt-3 border-t border-slate-800">
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-[10px] font-mono text-slate-400">
+                <div className="flex justify-between items-center text-slate-300 font-bold">
+                  <span>TELEMETRY ONLINE</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+                <div className="flex justify-between">
+                  <span>Neon DB:</span>
+                  <span className="text-emerald-400">Synced</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>RLS:</span>
+                  <span className="text-blue-400">Clause 2.1</span>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Sidebar Footer: Real-time Telemetry Health Pod */}
-          <div className="pt-3 border-t border-slate-800/80">
-            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-2 text-[11px]">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Telemetry Engine
-                </span>
-                <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded">
-                  ONLINE
-                </span>
+      {/* Main Command Body with Desktop Sidebar Rail */}
+      <div className="flex-1 flex w-full min-h-[calc(100dvh-4rem)]">
+        {/* Desktop Fixed Left Navigation Rail */}
+        <aside
+          className={`hidden lg:flex flex-col justify-between shrink-0 bg-slate-900 border-r border-slate-700/80 sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out shadow-xl z-20 ${
+            isSidebarCollapsed ? 'w-20 p-2.5' : 'w-72 p-4 space-y-4'
+          }`}
+        >
+          {isSidebarCollapsed ? (
+            /* Collapsed Icon Rail View */
+            <div className="flex flex-col items-center space-y-4 w-full">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <Lock className="w-4 h-4 text-blue-400" />
               </div>
 
-              <div className="space-y-1 font-mono text-[10px] text-slate-400">
-                <div className="flex justify-between">
-                  <span>PostgreSQL:</span>
-                  <span className="text-slate-300">Neon AWS Cloud</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Gemini Model:</span>
-                  <span className="text-purple-300">gemini-2.5-flash</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Privacy Guard:</span>
-                  <span className="text-blue-300">Clause 2.1 Enforced</span>
-                </div>
+              <div className="w-8 h-px bg-slate-800" />
+
+              <div className="space-y-1.5 w-full flex flex-col items-center">
+                {navSections.flatMap(sec => sec.items).map(item => {
+                  const isSelected = activeTab === item.id;
+                  return (
+                    <div key={item.id} className="relative group w-full flex justify-center">
+                      <button
+                        onClick={() => setActiveTab(item.id as any)}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
+                          isSelected
+                            ? 'bg-blue-600/20 text-blue-300 border border-blue-500/40 shadow-inner'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent'
+                        }`}
+                        title={item.label}
+                      >
+                        <span className="transition-transform group-hover:scale-110">
+                          {item.icon}
+                        </span>
+                        {isSelected && (
+                          <span className="absolute left-1 top-2.5 bottom-2.5 w-1 bg-blue-500 rounded-r-md" />
+                        )}
+                        {item.count !== undefined && item.count > 0 && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white rounded-full text-[9px] font-mono font-bold flex items-center justify-center shadow-xs">
+                            {item.count}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Tooltip on hover */}
+                      <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-800 border border-slate-700 text-white text-xs font-semibold rounded-xl whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 flex items-center gap-2">
+                        <span>{item.label}</span>
+                        {item.badge && (
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${item.badgeClass || 'bg-slate-900 text-slate-300'}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+          ) : (
+            /* Expanded Full Sidebar View */
+            <div className="space-y-4">
+              {/* Quick Module Filter */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Filter navigation..."
+                  value={sidebarFilter}
+                  onChange={e => setSidebarFilter(e.target.value)}
+                  className="w-full pl-8 pr-7 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+                {sidebarFilter && (
+                  <button
+                    onClick={() => setSidebarFilter('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Navigation Groups */}
+              <div className="space-y-4">
+                {navSections.map((sec, secIdx) => {
+                  const filteredItems = sec.items.filter(item =>
+                    item.label.toLowerCase().includes(sidebarFilter.toLowerCase())
+                  );
+                  if (filteredItems.length === 0) return null;
+
+                  return (
+                    <div key={secIdx} className="space-y-1">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1.5 flex items-center justify-between">
+                        <span>{sec.title}</span>
+                      </div>
+
+                      <div className="space-y-0.5">
+                        {filteredItems.map(item => {
+                          const isSelected = activeTab === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => setActiveTab(item.id as any)}
+                              className={`w-full px-3 py-2.5 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left group cursor-pointer relative ${
+                                isSelected
+                                  ? 'bg-blue-600/15 text-blue-200 border border-blue-500/40 shadow-xs font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-500 before:rounded-r-md'
+                                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70 border border-transparent'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2.5 truncate pl-1">
+                                <span className={`shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-blue-400' : 'text-slate-400'}`}>
+                                  {item.icon}
+                                </span>
+                                <span className="truncate">{item.label}</span>
+                              </span>
+
+                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                {item.badge && (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-800 text-slate-400'}`}>
+                                    {item.badge}
+                                  </span>
+                                )}
+                                {item.count !== undefined && item.count > 0 && (
+                                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-800 text-slate-400'}`}>
+                                    {item.count}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Sidebar Footer: Real-time Telemetry Health Pod */}
+          <div className="pt-3 border-t border-slate-800">
+            {isSidebarCollapsed ? (
+              <div className="flex flex-col items-center">
+                <div
+                  className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center group relative cursor-pointer"
+                  title="Telemetry Online"
+                >
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-800 border border-slate-700 text-emerald-300 text-[10px] font-mono font-bold rounded-xl whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                    Telemetry Synced • Neon DB
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-[11px] shadow-inner">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Command Telemetry
+                  </span>
+                  <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-bold">
+                    ONLINE
+                  </span>
+                </div>
+
+                <div className="space-y-1 font-mono text-[10px] text-slate-400">
+                  <div className="flex justify-between">
+                    <span>Neon PostgreSQL:</span>
+                    <span className="text-slate-200">Synced</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Gemini Engine:</span>
+                    <span className="text-purple-300">gemini-2.5-flash</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Privacy Tier:</span>
+                    <span className="text-blue-300">Clause 2.1 RLAC</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </aside>
 
         {/* Right Main Content Area */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-slate-950 overflow-y-auto space-y-6">
-          {/* Top 4 Telemetry Metrics Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Grievances */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg shadow-black/20 hover:border-slate-700 transition-all group">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Grievances</span>
-                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
-                  <MessageSquareWarning className="w-5 h-5 text-rose-400" />
+          {/* Top 4 Telemetry Metrics Cards - ONLY on Operational / Ticket tabs */}
+          {['service_requests', 'hostel_requests', 'grievances', 'clubs', 'bookings', 'lost_found', 'kanban'].includes(activeTab) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in-50 duration-200">
+              {/* Card 1: Grievances */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Grievances</span>
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
+                    <MessageSquareWarning className="w-5 h-5 text-rose-400" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black text-white tracking-tight">{grievances.length}</div>
+                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
+                  <span>Formal SGRC student filings</span>
                 </div>
               </div>
-              <div className="text-3xl font-black text-white tracking-tight">{grievances.length}</div>
-              <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                <span>Formal SGRC student filings</span>
-              </div>
-            </div>
 
-            {/* Card 2: Club Apps */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg shadow-black/20 hover:border-slate-700 transition-all group">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Club Applications</span>
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5 text-indigo-400" />
+              {/* Card 2: Club Apps */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Club Applications</span>
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 text-indigo-400" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black text-white tracking-tight">{clubApps.length}</div>
+                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
+                  <span>SAC & student council review</span>
                 </div>
               </div>
-              <div className="text-3xl font-black text-white tracking-tight">{clubApps.length}</div>
-              <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                <span>SAC & student council review</span>
-              </div>
-            </div>
 
-            {/* Card 3: Bookings */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg shadow-black/20 hover:border-slate-700 transition-all group">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Facility Bookings</span>
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <Calendar className="w-5 h-5 text-blue-400" />
+              {/* Card 3: Bookings */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Facility Bookings</span>
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                    <Calendar className="w-5 h-5 text-blue-400" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black text-white tracking-tight">{bookings.length}</div>
+                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
+                  <span>Halls, labs & sports grounds</span>
                 </div>
               </div>
-              <div className="text-3xl font-black text-white tracking-tight">{bookings.length}</div>
-              <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                <span>Halls, labs & sports grounds</span>
-              </div>
-            </div>
 
-            {/* Card 4: Lost & Found */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-lg shadow-black/20 hover:border-slate-700 transition-all group">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lost & Found Posts</span>
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                  <PackageSearch className="w-5 h-5 text-amber-400" />
+              {/* Card 4: Lost & Found */}
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lost & Found Posts</span>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                    <PackageSearch className="w-5 h-5 text-amber-400" />
+                  </div>
+                </div>
+                <div className="text-3xl font-black text-white tracking-tight">{lostAndFound.length}</div>
+                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
+                  <span>Campus item registry</span>
                 </div>
               </div>
-              <div className="text-3xl font-black text-white tracking-tight">{lostAndFound.length}</div>
-              <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                <span>Campus item registry</span>
-              </div>
             </div>
-          </div>
+          )}
 
           {/* Tab Content Display */}
           <div className="space-y-6">
@@ -1927,18 +2192,19 @@ function CognitiveRemediationTab() {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner Header: Deep Dark Slate/Purple Command Center Style */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/90 via-slate-900 to-indigo-950/90 text-white shadow-2xl border border-purple-500/30 relative overflow-hidden">
+      {/* Top Banner Header - Matching Login Slate & Royal Blue Accents */}
+      <div className="p-6 rounded-2xl bg-slate-800 text-white shadow-xl border border-slate-700 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-purple-500/20 text-purple-200 border border-purple-400/30 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-purple-300 animate-pulse" /> Cognitive Remediation Hub
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-blue-500/10 text-blue-300 border border-blue-500/20 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-pulse" /> Cognitive Remediation Hub
               </span>
-              <span className="text-xs text-purple-200/80 font-mono">Neon PostgreSQL ap-southeast-1</span>
+              <span className="text-xs text-slate-400 font-mono">Neon PostgreSQL • Autonomous Interceptor</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-white">AI Feedback Surveillance & Gemini Governance</h2>
-            <p className="text-xs text-purple-200/80 max-w-2xl leading-relaxed">
+            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
               Surveil queries disliked by students, inspect Gemini intent-audit diagnoses, review self-learned Dijkstra routing rules pushed to Neon, and manage Google Gemini API quotas & credentials.
             </p>
           </div>
@@ -1947,16 +2213,16 @@ function CognitiveRemediationTab() {
             <button
               onClick={handlePingGemini}
               disabled={pinging}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer disabled:opacity-50"
               title="Send lightweight diagnostic ping to Google Gemini API"
             >
-              <Zap className={`w-3.5 h-3.5 text-amber-300 ${pinging ? 'animate-spin' : ''}`} />
+              <Zap className={`w-3.5 h-3.5 text-amber-400 ${pinging ? 'animate-spin' : ''}`} />
               {pinging ? 'Pinging Gemini...' : 'Ping Gemini API'}
             </button>
 
             <button
               onClick={() => setShowConfigBox(!showConfigBox)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-md shadow-purple-600/30 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/20 transition-all cursor-pointer"
             >
               <KeyRound className="w-3.5 h-3.5" />
               {showConfigBox ? 'Hide API Key Manager' : 'Switch Gemini API Key'}
@@ -1994,7 +2260,7 @@ function CognitiveRemediationTab() {
       {/* Top 4 Telemetry Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Gemini Free Tier Quota */}
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
           <div className="flex items-center justify-between">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Daily API Quota</div>
             <div className="p-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg">
@@ -2026,7 +2292,7 @@ function CognitiveRemediationTab() {
         </div>
 
         {/* Card 2: Engine Status & Active Key */}
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
           <div className="flex items-center justify-between">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Gemini Engine Status</div>
             <div className="flex items-center gap-1.5">
@@ -2051,7 +2317,7 @@ function CognitiveRemediationTab() {
         </div>
 
         {/* Card 3: Active Remediations in Neon */}
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
           <div className="flex items-center justify-between">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Rules in Neon</div>
             <div className="p-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg">
@@ -2071,7 +2337,7 @@ function CognitiveRemediationTab() {
         </div>
 
         {/* Card 4: Policy Defense Guardrails */}
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-3">
+        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
           <div className="flex items-center justify-between">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Policy Guardrails Upheld</div>
             <div className="p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
@@ -2213,7 +2479,7 @@ function CognitiveRemediationTab() {
       )}
 
       {/* Filter and Search Bar */}
-      <div className="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setFilter('ALL')}
@@ -2256,7 +2522,7 @@ function CognitiveRemediationTab() {
             placeholder="Search query, landmark, reason..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-400"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           />
         </div>
       </div>
@@ -2285,12 +2551,12 @@ function CognitiveRemediationTab() {
             return (
               <div
                 key={rem.remediation_id}
-                className={`bg-slate-900/90 rounded-2xl border transition-all shadow-xl hover:border-slate-700 overflow-hidden ${
-                  isActive ? 'border-emerald-500/30' : isPolicy ? 'border-purple-500/30' : 'border-slate-800'
+                className={`bg-slate-800 rounded-2xl border transition-all shadow-xl hover:border-slate-600 overflow-hidden ${
+                  isActive ? 'border-emerald-500/40' : isPolicy ? 'border-blue-500/40' : 'border-slate-700'
                 }`}
               >
                 {/* Header Strip */}
-                <div className="p-4 sm:px-6 bg-slate-950/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="p-4 sm:px-6 bg-slate-900 border-b border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                       isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
