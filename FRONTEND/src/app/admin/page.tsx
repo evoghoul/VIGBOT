@@ -297,26 +297,35 @@ export default function AdminDashboard() {
   const getStatusBadgeColor = (status: string) => {
     const s = status.toLowerCase();
     if (s.includes('resolved') || s.includes('approved') || s.includes('confirmed') || s.includes('claimed')) {
-      return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
     }
     if (s.includes('withdrawn') || s.includes('rejected') || s.includes('cancelled')) {
-      return 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+      return 'bg-rose-50 text-rose-700 border-rose-200';
     }
     if (s.includes('investigation') || s.includes('forwarded') || s.includes('open') || s.includes('pending') || s.includes('in_review') || s.includes('submitted')) {
-      return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+      return 'bg-amber-50 text-amber-700 border-amber-200';
     }
-    return 'bg-blue-500/15 text-blue-300 border-blue-500/30';
+    return 'bg-blue-50 text-blue-700 border-blue-200';
   };
 
   const getStatusIcon = (status: string) => {
     const s = status.toLowerCase();
-    if (s.includes('resolved') || s.includes('approved')) return <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-400" />;
-    if (s.includes('withdrawn') || s.includes('rejected')) return <XCircle className="w-3.5 h-3.5 mr-1 text-rose-400" />;
-    if (s.includes('investigation') || s.includes('forwarded')) return <Activity className="w-3.5 h-3.5 mr-1 text-amber-400" />;
-    return <Clock className="w-3.5 h-3.5 mr-1 text-blue-400" />;
+    if (s.includes('resolved') || s.includes('approved')) return <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" />;
+    if (s.includes('withdrawn') || s.includes('rejected')) return <XCircle className="w-3.5 h-3.5 mr-1 text-rose-600" />;
+    if (s.includes('investigation') || s.includes('forwarded')) return <Activity className="w-3.5 h-3.5 mr-1 text-amber-600" />;
+    return <Clock className="w-3.5 h-3.5 mr-1 text-blue-600" />;
   };
 
-  if (!adminUser) return null; // Prevent flash of unauthorized content
+  if (!adminUser) {
+    return (
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center font-sans text-slate-800">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-semibold text-slate-500 font-mono tracking-wider">INITIALIZING NODAL OFFICER COMMAND CENTER...</p>
+        </div>
+      </div>
+    );
+  }
 
   const filteredServiceRequests = serviceRequests.filter(s =>
     (s.request_no && s.request_no.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -374,14 +383,14 @@ export default function AdminDashboard() {
         {
           id: 'distress',
           label: 'Distress Protocols',
-          icon: <AlertOctagon className="w-4 h-4 text-rose-400" />,
+          icon: <AlertOctagon className="w-4 h-4 text-rose-600" />,
           badge: '3 Active',
           badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
         },
         {
           id: 'grievances',
           label: 'Student Grievances',
-          icon: <MessageSquareWarning className="w-4 h-4 text-amber-400" />,
+          icon: <MessageSquareWarning className="w-4 h-4 text-amber-600" />,
           count: grievances.length,
           countClass: 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
         },
@@ -400,7 +409,7 @@ export default function AdminDashboard() {
         {
           id: 'service_requests',
           label: 'Service Requests',
-          icon: <FileCheck className="w-4 h-4 text-blue-400" />,
+          icon: <FileCheck className="w-4 h-4 text-blue-600" />,
           count: serviceRequests.length,
           countClass: 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
         },
@@ -414,14 +423,14 @@ export default function AdminDashboard() {
         {
           id: 'bookings',
           label: 'Facility Bookings',
-          icon: <Calendar className="w-4 h-4 text-emerald-400" />,
+          icon: <Calendar className="w-4 h-4 text-emerald-600" />,
           count: bookings.length,
           countClass: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
         },
         {
           id: 'lost_found',
           label: 'Lost & Found Registry',
-          icon: <PackageSearch className="w-4 h-4 text-amber-400" />,
+          icon: <PackageSearch className="w-4 h-4 text-amber-600" />,
           count: lostAndFound.length,
           countClass: 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
         },
@@ -447,21 +456,21 @@ export default function AdminDashboard() {
         {
           id: 'verifications',
           label: 'Document Verifications',
-          icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
+          icon: <CheckCircle2 className="w-4 h-4 text-emerald-600" />,
           badge: 'Crypto',
           badgeClass: 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
         },
         {
           id: 'health',
           label: 'Agent Telemetry & Health',
-          icon: <HeartPulse className="w-4 h-4 text-rose-400" />,
+          icon: <HeartPulse className="w-4 h-4 text-rose-600" />,
           badge: '99.98%',
           badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
         },
         {
           id: 'kanban',
           label: 'Grievance Kanban',
-          icon: <KanbanSquare className="w-4 h-4 text-blue-400" />
+          icon: <KanbanSquare className="w-4 h-4 text-blue-600" />
         },
         {
           id: 'audit',
@@ -471,7 +480,7 @@ export default function AdminDashboard() {
         {
           id: 'knowledge',
           label: 'Knowledge Base (RAG)',
-          icon: <BookOpen className="w-4 h-4 text-amber-400" />
+          icon: <BookOpen className="w-4 h-4 text-amber-600" />
         },
         {
           id: 'broadcasts',
@@ -481,7 +490,7 @@ export default function AdminDashboard() {
         {
           id: 'analytics',
           label: 'Real-Time Analytics',
-          icon: <BarChart3 className="w-4 h-4 text-blue-400" />
+          icon: <BarChart3 className="w-4 h-4 text-blue-600" />
         }
       ]
     }
@@ -492,14 +501,14 @@ export default function AdminDashboard() {
       const match = sec.items.find(it => it.id === activeTab);
       if (match) return { section: sec.title, label: match.label, icon: match.icon };
     }
-    return { section: 'Command Center', label: 'Dashboard', icon: <Lock className="w-4 h-4 text-blue-400" /> };
+    return { section: 'Command Center', label: 'Dashboard', icon: <Lock className="w-4 h-4 text-blue-600" /> };
   };
   const activeInfo = getActiveTabInfo();
 
   return (
-    <div className="min-h-dvh bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-white">
+    <div className="min-h-dvh bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Institutional Command Header - Sleek dark navy matching Login */}
-      <header className="bg-slate-900 border-b border-slate-700/80 sticky top-0 z-40 shadow-xl shadow-black/25 backdrop-blur-md">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs backdrop-blur-md">
         <div className="w-full px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
             {/* Left: Mobile Drawer Trigger + Desktop Rail Collapse + Brand & Breadcrumb */}
@@ -507,50 +516,50 @@ export default function AdminDashboard() {
               {/* Mobile Drawer Trigger (lg:hidden) */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl border border-slate-700/80 transition-colors cursor-pointer"
+                className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors cursor-pointer"
                 title="Open navigation drawer"
                 aria-label="Open navigation drawer"
               >
-                <Menu className="w-5 h-5 text-blue-400" />
+                <Menu className="w-5 h-5 text-blue-600" />
               </button>
 
               {/* Desktop Sidebar Collapse Toggle (hidden lg:flex) */}
               <button
                 onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className="hidden lg:flex p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl border border-slate-700/80 hover:border-slate-600 transition-all cursor-pointer group"
+                className="hidden lg:flex p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl border border-slate-200 hover:border-slate-300 transition-all cursor-pointer group"
                 title={isSidebarCollapsed ? "Expand sidebar rail" : "Collapse sidebar rail"}
                 aria-label="Toggle sidebar collapse"
               >
                 {isSidebarCollapsed ? (
                   <PanelLeftOpen className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
                 ) : (
-                  <PanelLeftClose className="w-4 h-4 text-slate-400 group-hover:text-blue-400 group-hover:scale-110 transition-all" />
+                  <PanelLeftClose className="w-4 h-4 text-slate-500 group-hover:text-blue-600 group-hover:scale-110 transition-all" />
                 )}
               </button>
 
-              {/* Brand Logo & Lock Badge matching Login */}
+              {/* Brand Logo & Shield Badge matching Screenshot 2 */}
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center shadow-inner shrink-0">
-                  <Lock className="w-5 h-5 text-blue-400" />
+                <div className="w-9 h-9 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-xs shrink-0">
+                  <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="font-bold text-base leading-tight text-white tracking-tight">Nodal Officer Portal</h1>
-                    <span className="text-[10px] bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2 py-0.5 rounded-full font-mono font-semibold">
+                    <h1 className="font-bold text-base leading-tight text-slate-900 tracking-tight">Nodal Officer Portal</h1>
+                    <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-mono font-semibold">
                       v2.4 SECURE
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 font-medium tracking-wide">VFSTR Institutional Command Center</p>
+                  <p className="text-[10px] text-slate-500 font-mono font-semibold tracking-wider uppercase">COMMAND CENTER</p>
                 </div>
               </div>
 
               {/* Active Tab Breadcrumb */}
-              <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 font-medium pl-3 ml-1 border-l border-slate-800">
-                <span className="text-slate-500">Command Center</span>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-                <span className="text-slate-400">{activeInfo.section}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-                <span className="text-white font-semibold flex items-center gap-1.5 bg-slate-800/80 border border-slate-700/80 px-2.5 py-1 rounded-lg">
+              <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 font-medium pl-3 ml-1 border-l border-slate-200">
+                <span className="text-slate-400">Command Center</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                <span className="text-slate-500">{activeInfo.section}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                <span className="text-blue-700 font-semibold flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
                   {activeInfo.icon}
                   {activeInfo.label}
                 </span>
@@ -559,23 +568,23 @@ export default function AdminDashboard() {
 
             {/* Middle: Live telemetry indicators */}
             <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] text-slate-300 shadow-inner">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] text-slate-700 shadow-2xs">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span className="text-slate-400 font-medium">Neon PostgreSQL:</span>
-                <span className="font-semibold text-emerald-400">Synced</span>
+                <span className="text-slate-500 font-medium">Neon PostgreSQL:</span>
+                <span className="font-semibold text-emerald-600">Synced</span>
               </div>
 
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] text-slate-300 shadow-inner">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-slate-400 font-medium">Security:</span>
-                <span className="font-semibold text-blue-300 font-mono">RLS Clause 2.1</span>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] text-slate-700 shadow-2xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                <span className="text-slate-500 font-medium">Security:</span>
+                <span className="font-semibold text-blue-700 font-mono">RLS Clause 2.1</span>
               </div>
 
               {currentTime && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-slate-300 shadow-inner">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700 shadow-2xs">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
                   <span>{currentTime}</span>
                 </div>
@@ -584,19 +593,19 @@ export default function AdminDashboard() {
 
             {/* Right: User profile & Logout */}
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5 bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs shadow-xs">
-                <div className="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-300 flex items-center justify-center font-bold text-xs">
+              <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs shadow-2xs">
+                <div className="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xs">
                   {adminUser.name.charAt(0)}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-white font-semibold leading-tight">{adminUser.name}</div>
+                  <div className="text-slate-900 font-semibold leading-tight">{adminUser.name}</div>
                   <div className="text-[10px] text-slate-400 font-mono">{adminUser.role}</div>
                 </div>
               </div>
 
               <button 
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl border border-transparent hover:border-rose-500/20 transition-all cursor-pointer"
+                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-transparent hover:border-rose-200 transition-all cursor-pointer"
                 title="Sign out of Command Center"
               >
                 <LogOut className="w-4 h-4" />
@@ -611,27 +620,27 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 z-50 flex lg:hidden">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
           {/* Drawer Panel */}
-          <div className="relative w-80 max-w-[85vw] bg-slate-900 border-r border-slate-700 flex flex-col justify-between p-4 shadow-2xl z-10 overflow-y-auto animate-in slide-in-from-left duration-200">
+          <div className="relative w-80 max-w-[85vw] bg-white border-r border-slate-200 flex flex-col justify-between p-4 shadow-2xl z-10 overflow-y-auto animate-in slide-in-from-left duration-200">
             <div className="space-y-4">
               {/* Drawer Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Lock className="w-4 h-4 text-blue-400" />
+                    <Lock className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-bold text-white">Nodal Navigation</h2>
+                    <h2 className="text-sm font-bold text-slate-900">Nodal Navigation</h2>
                     <p className="text-[10px] text-slate-400">Institutional Modules</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg border border-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -645,7 +654,7 @@ export default function AdminDashboard() {
                   placeholder="Filter navigation..."
                   value={sidebarFilter}
                   onChange={e => setSidebarFilter(e.target.value)}
-                  className="w-full pl-8 pr-7 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
                 {sidebarFilter && (
                   <button
@@ -683,12 +692,12 @@ export default function AdminDashboard() {
                               }}
                               className={`w-full px-3 py-2.5 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left group cursor-pointer relative ${
                                 isSelected
-                                  ? 'bg-blue-600/15 text-blue-200 border border-blue-500/40 shadow-xs font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-500 before:rounded-r-md'
-                                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70 border border-transparent'
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200/80 font-bold shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-600 before:rounded-r-md'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent'
                               }`}
                             >
                               <span className="flex items-center gap-2.5 truncate pl-1">
-                                <span className={`shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-blue-400' : 'text-slate-400'}`}>
+                                <span className={`shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-blue-600' : 'text-slate-400'}`}>
                                   {item.icon}
                                 </span>
                                 <span className="truncate">{item.label}</span>
@@ -696,12 +705,12 @@ export default function AdminDashboard() {
 
                               <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                 {item.badge && (
-                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-800 text-slate-400'}`}>
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-100 text-slate-600'}`}>
                                     {item.badge}
                                   </span>
                                 )}
                                 {item.count !== undefined && item.count > 0 && (
-                                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-800 text-slate-400'}`}>
+                                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-100 text-slate-600'}`}>
                                     {item.count}
                                   </span>
                                 )}
@@ -717,19 +726,19 @@ export default function AdminDashboard() {
             </div>
 
             {/* Mobile Drawer Telemetry Pod */}
-            <div className="pt-3 border-t border-slate-800">
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-[10px] font-mono text-slate-400">
-                <div className="flex justify-between items-center text-slate-300 font-bold">
+            <div className="pt-3 border-t border-slate-100">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-[10px] font-mono text-slate-600">
+                <div className="flex justify-between items-center text-slate-900 font-bold">
                   <span>TELEMETRY ONLINE</span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 </div>
                 <div className="flex justify-between">
                   <span>Neon DB:</span>
-                  <span className="text-emerald-400">Synced</span>
+                  <span className="text-emerald-600 font-bold">Synced</span>
                 </div>
                 <div className="flex justify-between">
                   <span>RLS:</span>
-                  <span className="text-blue-400">Clause 2.1</span>
+                  <span className="text-blue-600 font-bold">Clause 2.1</span>
                 </div>
               </div>
             </div>
@@ -741,7 +750,7 @@ export default function AdminDashboard() {
       <div className="flex-1 flex w-full min-h-[calc(100dvh-4rem)]">
         {/* Desktop Fixed Left Navigation Rail */}
         <aside
-          className={`hidden lg:flex flex-col justify-between shrink-0 bg-slate-900 border-r border-slate-700/80 sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out shadow-xl z-20 ${
+          className={`hidden lg:flex flex-col justify-between shrink-0 bg-white border-r border-slate-200 sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out shadow-xs z-20 ${
             isSidebarCollapsed ? 'w-20 p-2.5' : 'w-72 p-4 space-y-4'
           }`}
         >
@@ -749,10 +758,10 @@ export default function AdminDashboard() {
             /* Collapsed Icon Rail View */
             <div className="flex flex-col items-center space-y-4 w-full">
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                <Lock className="w-4 h-4 text-blue-400" />
+                <Lock className="w-4 h-4 text-blue-600" />
               </div>
 
-              <div className="w-8 h-px bg-slate-800" />
+              <div className="w-8 h-px bg-slate-200" />
 
               <div className="space-y-1.5 w-full flex flex-col items-center">
                 {navSections.flatMap(sec => sec.items).map(item => {
@@ -763,8 +772,8 @@ export default function AdminDashboard() {
                         onClick={() => setActiveTab(item.id as any)}
                         className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
                           isSelected
-                            ? 'bg-blue-600/20 text-blue-300 border border-blue-500/40 shadow-inner'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs'
+                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
                         }`}
                         title={item.label}
                       >
@@ -785,7 +794,7 @@ export default function AdminDashboard() {
                       <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-800 border border-slate-700 text-white text-xs font-semibold rounded-xl whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 flex items-center gap-2">
                         <span>{item.label}</span>
                         {item.badge && (
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${item.badgeClass || 'bg-slate-900 text-slate-300'}`}>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${item.badgeClass || 'bg-slate-100 text-slate-700'}`}>
                             {item.badge}
                           </span>
                         )}
@@ -806,7 +815,7 @@ export default function AdminDashboard() {
                   placeholder="Filter navigation..."
                   value={sidebarFilter}
                   onChange={e => setSidebarFilter(e.target.value)}
-                  className="w-full pl-8 pr-7 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
                 {sidebarFilter && (
                   <button
@@ -841,12 +850,12 @@ export default function AdminDashboard() {
                               onClick={() => setActiveTab(item.id as any)}
                               className={`w-full px-3 py-2.5 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left group cursor-pointer relative ${
                                 isSelected
-                                  ? 'bg-blue-600/15 text-blue-200 border border-blue-500/40 shadow-xs font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-500 before:rounded-r-md'
-                                  : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70 border border-transparent'
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200/80 font-bold shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-600 before:rounded-r-md'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent'
                               }`}
                             >
                               <span className="flex items-center gap-2.5 truncate pl-1">
-                                <span className={`shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-blue-400' : 'text-slate-400'}`}>
+                                <span className={`shrink-0 transition-transform group-hover:scale-110 ${isSelected ? 'text-blue-600' : 'text-slate-400'}`}>
                                   {item.icon}
                                 </span>
                                 <span className="truncate">{item.label}</span>
@@ -854,12 +863,12 @@ export default function AdminDashboard() {
 
                               <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                 {item.badge && (
-                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-800 text-slate-400'}`}>
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-100 text-slate-600'}`}>
                                     {item.badge}
                                   </span>
                                 )}
                                 {item.count !== undefined && item.count > 0 && (
-                                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-800 text-slate-400'}`}>
+                                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-100 text-slate-600'}`}>
                                     {item.count}
                                   </span>
                                 )}
@@ -890,29 +899,29 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-[11px] shadow-inner">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-[11px] shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Command Telemetry
                   </span>
-                  <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-bold">
+                  <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
                     ONLINE
                   </span>
                 </div>
 
-                <div className="space-y-1 font-mono text-[10px] text-slate-400">
+                <div className="space-y-1 font-mono text-[10px] text-slate-600">
                   <div className="flex justify-between">
                     <span>Neon PostgreSQL:</span>
-                    <span className="text-slate-200">Synced</span>
+                    <span className="text-slate-800 font-semibold">Synced</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Gemini Engine:</span>
-                    <span className="text-purple-300">gemini-2.5-flash</span>
+                    <span className="text-purple-700 font-semibold">gemini-2.5-flash</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Privacy Tier:</span>
-                    <span className="text-blue-300">Clause 2.1 RLAC</span>
+                    <span className="text-blue-700 font-semibold">Clause 2.1 RLAC</span>
                   </div>
                 </div>
               </div>
@@ -921,61 +930,61 @@ export default function AdminDashboard() {
         </aside>
 
         {/* Right Main Content Area */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-slate-950 overflow-y-auto space-y-6">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-slate-50 overflow-y-auto space-y-6">
           {/* Top 4 Telemetry Metrics Cards - ONLY on Operational / Ticket tabs */}
           {['service_requests', 'hostel_requests', 'grievances', 'clubs', 'bookings', 'lost_found', 'kanban'].includes(activeTab) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in-50 duration-200">
               {/* Card 1: Grievances */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Grievances</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Grievances</span>
                   <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
-                    <MessageSquareWarning className="w-5 h-5 text-rose-400" />
+                    <MessageSquareWarning className="w-5 h-5 text-rose-600" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-white tracking-tight">{grievances.length}</div>
+                <div className="text-3xl font-black text-slate-900 tracking-tight">{grievances.length}</div>
                 <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
                   <span>Formal SGRC student filings</span>
                 </div>
               </div>
 
               {/* Card 2: Club Apps */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Club Applications</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Club Applications</span>
                   <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
                     <Users className="w-5 h-5 text-indigo-400" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-white tracking-tight">{clubApps.length}</div>
+                <div className="text-3xl font-black text-slate-900 tracking-tight">{clubApps.length}</div>
                 <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
                   <span>SAC & student council review</span>
                 </div>
               </div>
 
               {/* Card 3: Bookings */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Facility Bookings</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Facility Bookings</span>
                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                    <Calendar className="w-5 h-5 text-blue-400" />
+                    <Calendar className="w-5 h-5 text-blue-600" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-white tracking-tight">{bookings.length}</div>
+                <div className="text-3xl font-black text-slate-900 tracking-tight">{bookings.length}</div>
                 <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
                   <span>Halls, labs & sports grounds</span>
                 </div>
               </div>
 
               {/* Card 4: Lost & Found */}
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl shadow-black/20 hover:border-slate-600 transition-all group">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Lost & Found Posts</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lost & Found Posts</span>
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                    <PackageSearch className="w-5 h-5 text-amber-400" />
+                    <PackageSearch className="w-5 h-5 text-amber-600" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-white tracking-tight">{lostAndFound.length}</div>
+                <div className="text-3xl font-black text-slate-900 tracking-tight">{lostAndFound.length}</div>
                 <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
                   <span>Campus item registry</span>
                 </div>
@@ -988,8 +997,8 @@ export default function AdminDashboard() {
             {['service_requests', 'hostel_requests', 'grievances', 'clubs', 'bookings', 'lost_found'].includes(activeTab) ? (
               <>
                 {/* Search & Header Bar */}
-                <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <h2 className="text-lg font-bold text-white capitalize flex items-center gap-2">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-lg font-bold text-slate-900 capitalize flex items-center gap-2">
                     {activeTab === 'service_requests' ? 'Student Service Requests (Nodal Office)' : activeTab === 'hostel_requests' ? 'Hostel & Mess Requests' : activeTab === 'lost_found' ? 'Lost & Found Registry' : activeTab.replace('_', ' ')}
                   </h2>
                   <div className="relative w-full sm:w-80">
@@ -999,13 +1008,13 @@ export default function AdminDashboard() {
                       placeholder="Search by ID, name, or description..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Data Table */}
-                <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
                   {loading ? (
                     <div className="p-12 text-center text-slate-400">
                       <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
@@ -1015,7 +1024,7 @@ export default function AdminDashboard() {
                     <div className="overflow-x-auto min-h-[450px]">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-950/80 border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                          <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                             <th className="px-6 py-4">Tracking ID / User</th>
                             <th className="px-6 py-4">Details</th>
                             <th className="px-6 py-4">Date & Time</th>
@@ -1023,18 +1032,18 @@ export default function AdminDashboard() {
                             <th className="px-6 py-4 text-right">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/80 text-xs">
+                        <tbody className="divide-y divide-slate-100 text-xs">
                           {activeTab === 'service_requests' ? (
                             filteredServiceRequests.length > 0 ? filteredServiceRequests.map(s => (
-                              <tr key={s.id || s.request_no} className="hover:bg-slate-800/40 transition-colors">
+                              <tr key={s.id || s.request_no} className="hover:bg-slate-50/70 transition-colors text-slate-700">
                                 <td className="px-6 py-4 align-top">
                                   <span className="font-mono font-semibold text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md text-xs">{s.request_no}</span>
                                   <div className="text-xs text-slate-400 mt-1.5 font-mono">{s.student_id}</div>
                                 </td>
                                 <td className="px-6 py-4 align-top max-w-md">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-bold uppercase">{s.category}</span>
-                                    <span className="font-semibold text-white text-sm">{s.title}</span>
+                                    <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-bold uppercase">{s.category}</span>
+                                    <span className="font-semibold text-slate-900 text-sm">{s.title}</span>
                                   </div>
                                   <p className="text-xs text-slate-400 line-clamp-2">{s.description}</p>
                                   {s.assigned_office && (
@@ -1054,7 +1063,7 @@ export default function AdminDashboard() {
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
                                     <select 
-                                      className="text-xs bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 shadow-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                                      className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                                       value={s.status.toUpperCase()}
                                       onChange={(e) => handleStatusUpdate(s.id || s.request_no, 'service_request', e.target.value)}
                                     >
@@ -1080,7 +1089,7 @@ export default function AdminDashboard() {
                             )
                           ) : activeTab === 'hostel_requests' ? (
                             filteredHostelRequests.length > 0 ? filteredHostelRequests.map(h => (
-                              <tr key={h.id} className="hover:bg-slate-800/40 transition-colors">
+                              <tr key={h.id} className="hover:bg-slate-50/70 transition-colors text-slate-700">
                                 <td className="px-6 py-4 align-top">
                                   <div className="font-semibold text-white">{h.student_id}</div>
                                   <div className="text-xs text-slate-400 mt-1 font-mono">Req #{h.id}</div>
@@ -1103,7 +1112,7 @@ export default function AdminDashboard() {
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
                                     <select 
-                                      className="text-xs bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 shadow-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
+                                      className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                                       value={h.status}
                                       onChange={(e) => handleStatusUpdate(h.id, 'hostel', e.target.value)}
                                     >
@@ -1127,9 +1136,9 @@ export default function AdminDashboard() {
                             )
                           ) : activeTab === 'grievances' ? (
                             filteredGrievances.length > 0 ? filteredGrievances.map(g => (
-                              <tr key={g.id} className="hover:bg-slate-800/40 transition-colors">
+                              <tr key={g.id} className="hover:bg-slate-50/70 transition-colors text-slate-700">
                                 <td className="px-6 py-4 align-top">
-                                  <span className="font-mono font-semibold text-slate-300 bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-md text-xs">{g.id}</span>
+                                  <span className="font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-xs">{g.id}</span>
                                 </td>
                                 <td className="px-6 py-4 align-top max-w-md">
                                   <p className="text-slate-200 line-clamp-2">{g.description}</p>
@@ -1152,7 +1161,7 @@ export default function AdminDashboard() {
                                   <div className="flex items-center justify-end gap-2">
                                     <select 
                                       disabled={g.status === 'Withdrawn'}
-                                      className="text-xs bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 shadow-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                                      className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                                       value={g.status}
                                       onChange={(e) => handleStatusUpdate(g.id, 'grievance', e.target.value)}
                                     >
@@ -1178,9 +1187,9 @@ export default function AdminDashboard() {
                             )
                           ) : activeTab === 'clubs' ? (
                             filteredClubApps.length > 0 ? filteredClubApps.map(c => (
-                              <tr key={c.id} className="hover:bg-slate-800/40 transition-colors">
+                              <tr key={c.id} className="hover:bg-slate-50/70 transition-colors text-slate-700">
                                 <td className="px-6 py-4 align-top">
-                                  <div className="font-semibold text-white">{c.student_name}</div>
+                                  <div className="font-semibold text-slate-900">{c.student_name}</div>
                                   <div className="text-xs text-slate-400 mt-1 font-mono">App #{c.id}</div>
                                 </td>
                                 <td className="px-6 py-4 align-top">
@@ -1206,7 +1215,7 @@ export default function AdminDashboard() {
                                   <div className="flex items-center justify-end gap-2">
                                     <select 
                                       disabled={c.status === 'Withdrawn'}
-                                      className="text-xs bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 shadow-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                                      className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                                       value={c.status}
                                       onChange={(e) => handleStatusUpdate(c.id, 'club', e.target.value)}
                                     >
@@ -1232,9 +1241,9 @@ export default function AdminDashboard() {
                             )
                           ) : activeTab === 'bookings' ? (
                             filteredBookings.length > 0 ? filteredBookings.map(b => (
-                              <tr key={b.id} className="hover:bg-slate-800/40 transition-colors">
+                              <tr key={b.id} className="hover:bg-slate-50/70 transition-colors text-slate-700">
                                 <td className="px-6 py-4 align-top">
-                                  <div className="font-semibold text-white">{b.student_id}</div>
+                                  <div className="font-semibold text-slate-900">{b.student_id}</div>
                                   <div className="text-xs text-slate-400 mt-1 font-mono">Booking #{b.id}</div>
                                 </td>
                                 <td className="px-6 py-4 align-top">
@@ -1258,7 +1267,7 @@ export default function AdminDashboard() {
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
                                     <select 
-                                      className="text-xs bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 shadow-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                      className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                       value={b.status}
                                       onChange={(e) => handleStatusUpdate(b.id, 'booking' as any, e.target.value)}
                                     >
@@ -1281,13 +1290,13 @@ export default function AdminDashboard() {
                             )
                           ) : (
                             filteredLostAndFound.length > 0 ? filteredLostAndFound.map(l => (
-                              <tr key={l.id} className="hover:bg-slate-800/40 transition-colors">
+                              <tr key={l.id} className="hover:bg-slate-50/70 transition-colors text-slate-700">
                                 <td className="px-6 py-4 align-top">
-                                  <div className="font-semibold text-white">{l.student_id}</div>
+                                  <div className="font-semibold text-slate-900">{l.student_id}</div>
                                   <div className="text-xs text-slate-400 mt-1 font-mono">Post #{l.id} ({l.type.toUpperCase()})</div>
                                 </td>
                                 <td className="px-6 py-4 align-top">
-                                  <div className="font-semibold text-white text-sm">{l.title}</div>
+                                  <div className="font-semibold text-slate-900 text-sm">{l.title}</div>
                                   <p className="text-xs text-slate-400 line-clamp-2 mt-1">{l.description}</p>
                                 </td>
                                 <td className="px-6 py-4 align-top text-slate-400 whitespace-nowrap">
@@ -1302,7 +1311,7 @@ export default function AdminDashboard() {
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
                                     <select 
-                                      className="text-xs bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 shadow-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                      className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                       value={l.status}
                                       onChange={(e) => handleStatusUpdate(l.id, 'lost_found' as any, e.target.value)}
                                     >
@@ -1382,9 +1391,9 @@ function DistressTab() {
       {/* Top row: Alerts & Sentiment */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Real-time Distress Alerts */}
-        <div className="lg:col-span-3 bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col h-[480px]">
-          <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-            <h3 className="font-bold text-white flex items-center gap-2">
+        <div className="lg:col-span-3 bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col h-[480px]">
+          <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2">
               <AlertOctagon className="w-5 h-5 text-rose-500 animate-pulse" /> Real-time Distress Surveillance
             </h3>
             <span className="text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full font-bold">
@@ -1394,10 +1403,10 @@ function DistressTab() {
 
           <div className="space-y-3.5 flex-1 overflow-y-auto pr-1">
             {mockAlerts.map(alert => (
-              <div key={alert.id} className={`p-4 border rounded-xl transition-all ${alert.status === 'Unassigned' ? 'border-rose-500/30 bg-rose-950/20' : 'border-slate-800 bg-slate-950/60'}`}>
+              <div key={alert.id} className={`p-4 border rounded-xl transition-all ${alert.status === 'Unassigned' ? 'border-rose-200 bg-rose-50/40' : 'border-slate-200 bg-slate-50/60'}`}>
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-white text-sm">{alert.student}</span>
+                    <span className="font-bold text-slate-900 text-sm">{alert.student}</span>
                     <span className={`text-[10px] uppercase px-2 py-0.5 rounded-md font-bold ${
                       alert.sentiment === 'Severe' ? 'bg-rose-600 text-white shadow-xs' : 
                       alert.sentiment === 'Critical' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 
@@ -1411,7 +1420,7 @@ function DistressTab() {
                 <p className="text-xs text-slate-300 font-medium mb-1">
                   Trigger: <span className="text-slate-400 font-normal">{alert.trigger}</span>
                 </p>
-                <div className="mt-2.5 bg-slate-950/90 p-3 rounded-xl border border-slate-800 text-xs italic text-slate-300 border-l-4 border-l-rose-500">
+                <div className="mt-2.5 bg-white p-3 rounded-xl border border-slate-200 text-xs italic text-slate-700 border-l-4 border-l-rose-500 shadow-2xs">
                   "{alert.transcript}"
                 </div>
                 
@@ -1432,7 +1441,7 @@ function DistressTab() {
         </div>
 
         {/* Sentiment Analytics */}
-        <div className="lg:col-span-2 bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col h-[480px]">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col h-[480px]">
           <h3 className="font-bold text-white flex items-center gap-2 mb-1">
             <Activity className="w-5 h-5 text-indigo-400" /> Campus Stress Index
           </h3>
@@ -1447,11 +1456,11 @@ function DistressTab() {
                     <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <RechartsTooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', color: '#f8fafc' }}
+                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a' }}
                 />
                 <Area type="monotone" dataKey="stress" stroke="#f43f5e" strokeWidth={2.5} fillOpacity={1} fill="url(#colorStressDark)" />
               </AreaChart>
@@ -1474,15 +1483,15 @@ function DistressTab() {
 function AnalyticsTab({ analytics }: { analytics: any }) {
   if (!analytics) return null;
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl p-6 space-y-6">
-      <div className="border-b border-slate-800 pb-4">
-        <h2 className="text-lg font-bold text-white">Institutional Service Analytics</h2>
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-xs p-6 space-y-6">
+      <div className="border-b border-slate-100 pb-4">
+        <h2 className="text-lg font-bold text-slate-900">Institutional Service Analytics</h2>
         <p className="text-xs text-slate-400">Telemetry aggregations across student submissions & bookings</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-950/80 p-5 rounded-2xl border border-slate-800">
-          <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Grievance Status Distribution</h3>
+        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Grievance Status Distribution</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -1499,22 +1508,22 @@ function AnalyticsTab({ analytics }: { analytics: any }) {
                     <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#f43f5e', '#a855f7'][index % 5]} />
                   ))}
                 </Pie>
-                <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }} />
+                <RechartsTooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px' }} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
         
-        <div className="bg-slate-950/80 p-5 rounded-2xl border border-slate-800">
-          <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-4">Facility Bookings Volume</h3>
+        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+          <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Facility Bookings Volume</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={analytics.bookings}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} />
+                <YAxis tick={{ fontSize: 11, fill: '#64748b' }} />
+                <RechartsTooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px' }} />
                 <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -1534,16 +1543,16 @@ function ComplianceTab() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col h-[500px]">
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-800">
-          <h3 className="font-bold text-white flex items-center gap-2">
+      <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col h-[500px]">
+        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+          <h3 className="font-bold text-slate-900 flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-rose-500" /> SLA Breach Warning Matrix
           </h3>
           <span className="text-xs bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full font-bold">2 Critical</span>
         </div>
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left text-xs text-slate-300">
-            <thead className="text-slate-400 uppercase bg-slate-950/80 border-b border-slate-800 sticky top-0">
+            <thead className="text-slate-500 uppercase bg-slate-50 border-b border-slate-200 sticky top-0">
               <tr>
                 <th className="px-4 py-3 font-semibold">Ticket / Type</th>
                 <th className="px-4 py-3 font-semibold">SLA Countdown</th>
@@ -1553,7 +1562,7 @@ function ComplianceTab() {
             </thead>
             <tbody className="divide-y divide-slate-800/80">
               {tickets.map(t => (
-                <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
+                <tr key={t.id} className="hover:bg-slate-50/70 transition-colors text-slate-700">
                   <td className="px-4 py-3">
                     <div className="font-semibold text-white">{t.id}</div>
                     <div className="text-[11px] text-slate-400">{t.type}</div>
@@ -1583,7 +1592,7 @@ function ComplianceTab() {
         </div>
       </div>
 
-      <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl flex flex-col justify-between h-[500px]">
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between h-[500px]">
         <div>
           <h3 className="font-bold text-white flex items-center gap-2 mb-2">
             <FileText className="w-5 h-5 text-indigo-400" /> Statutory ATR Generator
@@ -1593,7 +1602,7 @@ function ComplianceTab() {
           <div className="space-y-4">
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Report Period</label>
-              <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 <option>Q3 2026 (Jul - Sep)</option>
                 <option>Q2 2026 (Apr - Jun)</option>
                 <option>Annual 2025-26</option>
@@ -1601,7 +1610,7 @@ function ComplianceTab() {
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Target Authority</label>
-              <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                 <option>University Grants Commission (UGC)</option>
                 <option>National Assessment (NAAC)</option>
                 <option>Internal Management (Registrar)</option>
@@ -1635,9 +1644,9 @@ function LiveSessionsTab() {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row h-[600px] bg-slate-900/90 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-      <div className="w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-800 bg-slate-950/60 flex flex-col">
-        <div className="p-4 border-b border-slate-800 flex justify-between items-center">
+    <div className="flex flex-col lg:flex-row h-[600px] bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+      <div className="w-full lg:w-1/3 border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-50 flex flex-col">
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center">
           <h3 className="font-bold text-white text-sm">Active AI Sessions (12)</h3>
           <span className="flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 opacity-75"></span>
@@ -1651,8 +1660,8 @@ function LiveSessionsTab() {
               onClick={() => setActiveSession(s.id)}
               className={`p-3 rounded-xl cursor-pointer border transition-all ${
                 activeSession === s.id 
-                  ? 'bg-blue-600/15 border-blue-500/40 text-blue-200 shadow-sm' 
-                  : 'bg-slate-900 border-slate-800/80 hover:border-slate-700 text-slate-300'
+                  ? 'bg-blue-50 border-blue-200 text-blue-800 shadow-2xs font-semibold' 
+                  : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
               }`}
             >
               <div className="flex justify-between items-start mb-1">
@@ -1660,7 +1669,7 @@ function LiveSessionsTab() {
                 <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-bold ${
                   s.status === 'High Friction' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
                   s.status === 'Escalating' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                  'bg-slate-800 text-slate-400'
+                  'bg-slate-100 text-slate-600'
                 }`}>{s.status}</span>
               </div>
               <div className="text-[11px] text-slate-400 truncate">{s.topic}</div>
@@ -1669,20 +1678,20 @@ function LiveSessionsTab() {
         </div>
       </div>
       
-      <div className="flex-1 flex flex-col bg-slate-900">
+      <div className="flex-1 flex flex-col bg-white">
         {activeSession ? (
           <>
-            <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/80">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
               <div>
                 <h3 className="font-bold text-white text-sm">Shadowing Session {activeSession}</h3>
                 <div className="text-xs text-slate-400">Live inspection of autonomous NLU inference</div>
               </div>
-              <button className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 hover:bg-slate-700 flex items-center gap-1.5 transition-colors">
+              <button className="px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-200 flex items-center gap-1.5 transition-colors">
                 <UserX className="w-3.5 h-3.5 text-slate-400" /> End Shadow
               </button>
             </div>
             
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-950/40">
+            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/50">
               {transcript.map((msg, i) => (
                 <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                   <div className="flex items-baseline gap-2 mb-1">
@@ -1692,7 +1701,7 @@ function LiveSessionsTab() {
                   <div className={`p-3.5 rounded-2xl text-xs max-w-[80%] leading-relaxed ${
                     msg.role === 'user' 
                       ? 'bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-600/20' 
-                      : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-tl-none shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-2xs'
                   }`}>
                     {msg.content}
                   </div>
@@ -1700,7 +1709,7 @@ function LiveSessionsTab() {
               ))}
             </div>
             
-            <div className="p-4 border-t border-slate-800 bg-slate-950/80">
+            <div className="p-4 border-t border-slate-200 bg-white">
               <div className="flex gap-3">
                 <button className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-2 transition-colors">
                   <Ear className="w-4 h-4" /> Whisper Direct Guidance to VIGBOT
@@ -1725,29 +1734,29 @@ function VerificationsTab() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="md:col-span-2 space-y-4">
-        <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl p-5">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5">
           <h3 className="font-bold text-white mb-4 flex items-center gap-2 text-sm">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Pending Exemptions & Statutory Waivers
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" /> Pending Exemptions & Statutory Waivers
           </h3>
           <div className="space-y-3">
-            <div className="p-4 border border-slate-800 rounded-xl bg-slate-950/60 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div>
                 <div className="font-semibold text-white text-xs">Medical Attendance Condonation</div>
                 <div className="text-[11px] text-slate-400 mt-0.5">Student: 23MEC045 • Requested 75% threshold relaxation (medical condonation)</div>
               </div>
               <div className="flex gap-2 shrink-0">
-                <button className="px-3 py-1.5 text-xs font-medium bg-slate-800 border border-rose-500/30 text-rose-300 rounded-lg hover:bg-rose-500/10 transition-colors">Reject</button>
+                <button className="px-3 py-1.5 text-xs font-medium bg-white border border-rose-200 text-rose-600 rounded-lg hover:bg-rose-50 transition-colors">Reject</button>
                 <button className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors shadow-sm">Approve Override</button>
               </div>
             </div>
 
-            <div className="p-4 border border-slate-800 rounded-xl bg-slate-950/60 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            <div className="p-4 border border-slate-200 rounded-xl bg-slate-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div>
                 <div className="font-semibold text-white text-xs">Fee Hold Exam Hall Ticket Release</div>
                 <div className="text-[11px] text-slate-400 mt-0.5">Student: 21BEE092 • Unlock hall ticket generation temporarily under undertaking</div>
               </div>
               <div className="flex gap-2 shrink-0">
-                <button className="px-3 py-1.5 text-xs font-medium bg-slate-800 border border-rose-500/30 text-rose-300 rounded-lg hover:bg-rose-500/10 transition-colors">Reject</button>
+                <button className="px-3 py-1.5 text-xs font-medium bg-white border border-rose-200 text-rose-600 rounded-lg hover:bg-rose-50 transition-colors">Reject</button>
                 <button className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors shadow-sm">Approve Override</button>
               </div>
             </div>
@@ -1755,16 +1764,16 @@ function VerificationsTab() {
         </div>
       </div>
       
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl p-5">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5">
         <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-sm">
-          <ShieldCheck className="w-5 h-5 text-blue-400" /> Cryptographic Verification
+          <ShieldCheck className="w-5 h-5 text-blue-600" /> Cryptographic Verification
         </h3>
         <p className="text-xs text-slate-400 mb-4">Cryptographically verify authentic uploaded medical certificates or payment receipts.</p>
         
         <div className="space-y-4">
           <div>
             <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Document SHA-256 Hash</label>
-            <input type="text" placeholder="e.g. 8f92a3b04c8..." className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+            <input type="text" placeholder="e.g. 8f92a3b04c8..." className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white" />
           </div>
           <button className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors cursor-pointer shadow-md">
             Verify Digital Certificate
@@ -1778,18 +1787,18 @@ function VerificationsTab() {
 function BroadcastsTab() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl p-5 space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
         <h3 className="font-bold text-white flex items-center gap-2 text-sm">
           <Radio className="w-5 h-5 text-cyan-400" /> Broadcast Campus Alert
         </h3>
         <div className="space-y-4">
           <div>
             <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Banner Message</label>
-            <textarea rows={3} placeholder="e.g. Fee payment gateway scheduled maintenance from 2 PM to 4 PM today." className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500 resize-none"></textarea>
+            <textarea rows={3} placeholder="e.g. Fee payment gateway scheduled maintenance from 2 PM to 4 PM today." className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:bg-white resize-none"></textarea>
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Target Cohort</label>
-            <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500">
+            <select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:bg-white">
               <option>All University Students</option>
               <option>B.Tech CSE & AIML Cohorts</option>
               <option>Hostel Residents Only</option>
@@ -1801,20 +1810,20 @@ function BroadcastsTab() {
         </div>
       </div>
       
-      <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl p-5 border-l-4 border-l-amber-500 space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 border-l-4 border-l-amber-500 space-y-4">
         <h3 className="font-bold text-white flex items-center gap-2 text-sm">
-          <ShieldAlert className="w-5 h-5 text-amber-400" /> Situational Guardrail Override
+          <ShieldAlert className="w-5 h-5 text-amber-600" /> Situational Guardrail Override
         </h3>
         <p className="text-xs text-slate-400">Inject situational administrative directives directly into the AI system prompt.</p>
         <div className="space-y-4">
           <div>
             <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Direct NLU System Directive</label>
-            <textarea rows={3} placeholder="e.g. If asked about tomorrow's internal examination, state that it is rescheduled to Monday due to rain." className="w-full bg-slate-950 border border-amber-500/30 rounded-xl px-3 py-2 text-xs text-amber-200 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"></textarea>
+            <textarea rows={3} placeholder="e.g. If asked about tomorrow's internal examination, state that it is rescheduled to Monday due to rain." className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-900 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:bg-white resize-none"></textarea>
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Expiry Time</label>
-              <select className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500">
+              <select className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:bg-white">
                 <option>1 Hour</option>
                 <option>24 Hours</option>
                 <option>Until Revoked</option>
@@ -1836,50 +1845,50 @@ function AgentHealthTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
           <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">System Uptime</div>
-          <div className="text-2xl font-black text-emerald-400">99.98%</div>
+          <div className="text-2xl font-black text-emerald-600">99.98%</div>
         </div>
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
           <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Avg Latency</div>
-          <div className="text-2xl font-black text-white">840ms</div>
+          <div className="text-2xl font-black text-slate-900">840ms</div>
         </div>
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
           <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Hallucination Rate</div>
-          <div className="text-2xl font-black text-emerald-400">&lt; 0.1%</div>
+          <div className="text-2xl font-black text-emerald-600">&lt; 0.1%</div>
         </div>
-        <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-lg">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
           <div className="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wider">Audit Free Calls Left</div>
           <div className="text-2xl font-black text-purple-300">1,492 / 1,500</div>
         </div>
       </div>
 
-      <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl">
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs p-5">
         <h3 className="font-bold text-white mb-4 text-sm">Live University Sub-Agent Status</h3>
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-slate-800 text-slate-400 uppercase">
+            <tr className="border-b border-slate-100 text-slate-400 uppercase">
               <th className="pb-3 font-semibold">Agent Core</th>
               <th className="pb-3 font-semibold">Role</th>
               <th className="pb-3 font-semibold">Status</th>
               <th className="pb-3 font-semibold">Last Sync</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 text-slate-300">
+          <tbody className="divide-y divide-slate-100 text-slate-700">
             <tr>
-              <td className="py-3 font-medium text-white">Support_VIGBOT</td>
+              <td className="py-3 font-medium text-slate-900">Support_VIGBOT</td>
               <td className="py-3 text-slate-400">Frontline Cognitive Triage</td>
               <td className="py-3"><span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[10px] font-bold">ONLINE</span></td>
               <td className="py-3 text-slate-500">Just now</td>
             </tr>
             <tr>
-              <td className="py-3 font-medium text-white">Nav_Agent_Omega</td>
+              <td className="py-3 font-medium text-slate-900">Nav_Agent_Omega</td>
               <td className="py-3 text-slate-400">Campus Maps & Dijkstra Routing</td>
               <td className="py-3"><span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[10px] font-bold">ONLINE</span></td>
               <td className="py-3 text-slate-500">2m ago</td>
             </tr>
             <tr>
-              <td className="py-3 font-medium text-white">Policy_Validator_9</td>
+              <td className="py-3 font-medium text-slate-900">Policy_Validator_9</td>
               <td className="py-3 text-slate-400">RLS Privacy & Statutory Guardrail</td>
               <td className="py-3"><span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[10px] font-bold">ONLINE</span></td>
               <td className="py-3 text-slate-500">1m ago</td>
@@ -1895,22 +1904,22 @@ function KanbanTab({ grievances, handleStatusUpdate }: any) {
   const statuses = ['Pending', 'In Progress', 'Resolved'];
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-white mb-2">Grievance Resolution Board</h2>
+      <h2 className="text-lg font-bold text-slate-900 mb-2">Grievance Resolution Board</h2>
       <div className="flex gap-4 overflow-x-auto pb-4">
         {statuses.map(status => (
-          <div key={status} className="flex-1 min-w-[300px] bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col shadow-xl">
-            <h3 className="font-bold text-white text-xs uppercase tracking-wider mb-4 flex items-center justify-between pb-2 border-b border-slate-800">
+          <div key={status} className="flex-1 min-w-[300px] bg-slate-100/70 border border-slate-200 rounded-2xl p-4 flex flex-col shadow-xs">
+            <h3 className="font-bold text-white text-xs uppercase tracking-wider mb-4 flex items-center justify-between pb-2 border-b border-slate-100">
               {status}
-              <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[10px] font-mono">
+              <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-mono">
                 {grievances.filter((g: any) => g.status === status).length}
               </span>
             </h3>
             <div className="flex flex-col gap-3 overflow-y-auto">
               {grievances.filter((g: any) => g.status === status).map((g: any) => (
-                <div key={g.id} className="bg-slate-950 p-4 rounded-xl shadow-sm border border-slate-800 hover:border-slate-700 transition-all">
+                <div key={g.id} className="bg-white p-4 rounded-xl shadow-2xs border border-slate-200 hover:border-slate-300 transition-all">
                   <div className="text-[10px] font-bold text-blue-400 uppercase mb-1">{g.category}</div>
-                  <div className="font-medium text-white text-xs mb-2 leading-relaxed">{g.description}</div>
-                  <div className="text-[11px] text-slate-500 flex justify-between items-center mt-3 pt-2 border-t border-slate-800/80">
+                  <div className="font-medium text-slate-800 text-xs mb-2 leading-relaxed">{g.description}</div>
+                  <div className="text-[11px] text-slate-400 flex justify-between items-center mt-3 pt-2 border-t border-slate-100">
                     <span className="font-mono">{g.student_id}</span>
                     {status !== 'Resolved' && (
                       <button 
@@ -1939,13 +1948,13 @@ function AuditTab() {
     { id: 4, time: '08:00 AM', action: 'Database Backup', user: 'System', detail: 'Nightly automated backup completed successfully.' },
   ];
   return (
-    <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-      <div className="p-4 border-b border-slate-800 flex justify-between items-center">
-        <h2 className="text-base font-bold text-white">System Audit Trail</h2>
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+        <h2 className="text-base font-bold text-slate-900">System Audit Trail</h2>
         <span className="text-xs text-slate-500 font-mono">Immutable Log Ledger</span>
       </div>
       <table className="w-full text-left text-xs">
-        <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase">
+        <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase">
           <tr>
             <th className="px-6 py-4 font-semibold">Timestamp</th>
             <th className="px-6 py-4 font-semibold">Actor</th>
@@ -1953,12 +1962,12 @@ function AuditTab() {
             <th className="px-6 py-4 font-semibold">Details</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800/60 text-slate-300">
+        <tbody className="divide-y divide-slate-100 text-slate-700">
           {auditLogs.map(log => (
-            <tr key={log.id} className="hover:bg-slate-800/40">
+            <tr key={log.id} className="hover:bg-slate-50/70 transition-colors text-slate-700">
               <td className="px-6 py-3.5 text-slate-400 font-mono whitespace-nowrap">{log.time}</td>
-              <td className="px-6 py-3.5 font-semibold text-white">{log.user}</td>
-              <td className="px-6 py-3.5 text-blue-300">{log.action}</td>
+              <td className="px-6 py-3.5 font-semibold text-slate-900">{log.user}</td>
+              <td className="px-6 py-3.5 text-blue-700 font-medium">{log.action}</td>
               <td className="px-6 py-3.5 text-slate-400">{log.detail}</td>
             </tr>
           ))}
@@ -1971,9 +1980,9 @@ function AuditTab() {
 function KnowledgeTab() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl md:col-span-2 space-y-4">
-        <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-          <h3 className="font-bold text-white text-sm">Indexed Academic Regulations (RAG)</h3>
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs md:col-span-2 space-y-4">
+        <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+          <h3 className="font-bold text-slate-900 text-sm">Indexed Academic Regulations (RAG)</h3>
           <button className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-sm">
             + Index Document
           </button>
@@ -1985,11 +1994,11 @@ function KnowledgeTab() {
             { name: 'Fee Structure AY2024-25.xlsx', tokens: '8k', status: 'Indexed' },
             { name: 'Exam Rescheduling Policy.pdf', tokens: '15k', status: 'Indexing...' },
           ].map(doc => (
-            <div key={doc.name} className="flex justify-between items-center p-3 hover:bg-slate-950/60 rounded-xl border border-slate-800 transition-colors">
+            <div key={doc.name} className="flex justify-between items-center p-3 hover:bg-slate-50 rounded-xl border border-slate-200 transition-colors">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg flex items-center justify-center text-xs">📄</div>
                 <div>
-                  <div className="text-xs font-semibold text-white">{doc.name}</div>
+                  <div className="text-xs font-semibold text-slate-900">{doc.name}</div>
                   <div className="text-[10px] text-slate-400">{doc.tokens} tokens indexed</div>
                 </div>
               </div>
@@ -2001,24 +2010,24 @@ function KnowledgeTab() {
         </div>
       </div>
       
-      <div className="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-xl space-y-4">
-        <h3 className="font-bold text-white text-sm border-b border-slate-800 pb-3">Vector Embedding Metrics</h3>
+      <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
+        <h3 className="font-bold text-white text-sm border-b border-slate-100 pb-3">Vector Embedding Metrics</h3>
         <div className="space-y-3 text-xs">
-          <div className="flex justify-between border-b border-slate-800 pb-2">
+          <div className="flex justify-between border-b border-slate-100 pb-2">
             <span className="text-slate-400">Total Vectors:</span>
-            <span className="font-mono font-bold text-white">12,405</span>
+            <span className="font-mono font-bold text-slate-900">12,405</span>
           </div>
-          <div className="flex justify-between border-b border-slate-800 pb-2">
+          <div className="flex justify-between border-b border-slate-100 pb-2">
             <span className="text-slate-400">Model:</span>
             <span className="font-mono font-semibold text-purple-300">text-embedding-3-small</span>
           </div>
-          <div className="flex justify-between border-b border-slate-800 pb-2">
+          <div className="flex justify-between border-b border-slate-100 pb-2">
             <span className="text-slate-400">Dimensions:</span>
-            <span className="font-mono font-bold text-white">1536</span>
+            <span className="font-mono font-bold text-slate-900">1536</span>
           </div>
           <div className="flex justify-between pb-1">
             <span className="text-slate-400">Last Synced:</span>
-            <span className="font-mono text-emerald-400">Today, 02:00 AM</span>
+            <span className="font-mono text-emerald-600">Today, 02:00 AM</span>
           </div>
         </div>
       </div>
@@ -2192,19 +2201,19 @@ function CognitiveRemediationTab() {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner Header - Matching Login Slate & Royal Blue Accents */}
-      <div className="p-6 rounded-2xl bg-slate-800 text-white shadow-xl border border-slate-700 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+      {/* Top Banner Header - Clean White University Design matching Screenshot 2 */}
+      <div className="p-6 rounded-2xl bg-white text-slate-900 shadow-xs border border-slate-200 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-blue-500/10 text-blue-300 border border-blue-500/20 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-pulse" /> Cognitive Remediation Hub
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" /> Cognitive Remediation Hub
               </span>
-              <span className="text-xs text-slate-400 font-mono">Neon PostgreSQL • Autonomous Interceptor</span>
+              <span className="text-xs text-slate-500 font-mono">Neon PostgreSQL • Autonomous Interceptor</span>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-white">AI Feedback Surveillance & Gemini Governance</h2>
-            <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">AI Feedback Surveillance & Gemini Governance</h2>
+            <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
               Surveil queries disliked by students, inspect Gemini intent-audit diagnoses, review self-learned Dijkstra routing rules pushed to Neon, and manage Google Gemini API quotas & credentials.
             </p>
           </div>
@@ -2213,10 +2222,10 @@ function CognitiveRemediationTab() {
             <button
               onClick={handlePingGemini}
               disabled={pinging}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 transition-all cursor-pointer disabled:opacity-50 shadow-2xs"
               title="Send lightweight diagnostic ping to Google Gemini API"
             >
-              <Zap className={`w-3.5 h-3.5 text-amber-400 ${pinging ? 'animate-spin' : ''}`} />
+              <Zap className={`w-3.5 h-3.5 text-amber-500 ${pinging ? 'animate-spin' : ''}`} />
               {pinging ? 'Pinging Gemini...' : 'Ping Gemini API'}
             </button>
 
@@ -2231,7 +2240,7 @@ function CognitiveRemediationTab() {
             <button
               onClick={loadData}
               disabled={loading}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/15 text-slate-200 border border-white/10 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 transition-all cursor-pointer shadow-2xs"
               title="Refresh live data from Neon DB"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -2245,7 +2254,7 @@ function CognitiveRemediationTab() {
             pingResult.success ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200' : 'bg-rose-500/15 border-rose-500/30 text-rose-200'
           }`}>
             <div className="flex items-center gap-2">
-              {pingResult.success ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-rose-400" />}
+              {pingResult.success ? <CheckCircle className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
               <span>{pingResult.message || pingResult.error}</span>
             </div>
             {pingResult.latency_ms !== undefined && (
@@ -2257,26 +2266,26 @@ function CognitiveRemediationTab() {
         )}
       </div>
 
-      {/* Top 4 Telemetry Metrics Cards */}
+      {/* Top 4 Telemetry Metrics Cards - Crisp White matching Screenshot 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Gemini Free Tier Quota */}
-        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3 hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Daily API Quota</div>
-            <div className="p-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Daily API Quota</div>
+            <div className="p-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg">
               <Activity className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black text-white tracking-tight flex items-baseline gap-1">
+            <div className="text-2xl font-black text-slate-900 tracking-tight flex items-baseline gap-1">
               <span>{dailyRemaining.toLocaleString()}</span>
-              <span className="text-xs font-semibold text-slate-400 font-sans">/ {dailyLimit.toLocaleString()} RPD</span>
+              <span className="text-xs font-semibold text-slate-500 font-sans">/ {dailyLimit.toLocaleString()} RPD</span>
             </div>
-            <div className="text-[11px] text-slate-400 font-medium mt-0.5">Remaining Google Gemini Free Calls</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Remaining Google Gemini Free Calls</div>
           </div>
           {/* Visual Progress Bar */}
           <div className="space-y-1">
-            <div className="w-full bg-slate-950 border border-slate-800 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-100 border border-slate-200 h-2 rounded-full overflow-hidden">
               <div
                 className={`h-full transition-all duration-500 ${
                   usedPct > 80 ? 'bg-rose-500' : usedPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'
@@ -2284,7 +2293,7 @@ function CognitiveRemediationTab() {
                 style={{ width: `${Math.max(5, usedPct)}%` }}
               />
             </div>
-            <div className="flex justify-between text-[10px] text-slate-400 font-medium font-mono">
+            <div className="flex justify-between text-[10px] text-slate-500 font-medium font-mono">
               <span>{dailyUsed} calls used today</span>
               <span>15 RPM Limit</span>
             </div>
@@ -2292,81 +2301,81 @@ function CognitiveRemediationTab() {
         </div>
 
         {/* Card 2: Engine Status & Active Key */}
-        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3 hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Gemini Engine Status</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gemini Engine Status</div>
             <div className="flex items-center gap-1.5">
               <span className={`h-2.5 w-2.5 rounded-full ${geminiStatus.enable_gemini ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-              <span className="text-xs font-bold text-white">
+              <span className={`text-xs font-bold ${geminiStatus.enable_gemini ? 'text-emerald-700' : 'text-amber-700'}`}>
                 {geminiStatus.enable_gemini ? 'ENABLED' : 'PAUSED'}
               </span>
             </div>
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-200 font-mono truncate">
+            <div className="text-xs font-bold text-slate-800 font-mono truncate">
               {geminiStatus.masked_api_key || 'No Key Configured'}
             </div>
-            <div className="text-[11px] text-slate-400 font-medium mt-0.5">Active Credential (Masked)</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Active Credential (Masked)</div>
           </div>
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 font-medium">Active Model:</span>
-            <span className="font-bold font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20 text-[10px]">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Active Model:</span>
+            <span className="font-bold font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 text-[10px]">
               {geminiStatus.active_model || 'gemini-2.5-flash'}
             </span>
           </div>
         </div>
 
         {/* Card 3: Active Remediations in Neon */}
-        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3 hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Rules in Neon</div>
-            <div className="p-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Rules in Neon</div>
+            <div className="p-1.5 bg-purple-50 text-purple-600 border border-purple-200 rounded-lg">
               <Bot className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black text-purple-300 tracking-tight">
-              {summary.active_rules} <span className="text-xs font-bold text-slate-400 font-sans">Rules</span>
+            <div className="text-2xl font-black text-purple-700 tracking-tight">
+              {summary.active_rules} <span className="text-xs font-bold text-slate-500 font-sans">Rules</span>
             </div>
-            <div className="text-[11px] text-slate-400 font-medium mt-0.5">Self-Learned Query Interceptors</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Self-Learned Query Interceptors</div>
           </div>
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 font-medium">Runtime Routing:</span>
-            <span className="font-bold text-emerald-400">Tier 0 Intercept</span>
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Runtime Routing:</span>
+            <span className="font-bold text-emerald-600">Tier 0 Intercept</span>
           </div>
         </div>
 
         {/* Card 4: Policy Defense Guardrails */}
-        <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-3 hover:border-slate-600 transition-all">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3 hover:shadow-md transition-all">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Policy Guardrails Upheld</div>
-            <div className="p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg">
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Policy Guardrails Upheld</div>
+            <div className="p-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg">
               <Shield className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black text-emerald-400 tracking-tight">
-              {summary.policy_protected} <span className="text-xs font-bold text-slate-400 font-sans">Protected</span>
+            <div className="text-2xl font-black text-emerald-600 tracking-tight">
+              {summary.policy_protected} <span className="text-xs font-bold text-slate-500 font-sans">Protected</span>
             </div>
-            <div className="text-[11px] text-slate-400 font-medium mt-0.5">Clause 2.1 RLAC & Rules Upheld</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Clause 2.1 RLAC & Rules Upheld</div>
           </div>
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 font-medium">Integrity Check:</span>
-            <span className="font-bold text-blue-400">100% Zero-Leak</span>
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 font-medium">Integrity Check:</span>
+            <span className="font-bold text-blue-600">100% Zero-Leak</span>
           </div>
         </div>
       </div>
 
       {/* API Key Switcher & Configuration Drawer */}
       {showConfigBox && (
-        <div className="bg-slate-900 rounded-2xl border-2 border-purple-500/40 p-6 shadow-2xl space-y-5 animate-in fade-in-50 duration-200">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="bg-white rounded-2xl border-2 border-blue-300 p-6 shadow-xl space-y-5 animate-in fade-in-50 duration-200">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-500/10 border border-purple-500/20 text-purple-300 rounded-xl">
                 <KeyRound className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Switch Google Gemini API Key & Engine Config</h3>
+                <h3 className="text-base font-bold text-slate-900">Switch Google Gemini API Key & Engine Config</h3>
                 <p className="text-xs text-slate-400">
                   Validated live with Google before persisting to Neon DB <code className="font-mono text-purple-300">system_settings</code>. Survives Render reboots.
                 </p>
@@ -2400,7 +2409,7 @@ function CognitiveRemediationTab() {
                     placeholder="Paste new API Key (e.g. AIzaSy... or AQ.Ab8RN6...)"
                     value={newApiKey}
                     onChange={e => setNewApiKey(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 placeholder-slate-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-xs font-mono transition-all"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs font-mono transition-all"
                   />
                 </div>
                 <p className="text-[11px] text-slate-400">Leave blank if only updating model or enablement status.</p>
@@ -2412,7 +2421,7 @@ function CognitiveRemediationTab() {
                 <select
                   value={selectedModel}
                   onChange={e => setSelectedModel(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-xs font-mono cursor-pointer"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs font-mono cursor-pointer"
                 >
                   {(geminiStatus.available_models || ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.5-flash']).map((m: string) => (
                     <option key={m} value={m}>
@@ -2425,9 +2434,9 @@ function CognitiveRemediationTab() {
             </div>
 
             {/* Enable Gemini Toggle */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div className="space-y-0.5">
-                <div className="text-xs font-bold text-white">Enable Autonomous Gemini Feedback Loop</div>
+                <div className="text-xs font-bold text-slate-900">Enable Autonomous Gemini Feedback Loop</div>
                 <div className="text-[11px] text-slate-400">
                   When active, student downvotes automatically trigger the Gemini cognitive audit in the background and persist verified remediations to Neon.
                 </div>
@@ -2461,7 +2470,7 @@ function CognitiveRemediationTab() {
               <button
                 type="button"
                 onClick={() => setShowConfigBox(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -2478,13 +2487,13 @@ function CognitiveRemediationTab() {
         </div>
       )}
 
-      {/* Filter and Search Bar */}
-      <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-3">
+      {/* Filter and Search Bar - Crisp White matching Screenshot 2 */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setFilter('ALL')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              filter === 'ALL' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
+              filter === 'ALL' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             All Audited ({summary.total_audited})
@@ -2492,7 +2501,7 @@ function CognitiveRemediationTab() {
           <button
             onClick={() => setFilter('ACTIVE')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-              filter === 'ACTIVE' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
+              filter === 'ACTIVE' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <CheckCircle className="w-3 h-3" /> Active in Neon ({summary.active_rules})
@@ -2500,7 +2509,7 @@ function CognitiveRemediationTab() {
           <button
             onClick={() => setFilter('POLICY_PROTECTED')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-              filter === 'POLICY_PROTECTED' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
+              filter === 'POLICY_PROTECTED' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <Shield className="w-3 h-3" /> Policy Upheld ({summary.policy_protected})
@@ -2508,7 +2517,7 @@ function CognitiveRemediationTab() {
           <button
             onClick={() => setFilter('INACTIVE')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              filter === 'INACTIVE' ? 'bg-slate-700 text-white shadow-xs' : 'text-slate-400 hover:bg-slate-800'
+              filter === 'INACTIVE' ? 'bg-slate-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             Inactive ({summary.inactive_rules})
@@ -2516,13 +2525,13 @@ function CognitiveRemediationTab() {
         </div>
 
         <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search query, landmark, reason..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
           />
         </div>
       </div>
@@ -2530,14 +2539,14 @@ function CognitiveRemediationTab() {
       {/* Disliked Queries & Remediations List */}
       <div className="space-y-4">
         {loading ? (
-          <div className="bg-slate-900/90 rounded-2xl p-12 text-center border border-slate-800 space-y-3">
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs space-y-3">
             <RefreshCw className="w-8 h-8 text-purple-400 animate-spin mx-auto" />
             <div className="text-sm font-semibold text-slate-300">Loading live audit trail from Neon PostgreSQL...</div>
           </div>
         ) : filteredRemediations.length === 0 ? (
-          <div className="bg-slate-900/90 rounded-2xl p-12 text-center border border-slate-800 space-y-2">
-            <Bot className="w-10 h-10 text-slate-500 mx-auto" />
-            <div className="text-base font-bold text-white">No Audited Queries Found</div>
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs space-y-2">
+            <Bot className="w-10 h-10 text-slate-400 mx-auto" />
+            <div className="text-base font-bold text-slate-900">No Audited Queries Found</div>
             <p className="text-xs text-slate-400 max-w-md mx-auto">
               No disliked queries matching the active filter. When a student downvotes a query in the chat, the autonomous Gemini loop audits it here.
             </p>
@@ -2551,24 +2560,22 @@ function CognitiveRemediationTab() {
             return (
               <div
                 key={rem.remediation_id}
-                className={`bg-slate-800 rounded-2xl border transition-all shadow-xl hover:border-slate-600 overflow-hidden ${
-                  isActive ? 'border-emerald-500/40' : isPolicy ? 'border-blue-500/40' : 'border-slate-700'
-                }`}
+                className="bg-white rounded-2xl border border-slate-200 transition-all shadow-xs hover:shadow-md overflow-hidden"
               >
-                {/* Header Strip */}
-                <div className="p-4 sm:px-6 bg-slate-900 border-b border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs">
+                {/* Header Strip matching Screenshot 2 */}
+                <div className="p-4 sm:px-6 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                      isActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
-                      isPolicy ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' :
-                      'bg-slate-800 text-slate-400 border border-slate-700'
+                      isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      isPolicy ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                      'bg-slate-100 text-slate-600 border border-slate-200'
                     }`}>
-                      {isActive && <CheckCircle className="w-3 h-3 text-emerald-400" />}
-                      {isPolicy && <Shield className="w-3 h-3 text-purple-400" />}
+                      {isActive && <CheckCircle className="w-3 h-3 text-emerald-600" />}
+                      {isPolicy && <Shield className="w-3 h-3 text-purple-600" />}
                       {rem.status || 'UNKNOWN'}
                     </span>
 
-                    <span className="font-bold font-mono text-[10px] text-slate-300 bg-slate-900 px-2 py-0.5 rounded border border-slate-700">
+                    <span className="font-bold font-mono text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                       {rem.intended_intent || 'GENERAL'}
                     </span>
 
@@ -2582,9 +2589,9 @@ function CognitiveRemediationTab() {
                     
                     <button
                       onClick={() => handleToggleStatus(rem.remediation_id, rem.status)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors border ${
-                        isActive ? 'bg-amber-500/20 text-amber-300 border-amber-500/30 hover:bg-amber-500/30' :
-                        'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors border ${
+                        isActive ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' :
+                        'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                       }`}
                       title={isActive ? 'Pause rule from intercepting' : 'Activate rule for NLU interception'}
                     >
@@ -2593,7 +2600,7 @@ function CognitiveRemediationTab() {
 
                     <button
                       onClick={() => handleDeleteRule(rem.remediation_id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                       title="Delete rule permanently"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -2601,78 +2608,78 @@ function CognitiveRemediationTab() {
                   </div>
                 </div>
 
-                {/* Main Card Content */}
+                {/* Main Card Content matching Screenshot 2 */}
                 <div className="p-5 sm:p-6 space-y-4">
-                  {/* Student Disliked Query Section */}
+                  {/* Student Disliked Query Section matching Screenshot 2 */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400 uppercase tracking-wider">
-                      <ThumbsDown className="w-3.5 h-3.5" />
-                      <span>Student Disliked Query</span>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-rose-600 uppercase tracking-wider">
+                      <ThumbsDown className="w-3.5 h-3.5 text-rose-500" />
+                      <span>STUDENT DISLIKED QUERY</span>
                     </div>
-                    <div className="text-sm font-extrabold text-white bg-rose-950/20 p-3.5 rounded-xl border border-rose-500/20 font-sans">
+                    <div className="text-base font-bold text-slate-900 bg-rose-50/50 p-3.5 rounded-xl border border-rose-100 font-sans tracking-tight">
                       "{rem.user_query}"
                     </div>
                     {rem.student_comment && (
-                      <div className="text-xs text-rose-300 bg-rose-500/10 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 border border-rose-500/20">
-                        <span className="font-bold uppercase text-[10px] tracking-wide">Student Feedback:</span>
+                      <div className="text-xs text-rose-800 bg-rose-100/70 px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 border border-rose-200/80">
+                        <span className="font-bold uppercase text-[10px] tracking-wide">STUDENT FEEDBACK:</span>
                         <span>"{rem.student_comment}"</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Side-by-Side: Delivered vs Gemini Audit */}
+                  {/* Side-by-Side: Delivered vs Gemini Audit matching Screenshot 2 */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Left: Bot Output Delivered */}
-                    <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
-                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                        <span>Delivered Bot Output (Disliked)</span>
-                        <span className="text-[10px] font-mono text-slate-500">Conversation Turn</span>
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                        <span>DELIVERED BOT OUTPUT (DISLIKED)</span>
+                        <span className="text-[10px] font-mono text-slate-400">CONVERSATION TURN</span>
                       </div>
-                      <div className="text-xs text-slate-300 font-sans line-clamp-4 leading-relaxed whitespace-pre-wrap">
+                      <div className="text-xs text-slate-700 font-sans line-clamp-4 leading-relaxed whitespace-pre-wrap">
                         {rem.bot_output || 'No output recorded'}
                       </div>
                     </div>
 
                     {/* Right: Gemini Audit Diagnosis */}
                     <div className={`p-4 rounded-xl border space-y-2 ${
-                      rem.mismatch_detected ? 'bg-purple-950/30 border-purple-500/30' : 'bg-emerald-950/30 border-emerald-500/30'
+                      rem.mismatch_detected ? 'bg-purple-50/60 border-purple-200/70' : 'bg-emerald-50/60 border-emerald-200/70'
                     }`}>
                       <div className="text-xs font-bold uppercase tracking-wider flex items-center justify-between">
-                        <span className={rem.mismatch_detected ? 'text-purple-300' : 'text-emerald-300'}>
-                          Gemini Autonomous Audit Diagnosis
+                        <span className={rem.mismatch_detected ? 'text-purple-700' : 'text-emerald-700'}>
+                          GEMINI AUTONOMOUS AUDIT DIAGNOSIS
                         </span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          rem.mismatch_detected ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          rem.mismatch_detected ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                         }`}>
-                          {rem.mismatch_detected ? 'Mismatch Detected' : 'Policy Upheld'}
+                          {rem.mismatch_detected ? 'MISMATCH DETECTED' : 'POLICY UPHELD'}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-200 font-medium leading-relaxed">
+                      <p className="text-xs text-slate-700 font-medium leading-relaxed">
                         {rem.mismatch_reason || 'No audit explanation provided.'}
                       </p>
                     </div>
                   </div>
 
-                  {/* What Gemini Instructed & Pushed to Neon */}
+                  {/* What Gemini Instructed & Pushed to Neon matching Screenshot 2 */}
                   {rem.mismatch_detected && (
-                    <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/20 space-y-2.5">
+                    <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <span className="font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
-                          <Bot className="w-4 h-4 text-indigo-400" />
-                          Gemini Remediation Pushed to Neon
+                        <span className="font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Database className="w-3.5 h-3.5 text-indigo-600" />
+                          GEMINI REMEDIATION PUSHED TO NEON
                         </span>
-                        <div className="flex items-center gap-2 font-mono text-[11px]">
-                          <span className="text-slate-400 font-semibold">Routing Action:</span>
-                          <span className="bg-slate-900 px-2 py-0.5 rounded border border-indigo-500/30 font-bold text-indigo-300">
-                            {rem.routing_action || 'TOOL_ROUTING'}
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-slate-500 font-medium">Routing Action:</span>
+                          <span className="bg-white px-2.5 py-1 rounded border border-slate-200 font-mono font-semibold text-slate-700 shadow-2xs">
+                            {rem.routing_action || 'TOOL:get_campus_location_and_navigation'}
                           </span>
                         </div>
                       </div>
 
                       {rem.target_entity && (
-                        <div className="text-xs text-slate-300 flex items-center gap-2">
-                          <span className="font-bold text-slate-400">Target Entity:</span>
-                          <span className="font-mono font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-700 text-purple-300">
+                        <div className="text-xs text-slate-600 flex items-center gap-2">
+                          <span className="font-semibold text-slate-500">Target Entity:</span>
+                          <span className="font-mono font-bold bg-white px-2 py-0.5 rounded border border-slate-200 text-purple-700">
                             {rem.target_entity}
                           </span>
                         </div>
@@ -2680,12 +2687,12 @@ function CognitiveRemediationTab() {
 
                       {triggers.length > 0 && (
                         <div className="space-y-1.5">
-                          <div className="text-[11px] font-bold text-slate-400">Learned Trigger Variations:</div>
+                          <div className="text-[11px] font-semibold text-slate-500">Learned Trigger Variations:</div>
                           <div className="flex flex-wrap gap-1.5">
                             {triggers.map((t, idx) => (
                               <span
                                 key={idx}
-                                className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-900 text-slate-300 border border-slate-700 font-mono shadow-2xs"
+                                className="px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-white text-slate-700 border border-slate-200 shadow-2xs"
                               >
                                 "{t}"
                               </span>
