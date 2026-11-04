@@ -507,12 +507,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-dvh bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
-      {/* Institutional Command Header - Sleek dark navy matching Login */}
+      {/* Institutional Command Header - Spacious, Balanced & Executive */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs backdrop-blur-md">
         <div className="w-full px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
             {/* Left: Mobile Drawer Trigger + Desktop Rail Collapse + Brand & Breadcrumb */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 sm:gap-4">
               {/* Mobile Drawer Trigger (lg:hidden) */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -531,68 +531,52 @@ export default function AdminDashboard() {
                 aria-label="Toggle sidebar collapse"
               >
                 {isSidebarCollapsed ? (
-                  <PanelLeftOpen className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                  <PanelLeftOpen className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
                 ) : (
                   <PanelLeftClose className="w-4 h-4 text-slate-500 group-hover:text-blue-600 group-hover:scale-110 transition-all" />
                 )}
               </button>
 
-              {/* Brand Logo & Shield Badge matching Screenshot 2 */}
+              {/* Brand Logo & Title matching Screenshot 2 */}
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-xs shrink-0">
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="font-bold text-base leading-tight text-slate-900 tracking-tight">Nodal Officer Portal</h1>
-                    <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-mono font-semibold">
-                      v2.4 SECURE
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-mono font-semibold tracking-wider uppercase">COMMAND CENTER</p>
+                  <h1 className="font-bold text-base leading-tight text-slate-900 tracking-tight">Nodal Officer Portal</h1>
+                  <p className="text-[10px] text-slate-400 font-mono font-semibold tracking-wider uppercase mt-0.5">COMMAND CENTER</p>
                 </div>
               </div>
 
-              {/* Active Tab Breadcrumb */}
-              <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 font-medium pl-3 ml-1 border-l border-slate-200">
-                <span className="text-slate-400">Command Center</span>
+              {/* Discreet Section Breadcrumb on Desktop */}
+              <div className="hidden xl:flex items-center gap-2 text-xs text-slate-400 pl-4 border-l border-slate-200">
+                <span className="text-slate-400 font-medium">{activeInfo.section}</span>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                <span className="text-slate-500">{activeInfo.section}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-                <span className="text-blue-700 font-semibold flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
+                <span className="text-slate-700 font-semibold flex items-center gap-1.5">
                   {activeInfo.icon}
                   {activeInfo.label}
                 </span>
               </div>
             </div>
 
-            {/* Middle: Live telemetry indicators */}
-            <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] text-slate-700 shadow-2xs">
+            {/* Right: Sleek Telemetry Pod + User profile & Logout */}
+            <div className="flex items-center gap-3">
+              {/* Compact Unified Telemetry Pill */}
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-mono text-slate-600 shadow-2xs">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span className="text-slate-500 font-medium">Neon PostgreSQL:</span>
-                <span className="font-semibold text-emerald-600">Synced</span>
+                <span className="font-semibold text-emerald-700">Neon DB Synced</span>
+                {currentTime && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-600">{currentTime}</span>
+                  </>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] text-slate-700 shadow-2xs">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                <span className="text-slate-500 font-medium">Security:</span>
-                <span className="font-semibold text-blue-700 font-mono">RLS Clause 2.1</span>
-              </div>
-
-              {currentTime && (
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-mono text-slate-700 shadow-2xs">
-                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{currentTime}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Right: User profile & Logout */}
-            <div className="flex items-center gap-3">
+              {/* User Profile Card */}
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs shadow-2xs">
                 <div className="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xs">
                   {adminUser.name.charAt(0)}
@@ -603,6 +587,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* Logout Button */}
               <button 
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-transparent hover:border-rose-200 transition-all cursor-pointer"
@@ -749,86 +734,102 @@ export default function AdminDashboard() {
       {/* Main Command Body with Desktop Sidebar Rail */}
       <div className="flex-1 flex w-full min-h-[calc(100dvh-4rem)]">
         {/* Desktop Fixed Left Navigation Rail */}
+        {/* Desktop Fixed Left Navigation Rail - Pinned Footer & Smooth Independent Scroll */}
         <aside
-          className={`hidden lg:flex flex-col justify-between shrink-0 bg-white border-r border-slate-200 sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out shadow-xs z-20 ${
-            isSidebarCollapsed ? 'w-20 p-2.5' : 'w-72 p-4 space-y-4'
+          className={`hidden lg:flex flex-col justify-between shrink-0 bg-white border-r border-slate-200 sticky top-16 h-[calc(100dvh-4rem)] overflow-hidden transition-all duration-300 ease-in-out shadow-xs z-20 ${
+            isSidebarCollapsed ? 'w-20 p-2.5' : 'w-72 xl:w-76 p-3.5'
           }`}
         >
           {isSidebarCollapsed ? (
             /* Collapsed Icon Rail View */
-            <div className="flex flex-col items-center space-y-4 w-full">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                <Lock className="w-4 h-4 text-blue-600" />
+            <div className="flex flex-col items-center justify-between h-full w-full">
+              <div className="flex flex-col items-center space-y-3 w-full">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center">
+                  <Lock className="w-4 h-4 text-blue-600" />
+                </div>
+
+                <div className="w-8 h-px bg-slate-200" />
+
+                <div className="space-y-1.5 w-full flex flex-col items-center overflow-y-auto max-h-[calc(100dvh-12rem)] pr-0.5">
+                  {navSections.flatMap(sec => sec.items).map(item => {
+                    const isSelected = activeTab === item.id;
+                    return (
+                      <div key={item.id} className="relative group w-full flex justify-center">
+                        <button
+                          onClick={() => setActiveTab(item.id as any)}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
+                            isSelected
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs font-bold'
+                              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                          }`}
+                          title={item.label}
+                        >
+                          <span className="transition-transform group-hover:scale-110">
+                            {item.icon}
+                          </span>
+                          {isSelected && (
+                            <span className="absolute left-1 top-2.5 bottom-2.5 w-1 bg-blue-600 rounded-r-md" />
+                          )}
+                          {item.count !== undefined && item.count > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white rounded-full text-[9px] font-mono font-bold flex items-center justify-center shadow-xs">
+                              {item.count}
+                            </span>
+                          )}
+                        </button>
+
+                        {/* Tooltip on hover */}
+                        <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 border border-slate-800 text-white text-xs font-semibold rounded-xl whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 flex items-center gap-2">
+                          <span>{item.label}</span>
+                          {item.badge && (
+                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${item.badgeClass || 'bg-slate-800 text-slate-200'}`}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
-              <div className="w-8 h-px bg-slate-200" />
-
-              <div className="space-y-1.5 w-full flex flex-col items-center">
-                {navSections.flatMap(sec => sec.items).map(item => {
-                  const isSelected = activeTab === item.id;
-                  return (
-                    <div key={item.id} className="relative group w-full flex justify-center">
-                      <button
-                        onClick={() => setActiveTab(item.id as any)}
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer relative ${
-                          isSelected
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
-                        }`}
-                        title={item.label}
-                      >
-                        <span className="transition-transform group-hover:scale-110">
-                          {item.icon}
-                        </span>
-                        {isSelected && (
-                          <span className="absolute left-1 top-2.5 bottom-2.5 w-1 bg-blue-500 rounded-r-md" />
-                        )}
-                        {item.count !== undefined && item.count > 0 && (
-                          <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white rounded-full text-[9px] font-mono font-bold flex items-center justify-center shadow-xs">
-                            {item.count}
-                          </span>
-                        )}
-                      </button>
-
-                      {/* Tooltip on hover */}
-                      <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-800 border border-slate-700 text-white text-xs font-semibold rounded-xl whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 flex items-center gap-2">
-                        <span>{item.label}</span>
-                        {item.badge && (
-                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${item.badgeClass || 'bg-slate-100 text-slate-700'}`}>
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              {/* Collapsed Bottom Telemetry Indicator */}
+              <div className="pt-2 border-t border-slate-100 w-full flex justify-center shrink-0">
+                <div
+                  className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center group relative cursor-pointer"
+                  title="Telemetry Online"
+                >
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-emerald-300 text-[10px] font-mono font-bold rounded-xl whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                    Telemetry Synced • Neon DB
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
-            /* Expanded Full Sidebar View */
-            <div className="space-y-4">
-              {/* Quick Module Filter */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            /* Expanded Full Sidebar View - Two-section flex layout with pinned footer */
+            <div className="flex flex-col h-full justify-between overflow-hidden">
+              {/* Top Quick Module Filter */}
+              <div className="relative shrink-0 pb-3 border-b border-slate-100">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Filter navigation..."
                   value={sidebarFilter}
                   onChange={e => setSidebarFilter(e.target.value)}
-                  className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
                 />
                 {sidebarFilter && (
                   <button
                     onClick={() => setSidebarFilter('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
                   >
                     ✕
                   </button>
                 )}
               </div>
 
-              {/* Navigation Groups */}
-              <div className="space-y-4">
+              {/* Navigation Groups - Smooth Independent Scroll Area */}
+              <div className="flex-1 overflow-y-auto py-2.5 space-y-3.5 pr-1">
                 {navSections.map((sec, secIdx) => {
                   const filteredItems = sec.items.filter(item =>
                     item.label.toLowerCase().includes(sidebarFilter.toLowerCase())
@@ -837,7 +838,7 @@ export default function AdminDashboard() {
 
                   return (
                     <div key={secIdx} className="space-y-1">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1.5 flex items-center justify-between">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2.5 mb-1 flex items-center justify-between">
                         <span>{sec.title}</span>
                       </div>
 
@@ -848,7 +849,7 @@ export default function AdminDashboard() {
                             <button
                               key={item.id}
                               onClick={() => setActiveTab(item.id as any)}
-                              className={`w-full px-3 py-2.5 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left group cursor-pointer relative ${
+                              className={`w-full px-2.5 py-2 text-xs font-medium rounded-xl transition-all duration-150 flex items-center justify-between text-left group cursor-pointer relative ${
                                 isSelected
                                   ? 'bg-blue-50 text-blue-700 border border-blue-200/80 font-bold shadow-2xs before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-600 before:rounded-r-md'
                                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 border border-transparent'
@@ -863,12 +864,12 @@ export default function AdminDashboard() {
 
                               <div className="flex items-center gap-1.5 shrink-0 ml-2">
                                 {item.badge && (
-                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-100 text-slate-600'}`}>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${item.badgeClass || 'bg-slate-100 text-slate-600'}`}>
                                     {item.badge}
                                   </span>
                                 )}
                                 {item.count !== undefined && item.count > 0 && (
-                                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-100 text-slate-600'}`}>
+                                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${item.countClass || 'bg-slate-100 text-slate-600'}`}>
                                     {item.count}
                                   </span>
                                 )}
@@ -881,112 +882,106 @@ export default function AdminDashboard() {
                   );
                 })}
               </div>
+
+              {/* Sidebar Footer: Real-time Telemetry Health Pod - ALWAYS Pinned to Bottom */}
+              <div className="pt-2.5 border-t border-slate-100 shrink-0">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-[11px] shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Command Telemetry
+                    </span>
+                    <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
+                      ONLINE
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5 font-mono text-[10px] text-slate-600">
+                    <div className="flex justify-between">
+                      <span>Neon PostgreSQL:</span>
+                      <span className="text-slate-800 font-semibold">Synced</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Gemini Engine:</span>
+                      <span className="text-purple-700 font-semibold">gemini-2.5-flash</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Privacy Tier:</span>
+                      <span className="text-blue-700 font-semibold">Clause 2.1 RLAC</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Sidebar Footer: Real-time Telemetry Health Pod */}
-          <div className="pt-3 border-t border-slate-800">
-            {isSidebarCollapsed ? (
-              <div className="flex flex-col items-center">
-                <div
-                  className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center group relative cursor-pointer"
-                  title="Telemetry Online"
-                >
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-800 border border-slate-700 text-emerald-300 text-[10px] font-mono font-bold rounded-xl whitespace-nowrap shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                    Telemetry Synced • Neon DB
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 text-[11px] shadow-2xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Command Telemetry
-                  </span>
-                  <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
-                    ONLINE
-                  </span>
-                </div>
-
-                <div className="space-y-1 font-mono text-[10px] text-slate-600">
-                  <div className="flex justify-between">
-                    <span>Neon PostgreSQL:</span>
-                    <span className="text-slate-800 font-semibold">Synced</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Gemini Engine:</span>
-                    <span className="text-purple-700 font-semibold">gemini-2.5-flash</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Privacy Tier:</span>
-                    <span className="text-blue-700 font-semibold">Clause 2.1 RLAC</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
         </aside>
 
         {/* Right Main Content Area */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 bg-slate-50 overflow-y-auto space-y-6">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-16 bg-slate-50 overflow-y-auto space-y-6">
           {/* Top 4 Telemetry Metrics Cards - ONLY on Operational / Ticket tabs */}
           {['service_requests', 'hostel_requests', 'grievances', 'clubs', 'bookings', 'lost_found', 'kanban'].includes(activeTab) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in-50 duration-200">
               {/* Card 1: Grievances */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 hover:shadow-md transition-all group min-h-[140px]">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Grievances</span>
-                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
-                    <MessageSquareWarning className="w-5 h-5 text-rose-600" />
+                  <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0">
+                    <MessageSquareWarning className="w-4 h-4 text-rose-600" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-slate-900 tracking-tight">{grievances.length}</div>
-                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                  <span>Formal SGRC student filings</span>
+                <div>
+                  <div className="text-3xl font-black text-slate-900 tracking-tight leading-none">{grievances.length}</div>
+                  <div className="text-xs text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
+                    <span>Formal SGRC student filings</span>
+                  </div>
                 </div>
               </div>
 
               {/* Card 2: Club Apps */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 hover:shadow-md transition-all group min-h-[140px]">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Club Applications</span>
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-indigo-400" />
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 text-indigo-600" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-slate-900 tracking-tight">{clubApps.length}</div>
-                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                  <span>SAC & student council review</span>
+                <div>
+                  <div className="text-3xl font-black text-slate-900 tracking-tight leading-none">{clubApps.length}</div>
+                  <div className="text-xs text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
+                    <span>SAC & student council review</span>
+                  </div>
                 </div>
               </div>
 
               {/* Card 3: Bookings */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 hover:shadow-md transition-all group min-h-[140px]">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Facility Bookings</span>
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                    <Calendar className="w-5 h-5 text-blue-600" />
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4 text-blue-600" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-slate-900 tracking-tight">{bookings.length}</div>
-                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                  <span>Halls, labs & sports grounds</span>
+                <div>
+                  <div className="text-3xl font-black text-slate-900 tracking-tight leading-none">{bookings.length}</div>
+                  <div className="text-xs text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
+                    <span>Halls, labs & sports grounds</span>
+                  </div>
                 </div>
               </div>
 
               {/* Card 4: Lost & Found */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all group">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 hover:shadow-md transition-all group min-h-[140px]">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lost & Found Posts</span>
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                    <PackageSearch className="w-5 h-5 text-amber-600" />
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0">
+                    <PackageSearch className="w-4 h-4 text-amber-600" />
                   </div>
                 </div>
-                <div className="text-3xl font-black text-slate-900 tracking-tight">{lostAndFound.length}</div>
-                <div className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
-                  <span>Campus item registry</span>
+                <div>
+                  <div className="text-3xl font-black text-slate-900 tracking-tight leading-none">{lostAndFound.length}</div>
+                  <div className="text-xs text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
+                    <span>Campus item registry</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2201,28 +2196,32 @@ function CognitiveRemediationTab() {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner Header - Clean White University Design matching Screenshot 2 */}
-      <div className="p-6 rounded-2xl bg-white text-slate-900 shadow-xs border border-slate-200 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
+      {/* Top Banner Header - Perfectly Balanced Size, Clean Spacing & Responsive Actions */}
+      <div className="p-5 sm:p-6 rounded-2xl bg-white text-slate-900 shadow-xs border border-slate-200 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-50/60 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" /> Cognitive Remediation Hub
               </span>
-              <span className="text-xs text-slate-500 font-mono">Neon PostgreSQL • Autonomous Interceptor</span>
+              <span className="text-[11px] font-mono text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+                Neon PostgreSQL Synced
+              </span>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">AI Feedback Surveillance & Gemini Governance</h2>
-            <p className="text-xs text-slate-600 max-w-2xl leading-relaxed">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight">
+              AI Feedback Surveillance & Gemini Governance
+            </h2>
+            <p className="text-xs text-slate-500 leading-relaxed">
               Surveil queries disliked by students, inspect Gemini intent-audit diagnoses, review self-learned Dijkstra routing rules pushed to Neon, and manage Google Gemini API quotas & credentials.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start lg:self-center">
             <button
               onClick={handlePingGemini}
               disabled={pinging}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 transition-all cursor-pointer disabled:opacity-50 shadow-2xs"
+              className="h-9 inline-flex items-center gap-1.5 px-3.5 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
               title="Send lightweight diagnostic ping to Google Gemini API"
             >
               <Zap className={`w-3.5 h-3.5 text-amber-500 ${pinging ? 'animate-spin' : ''}`} />
@@ -2231,16 +2230,16 @@ function CognitiveRemediationTab() {
 
             <button
               onClick={() => setShowConfigBox(!showConfigBox)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/20 transition-all cursor-pointer"
+              className="h-9 inline-flex items-center gap-1.5 px-4 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-all cursor-pointer"
             >
               <KeyRound className="w-3.5 h-3.5" />
-              {showConfigBox ? 'Hide API Key Manager' : 'Switch Gemini API Key'}
+              {showConfigBox ? 'Hide Manager' : 'Switch Gemini API Key'}
             </button>
 
             <button
               onClick={loadData}
               disabled={loading}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 transition-all cursor-pointer shadow-2xs"
+              className="h-9 w-9 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition-all cursor-pointer"
               title="Refresh live data from Neon DB"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -2488,50 +2487,58 @@ function CognitiveRemediationTab() {
       )}
 
       {/* Filter and Search Bar - Crisp White matching Screenshot 2 */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              filter === 'ALL' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            className={`h-9 px-3.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filter === 'ALL'
+                ? 'bg-blue-600 text-white shadow-xs border border-blue-600'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
             }`}
           >
             All Audited ({summary.total_audited})
           </button>
           <button
             onClick={() => setFilter('ACTIVE')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-              filter === 'ACTIVE' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            className={`h-9 px-3.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              filter === 'ACTIVE'
+                ? 'bg-emerald-600 text-white shadow-xs border border-emerald-600'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
             }`}
           >
-            <CheckCircle className="w-3 h-3" /> Active in Neon ({summary.active_rules})
+            <CheckCircle className="w-3.5 h-3.5" /> Active in Neon ({summary.active_rules})
           </button>
           <button
             onClick={() => setFilter('POLICY_PROTECTED')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-              filter === 'POLICY_PROTECTED' ? 'bg-purple-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            className={`h-9 px-3.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              filter === 'POLICY_PROTECTED'
+                ? 'bg-purple-600 text-white shadow-xs border border-purple-600'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
             }`}
           >
-            <Shield className="w-3 h-3" /> Policy Upheld ({summary.policy_protected})
+            <Shield className="w-3.5 h-3.5" /> Policy Upheld ({summary.policy_protected})
           </button>
           <button
             onClick={() => setFilter('INACTIVE')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              filter === 'INACTIVE' ? 'bg-slate-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
+            className={`h-9 px-3.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              filter === 'INACTIVE'
+                ? 'bg-slate-700 text-white shadow-xs border border-slate-700'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
             }`}
           >
             Inactive ({summary.inactive_rules})
           </button>
         </div>
 
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search query, landmark, reason..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+            className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
           />
         </div>
       </div>
@@ -2544,10 +2551,12 @@ function CognitiveRemediationTab() {
             <div className="text-sm font-semibold text-slate-300">Loading live audit trail from Neon PostgreSQL...</div>
           </div>
         ) : filteredRemediations.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 shadow-xs space-y-2">
-            <Bot className="w-10 h-10 text-slate-400 mx-auto" />
+          <div className="bg-white rounded-2xl p-10 sm:p-14 text-center border border-slate-200 shadow-xs space-y-3">
+            <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center mx-auto text-slate-400 shadow-2xs">
+              <Bot className="w-6 h-6 text-slate-400" />
+            </div>
             <div className="text-base font-bold text-slate-900">No Audited Queries Found</div>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
+            <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
               No disliked queries matching the active filter. When a student downvotes a query in the chat, the autonomous Gemini loop audits it here.
             </p>
           </div>
