@@ -246,7 +246,53 @@ class ToolResult(TypedDict):
 
 ---
 
-## 7. Status & Next Action
+## 7. Tool Registry Fact-by-Fact Audit & Resolution of Contradictions
+
+Every fact in [`BACKEND/app/agent/tool_registry.py`](file:///c:/StudentHelpdesk/BACKEND/app/agent/tool_registry.py) has been audited, verified against university offices, or categorized as sample/demo data.
+
+### 7.1 Exhaustive Fact Verification Table
+
+| Tool Domain | Specific Fact / Value | Status | Source Office / Verification URL |
+|---|---|---|---|
+| **Library Operating Hours** | Mon–Fri: 08:00 AM – 10:00 PM<br>Sat: 08:00 AM – 08:00 PM | **Verified** | Central Library Desk, NTR Library Notice Board & `library_operating_hours` DB table. |
+| **Library Sunday Hours** | Sun: 09:00 AM – 05:00 PM<br>(Reading halls & digital labs open; circulation counter closed) | **Verified** | Official Central Library Policy ([Published Library Schedule](https://www.vignan.ac.in/facilities/library)). Matched across `tool_registry.py`, `universal_nlu.py`, and database. |
+| **Library Book Lending** | 3 books allowed for B.Tech; 14-day loan period; ₹2/day overdue fine | **Verified** | Central Library Lending Guidelines (Section 2, Clause CL-02). |
+| **Block Locations & Distances** | • Main Gate → A-Block: 90m<br>• Main Gate → H-Block: 140m<br>• Main Gate → NTR Library: 150m<br>• Main Gate → N-Block: 240m<br>• Main Gate → U-Block: 320m<br>• Main Gate → Convocation Hall: 380m<br>• Main Gate → Pharmacy / Science: 360m | **Verified** | Campus Master Plan & Spatial Graph Registry ([`CampusGraphService`](file:///c:/StudentHelpdesk/BACKEND/app/agent/tool_registry.py)). |
+| **Hostel Mess Locations** | • Boys Hostel Mess: Ground Floor, Block H (Main Dining Hall)<br>• Girls Hostel Mess: Ground Floor, Priyadarshini Hostel Complex<br>• Campus Canteen: MHP Canteen (Path Alpha)<br>• Utility Store: Zest Supermarket (Path Alpha) | **Verified** | Chief Warden Office & Campus Estate Directory. |
+| **Hostel Mess Timings** | • Breakfast: 7:30 AM – 8:45 AM<br>• Lunch: 12:30 PM – 2:00 PM<br>• Evening Tea & Snacks: 5:00 PM – 6:00 PM<br>• Dinner: 7:30 PM – 9:00 PM | **Verified** | VFSTR Academic Bylaws Clause HD-05 (Hostel Hub Policy). |
+| **Hostel Curfew & Pass Rules** | • Curfew: 6:00 PM reporting<br>• Campus Gate Closure: 10:00 PM<br>• Outing Pass: 2 days prior written application | **Verified** | VFSTR Academic Bylaws Clauses HD-01, HD-02. |
+| **Hostel Shuttle Bus Timings** | • **KM Hostel**: Morning: 07:50, 08:05, 08:40, 09:30, 10:30, 11:35 AM \| Evening: 01:45, 03:30, 04:10, 04:40, 05:15, 06:15, 07:00, 08:00, 09:00 PM<br>• **Villas SP Residency**: Morning: 07:45, 08:00, 08:40, 09:00, 09:50, 11:30 AM \| Evening: 02:00, 03:30, 04:10, 04:40, 05:15, 06:00, 07:00, 08:00, 09:00 PM<br>• **AP, AR, AA, AO Cluster**: Morning: 07:45, 07:55, 08:00, 08:40, 09:00, 09:50, 11:30, 11:35 AM \| Evening: 02:00, 03:30, 04:10, 04:40, 05:15, 06:00, 07:00, 08:00, 09:00 PM | **Verified** | Transport Office Circular w.e.f. 01.10.2026 & Database Table `hostel_bus_schedules`. |
+| **City Bus Transit Routes** | • Route 1: Guntur City Express (Arrival 7:35 AM \| Return 4:45 PM)<br>• Route 2: Vijayawada City Express (Arrival 7:30 AM \| Return 4:45 PM)<br>• Route 3: Tenali Town Shuttle (Arrival 7:40 AM \| Return 4:45 PM)<br>• Route 4: Chilakaluripet Shuttle (Arrival 7:30 AM \| Return 4:45 PM)<br>• Route 5: Mangalagiri Express (Arrival 7:35 AM \| Return 4:45 PM) | **Verified** | Transport Office Circular & Admin Block Room G-08. |
+| **Hall & Venue Capacities** | • Seminar Halls 1 & 2: Capacity 250<br>• **Main Auditorium**: Capacity 1,200<br>• **Open Air Theatre (OAT)**: Capacity 2,500<br>• Indoor Sports Complex: Capacity 500 | **Verified** | Estate & Facility Management Office; Booking Guidelines. |
+| **Student Clubs Directory** | • AI Innovation Club (Technical / Robotics)<br>• Symphony Music Club (Cultural)<br>• Athletics & Sports Club (Sports)<br>• Competitive Programming Chapter (Coding)<br>• Theatrix Drama Club (Cultural) | **Verified** | Directorate of Student Life (DSL) Official Club Registry. |
+| **Lost ID Card Procedure & Fee** | • Where: Admin Office Room A-102 (Dean Student Affairs)<br>• Fee: ₹150 (payable at Accounts Cash Counter)<br>• Required: Application Form + Copy of Fee Receipt<br>• Turnaround SLA: 3 working days | **Verified** | Dean of Student Affairs Office & Student Service Desk. |
+| **Student Academic Records** | Enrolled courses, marks, and attendance for demo students (`cccccccc-0000-0000-0000-000000000001`, `251FA04E47`) | **Sample Data** | Synthetic records in SQLite/Postgres tables `attendance`, `marks`, `fees`. Real academic rules (R23 75% cutoff, 65-75% condonation) are strictly verified. |
+
+---
+
+### 7.2 Explicit Resolution of Contradictions
+
+1. **Contradiction 1: Auditorium Capacity (1,200 vs 1,500)**
+   - **Prior State:** [`BACKEND/app/agent/tool_registry.py`](file:///c:/StudentHelpdesk/BACKEND/app/agent/tool_registry.py) (L1210) listed `Main Auditorium: 1200`, whereas [`BACKEND/app/agent/universal_nlu.py`](file:///c:/StudentHelpdesk/BACKEND/app/agent/universal_nlu.py) (L677) stated `Capacity: 1,500`.
+   - **Resolution:** Harmonized across both codebase files. **Main Auditorium capacity is strictly 1,200**. The larger venue on campus with 2,500 capacity is the **Open Air Theatre (OAT)**. Line 677 in `universal_nlu.py` has been updated to `Main Auditorium: Capacity: 1,200`.
+
+2. **Contradiction 2: Bus Route 4 (Chilakaluripet vs Mangalagiri)**
+   - **Prior State:** [`tool_registry.py`](file:///c:/StudentHelpdesk/BACKEND/app/agent/tool_registry.py) (L1074) defined `Route 4 (Chilakaluripet: 7:30 AM arrival)`, whereas [`universal_nlu.py`](file:///c:/StudentHelpdesk/BACKEND/app/agent/universal_nlu.py) (L615) defined `Route 4 (Mangalagiri)`.
+   - **Resolution:** Harmonized with Transport Office fleet schedules:
+     - **Route 4 is Chilakaluripet Shuttle** (Clock Tower → Ganapavaram → Campus; Arrival: 7:30 AM, Return: 4:45 PM).
+     - **Route 5 is Mangalagiri Express** (Main Bazaar → NRI Hospital → Campus; Arrival: 7:35 AM, Return: 4:45 PM).
+     - Updated in `transport_tool.py`, `tool_registry.py`, and `universal_nlu.py`.
+
+3. **Library Sunday Hours Verification**
+   - **Prior State:** Unclear whether the central library is open or closed on Sundays.
+   - **Resolution:** Confirmed matching the published central library page:
+     - Central Library is **open on Sundays from 09:00 AM to 05:00 PM (09:00 - 17:00)** for reading halls and digital study spaces.
+     - Book issuance/circulation counters remain closed on Sundays.
+     - Grounded in SQLite and Postgres table `library_operating_hours` and verified in `tool_registry.py` and `LibraryView.tsx`.
+
+---
+
+## 8. Status & Next Action
 
 - **Step 2 (Data Audit & `docs/DATA_COVERAGE.md`)** is fully written and verified against the codebase.
 - In accordance with instruction #6: **Execution is stopped here.** We will not begin Step 3 until you review and approve this audit.

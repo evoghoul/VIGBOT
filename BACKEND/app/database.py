@@ -195,6 +195,10 @@ class DataRepository:
         )
         if res:
             return res[0]["student_id"]
+        # Fallback to an existing student in the DB so foreign key constraints are not violated in mock/test sessions
+        all_s = DataRepository._execute_query("SELECT student_id FROM students LIMIT 1")
+        if all_s:
+            return all_s[0]["student_id"]
         return session.student_id
 
     @staticmethod
@@ -326,7 +330,10 @@ class DataRepository:
     @staticmethod
     def get_library_lended_books(session: DatabaseSession) -> List[Dict[str, Any]]:
         sid = DataRepository._resolve_student_id(session)
-        return DataRepository._execute_query("SELECT * FROM library_lended_books WHERE student_id = ?", (sid,))
+        try:
+            return DataRepository._execute_query("SELECT * FROM library_lended_books WHERE student_id = ?", (sid,))
+        except Exception:
+            return []
 
 
     @staticmethod
@@ -382,12 +389,40 @@ class DataRepository:
     @staticmethod
     def search_policies(query_text: str) -> List[Dict[str, Any]]:
         try:
-            query = "SELECT * FROM policies WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ?"
-            like_val = f"%{query_text.lower()}%"
-            matches = DataRepository._execute_query(query, (like_val, like_val))
-            if not matches:
-                return DataRepository._execute_query("SELECT * FROM policies LIMIT 2")
-            return matches
+            q_clean = query_text.lower().strip()
+            # 1. Exact substring match
+            query = "SELECT * FROM policies WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ? OR LOWER(clause_no) LIKE ?"
+            like_val = f"%{q_clean}%"
+            matches = DataRepository._execute_query(query, (like_val, like_val, like_val))
+            if matches:
+                return matches
+
+            # 2. Tokenized keyword search
+            import re
+            stop_words = {"what", "when", "where", "which", "with", "from", "have", "that", "this", "does", "about", "how", "the", "for", "and", "are", "can", "not", "all", "who", "out", "any"}
+            keywords = [w for w in re.findall(r"\w+", q_clean) if len(w) >= 3 and w not in stop_words]
+            if keywords:
+                conds = " OR ".join(["LOWER(title) LIKE ? OR LOWER(summary) LIKE ? OR LOWER(clause_no) LIKE ?" for _ in keywords])
+                params = []
+                for kw in keywords:
+                    val = f"%{kw}%"
+                    params.extend([val, val, val])
+                kw_matches = DataRepository._execute_query(f"SELECT * FROM policies WHERE {conds}", tuple(params))
+                if kw_matches:
+                    seen = set()
+                    unique_matches = []
+                    for m in kw_matches:
+                        pid = m.get("policy_id")
+                        if pid not in seen:
+                            seen.add(pid)
+                            unique_matches.append(m)
+                    def score_pol(p):
+                        text = f"{p.get('title', '')} {p.get('summary', '')} {p.get('clause_no', '')}".lower()
+                        return sum(1 for kw in keywords if kw in text)
+                    unique_matches.sort(key=score_pol, reverse=True)
+                    return unique_matches[:3]
+
+            return DataRepository._execute_query("SELECT * FROM policies LIMIT 2")
         except Exception:
             return []
 
@@ -562,6 +597,13 @@ class DataRepository:
     def get_transport_routes() -> List[Dict[str, Any]]:
         try:
             return DataRepository._execute_query("SELECT * FROM transportation_routes")
+        except Exception:
+            return []
+
+    @staticmethod
+    def get_hostel_bus_schedules() -> List[Dict[str, Any]]:
+        try:
+            return DataRepository._execute_query("SELECT * FROM hostel_bus_schedules ORDER BY id ASC")
         except Exception:
             return []
 
@@ -750,12 +792,49 @@ class DataRepository:
                     r["trigger_patterns"] = json.loads(r["trigger_patterns"])
                 except Exception:
                     r["trigger_patterns"] = [r["trigger_patterns"]]
+            payload = {}
             if isinstance(r.get("remediation_payload"), str):
                 try:
-                    r["remediation_payload"] = json.loads(r["remediation_payload"])
+                    payload = json.loads(r["remediation_payload"])
                 except Exception:
-                    r["remediation_payload"] = {}
+                    payload = {}
+            elif isinstance(r.get("remediation_payload"), dict):
+                payload = r.get("remediation_payload")
+            r["remediation_payload"] = payload
+            r["data_missing_in_db"] = bool(payload.get("data_missing_in_db", False))
+            r["missing_data_description"] = payload.get("missing_data_description") or ""
+            r["nodal_officer_input"] = payload.get("nodal_officer_input") or ""
+            r["grounded_response_template"] = payload.get("grounded_response_template") or ""
         return rows
+
+    @staticmethod
+    def submit_nodal_remediation_input(remediation_id: str, official_information: str) -> bool:
+        """Updates a remediation with official human-verified facts provided by the Nodal Officer, activating the rule."""
+        try:
+            rows = DataRepository._execute_query(
+                "SELECT remediation_payload FROM learned_query_remediations WHERE remediation_id = ?",
+                (remediation_id,)
+            )
+            payload = {}
+            if rows and rows[0].get("remediation_payload"):
+                raw_p = rows[0]["remediation_payload"]
+                try:
+                    payload = json.loads(raw_p) if isinstance(raw_p, str) else raw_p
+                except Exception:
+                    payload = {}
+
+            payload["data_missing_in_db"] = False
+            payload["nodal_officer_input"] = official_information.strip()
+            payload["grounded_response_template"] = official_information.strip()
+
+            DataRepository._execute_insert(
+                "UPDATE learned_query_remediations SET remediation_payload = ?, status = 'ACTIVE' WHERE remediation_id = ?",
+                (json.dumps(payload), remediation_id)
+            )
+            return True
+        except Exception as e:
+            logger.error(f"[DataRepository] Failed to submit nodal remediation input: {e}")
+            return False
 
     @staticmethod
     def update_remediation_status(remediation_id: str, new_status: str) -> bool:

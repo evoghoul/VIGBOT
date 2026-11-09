@@ -297,7 +297,7 @@ INSERT INTO identity.app_user (user_id, person_id, username, email) VALUES ('eee
 
 -- 5. Helpdesk Policies & Knowledge
 INSERT INTO governance.policy_document (policy_id, institution_id, policy_number, title, category, effective_date, status, summary)
-VALUES ('ffffffff-0000-0000-0000-000000000001','11111111-1111-1111-1111-111111111111','POL-ATT-2024','VFSTR Academic Regulations: Attendance Norms','ACADEMIC','2024-07-01','APPROVED','75% attendance mandatory. Condonation permitted between 65-74.9% on medical grounds with fee of Rs. 1000. Under 65% detained.') ON CONFLICT DO NOTHING;
+VALUES ('ffffffff-0000-0000-0000-000000000001','11111111-1111-1111-1111-111111111111','POL-ATT-2024','VFSTR Academic Regulations: Attendance Norms','ACADEMIC','2024-07-01','APPROVED','75% attendance mandatory. Condonation permitted between 65-74.9% on medical grounds with fee of Rs. 500 per course (flat Rs. 2000 for 4+ courses) via PNB voucher per Annexure - 2. Under 65% detained.') ON CONFLICT DO NOTHING;
 INSERT INTO governance.circular (circular_id, institution_id, circular_number, title, issued_date, category, status, summary)
 VALUES ('ffffffff-0000-0000-0000-000000000002','11111111-1111-1111-1111-111111111111','CIR-2026-088','Mid-Term 1 Examination Schedule - II B.Tech Sec 7','2026-09-05','EXAMINATION','ACTIVE','Mid-Term 1 examinations commence from 22nd September 2026. Hall tickets conditional on >= 75% attendance.') ON CONFLICT DO NOTHING;
 

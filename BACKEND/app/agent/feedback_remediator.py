@@ -84,6 +84,30 @@ class FeedbackRemediationService:
         return cleaned
 
     @classmethod
+    def get_verified_university_knowledge_context(cls) -> str:
+        """
+        Returns grounded institutional facts from ToolRegistry to prevent Gemini from hallucinating or inventing data.
+        """
+        return """
+- CAMPUS BUILDINGS & NODES: Main Gate (Node 0), Path Alpha (Main Road), A-Block (90m), H-Block (140m, Boys Hostel Mess on Ground Floor), NTR Library (150m), MHP Canteen (Path Alpha), Zest Supermarket (Path Alpha), Path Beta, N-Block (240m, just beside Zest), Vignan Vihar Boys Hostel (260m, directly in front of N-Block), Path Gamma, U-Block (325m, Law & Management, directly behind N-Block), Convocation Hall (380m).
+- CENTRAL LIBRARY HOURS: Monday-Friday 08:00 AM - 10:00 PM; Saturday 08:00 AM - 08:00 PM; Sunday 09:00 AM - 05:00 PM (Reading halls & digital labs open; circulation counter closed). 3 books per B.Tech student, 14-day loan, ₹2/day overdue fine.
+- HOSTEL & DINING RULES: Decentralized mess on ground floor of each hostel. Breakfast 7:30 AM - 8:45 AM, Lunch 12:30 PM - 2:00 PM, Evening Tea 5:00 PM - 6:00 PM, Dinner 7:30 PM - 9:00 PM. Curfew: 6:00 PM reporting curfew. Campus gate closure strictly at 10:00 PM (Clause HD-01).
+- TRANSIT & BUS TIMETABLES:
+  * Route 1: Guntur City Express (Arrival 7:35 AM | Return 4:45 PM)
+  * Route 2: Vijayawada City Express (Arrival 7:30 AM | Return 4:45 PM)
+  * Route 3: Tenali Town Shuttle (Arrival 7:40 AM | Return 4:45 PM)
+  * Route 4: Chilakaluripet Shuttle (Arrival 7:30 AM | Return 4:45 PM)
+  * Route 5: Mangalagiri Express (Arrival 7:35 AM | Return 4:45 PM)
+  * KM Hostel Shuttle: Morning 07:50, 08:05, 08:40, 09:30, 10:30, 11:35 AM | Evening 01:45, 03:30, 04:10, 04:40, 05:15, 06:15, 07:00, 08:00, 09:00 PM
+  * Villas SP Residency Shuttle: Morning 07:45, 08:00, 08:40, 09:00, 09:50, 11:30 AM | Evening 02:00, 03:30, 04:10, 04:40, 05:15, 06:00, 07:00, 08:00, 09:00 PM
+  * AP/AR/AA/AO Cluster Shuttle: Morning 07:45, 07:55, 08:00, 08:40, 09:00, 09:50, 11:30, 11:35 AM | Evening 02:00, 03:30, 04:10, 04:40, 05:15, 06:00, 07:00, 08:00, 09:00 PM
+- VENUE CAPACITIES: Seminar Halls 1 & 2: 250; Main Auditorium: 1,200; Open Air Theatre (OAT): 2,500; Indoor Sports Complex: 500. 48 hours advance notice required.
+- STUDENT CLUBS: AI Innovation Club (Technical / Robotics), Symphony Music Club (Cultural), Athletics & Sports (Sports), Competitive Programming (Technical), Theatrix (Cultural).
+- LOST ID CARD PROCEDURE: Phase 1: Submit digital report on Lost & Found board. Phase 2: Report physically to Admin Office in H-Block (ground floor, left hallway), collect Dean Student Affairs & Chief Warden signatures, remit ₹100 fee. SLA: 3 working days.
+- ACADEMIC REGULATIONS (R22/R23 & Annexure-2): Minimum 75% attendance mandatory in each registered subject to write final examinations (Clause 4.2). Medical condonation between 65% and 74.9% with Dean approval. Procedure for paying Condonation Fee (Annexure – 2): Students pay Rs. 500/- for each course as condonation fee for shortage of attendance; students having four or more courses pay flat Rs. 2,000/-. Payment must be made by voucher (NOT online) at PNB Bank, Vadlamudi Branch. After payment, submit original copy of the challan at the Examination section and get a receipt. Hall-Tickets will be issued to the candidate only after paying the condonation fee. Below 65% is non-condonable detention.
+""".strip()
+
+    @classmethod
     def call_gemini_audit_engine(
         cls,
         user_query: str,
@@ -93,6 +117,7 @@ class FeedbackRemediationService:
     ) -> Optional[Dict[str, Any]]:
         """
         Sends the disliked conversation turn to Google Gemini for intent-output mismatch evaluation.
+        Enforces strict grounding against verified institutional records to prevent hallucinating fake data.
         """
         api_key = cls.get_gemini_api_key()
         if not api_key:
@@ -102,6 +127,7 @@ class FeedbackRemediationService:
         clean_query = cls.redact_pii_for_audit(user_query)
         clean_output = cls.redact_pii_for_audit(bot_output)
         clean_comment = cls.redact_pii_for_audit(student_comment or "")
+        verified_context = cls.get_verified_university_knowledge_context()
 
         audit_prompt = f"""You are the VIGBOT Institutional Audit Engine for Vignan University (VFSTR Vadlamudi).
 A student gave negative feedback (thumbs down / dislike) on the following conversation turn:
@@ -115,10 +141,13 @@ A student gave negative feedback (thumbs down / dislike) on the following conver
 [STUDENT FEEDBACK COMMENT]:
 {clean_comment or "None provided"}
 
+[VERIFIED UNIVERSITY DATABASE CONTEXT]:
+{verified_context}
+
 TASK:
 Analyze whether there is a genuine INTENT-OUTPUT MISMATCH or if the bot was correct.
 
-CRITICAL EVALUATION RULES:
+CRITICAL EVALUATION & ZERO-FABRICATION RULES:
 1. DO NOT REMEDIATE (mismatch_detected = false, remediation_needed = false):
    - If the bot correctly enforced university regulations (e.g. attendance below mandatory 75% cutoff, condonation rules Clause 4.2).
    - If the bot correctly enforced privacy policies (e.g. refusing to show other students' attendance or marks under Clause 2.1 RLAC).
@@ -128,20 +157,32 @@ CRITICAL EVALUATION RULES:
 2. REMEDIATE (mismatch_detected = true, remediation_needed = true):
    - If the bot answered a completely different topic (e.g. user asked for building directions or location, but bot gave document request services).
    - If the bot failed to distinguish informational building queries ("what is N-Block?") from walking navigation ("where is N-Block?").
-   - If the bot hallucinated inaccurate campus landmarks (e.g. calling Zest Supermarket "Chest", or missing that N-Block is just beside Zest).
+   - If the bot hallucinated inaccurate campus landmarks.
    - If the bot failed to route to the correct tool or provided irrelevant generic boilerplate.
+
+3. STRICT TRUTHFULNESS & GROUNDING (NEVER INVENT FAKE DATA):
+   - You MUST NEVER invent, guess, extrapolate, or hallucinate facts, numbers, dates, timings, locations, room numbers, bus routes, or policies.
+   - If the accurate factual answer is present in the VERIFIED UNIVERSITY DATABASE CONTEXT above, set "data_missing_in_db": false, and use those exact verified facts in "grounded_response_template".
+   - CRITICAL: If the factual information needed to answer the student's query is NOT PRESENT in the university database context above (for example: an unrecorded new bus route, unlisted phone number, unrecorded event date, or unknown policy):
+     * You MUST set "data_missing_in_db": true
+     * You MUST set "missing_data_description": "Precise explanation of what factual data is missing from the university database"
+     * You MUST set "remediation_type": "PENDING_OFFICIAL_INPUT"
+     * You MUST set "grounded_response_template": null
+     * DO NOT fabricate fake data, fake numbers, fake dates, or fake procedures!
 
 Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching this schema:
 {{
   "mismatch_detected": true or false,
   "mismatch_reason": "Clear diagnosis of whether intent matched output",
   "remediation_needed": true or false,
+  "data_missing_in_db": true or false,
+  "missing_data_description": "Description of missing factual info if data_missing_in_db is true, else null",
   "intended_intent": "CAMPUS_DIRECTIONS | BUILDING_PROFILE | LOST_AND_FOUND | ATTENDANCE | FEES | EXAMS | TIMETABLE | SERVICES | HOSTEL | TRANSPORT | PRIVACY_GUARD | GENERAL",
   "target_entity": "Name of building, subject, or landmark (e.g. N_BLOCK, ZEST, CS302, etc.) or null",
   "trigger_patterns": ["phrase 1", "phrase 2", "phrase 3"],
-  "routing_action": "TOOL:get_campus_location_and_navigation | TOOL:get_attendance | RULE:privacy_refusal | DIRECT_ANSWER",
-  "remediation_type": "TOOL_ROUTING | BUILDING_PROFILE | POLICY_DEFENSE | DIRECT_ANSWER",
-  "grounded_response_template": "High-quality, factual markdown answer to serve future queries",
+  "routing_action": "TOOL:get_campus_location_and_navigation | TOOL:get_attendance | RULE:privacy_refusal | DIRECT_ANSWER | PENDING_OFFICIAL_INPUT",
+  "remediation_type": "TOOL_ROUTING | BUILDING_PROFILE | POLICY_DEFENSE | DIRECT_ANSWER | PENDING_OFFICIAL_INPUT",
+  "grounded_response_template": "High-quality, strictly factual markdown answer to serve future queries, or null if data is missing",
   "suggested_follow_ups": ["follow up question 1", "follow up question 2"]
 }}
 """
@@ -216,14 +257,20 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
             )
 
             if not audit_result:
+                logger.info(f"[FeedbackRemediator] Running local deterministic audit for feedback {feedback_id}...")
+                audit_result = cls.local_fallback_audit(user_query, bot_output, student_comment)
+
+            if not audit_result:
                 logger.warning(f"[FeedbackRemediator] Audit engine returned no result for feedback {feedback_id}")
                 return None
 
             mismatch = audit_result.get("mismatch_detected", False)
             remediation_needed = audit_result.get("remediation_needed", False)
             reason = audit_result.get("mismatch_reason", "No reason provided")
+            is_missing = bool(audit_result.get("data_missing_in_db", False))
+            missing_desc = audit_result.get("missing_data_description") or ""
 
-            logger.info(f"[FeedbackRemediator] Audit result for feedback {feedback_id}: mismatch={mismatch}, remediation_needed={remediation_needed}. Reason: {reason}")
+            logger.info(f"[FeedbackRemediator] Audit result for feedback {feedback_id}: mismatch={mismatch}, remediation_needed={remediation_needed}, data_missing_in_db={is_missing}. Reason: {reason}")
 
             # IFF necessary: only update query handling if intent and output genuinely mismatched
             if not (mismatch and remediation_needed):
@@ -242,6 +289,9 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
                     "target_entity": audit_result.get("target_entity") or "",
                     "routing_action": "RULE:policy_enforcement",
                     "remediation_payload": {
+                        "data_missing_in_db": False,
+                        "missing_data_description": "",
+                        "nodal_officer_input": "",
                         "grounded_response_template": bot_output,
                         "suggested_follow_ups": audit_result.get("suggested_follow_ups") or []
                     },
@@ -266,21 +316,24 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
                 "mismatch_detected": True,
                 "mismatch_reason": reason,
                 "intended_intent": audit_result.get("intended_intent") or "GENERAL",
-                "remediation_type": audit_result.get("remediation_type") or "DIRECT_ANSWER",
+                "remediation_type": "PENDING_OFFICIAL_INPUT" if is_missing else (audit_result.get("remediation_type") or "DIRECT_ANSWER"),
                 "trigger_patterns": triggers,
                 "target_entity": audit_result.get("target_entity") or "",
-                "routing_action": audit_result.get("routing_action") or "DIRECT_ANSWER",
+                "routing_action": "PENDING_OFFICIAL_INPUT" if is_missing else (audit_result.get("routing_action") or "DIRECT_ANSWER"),
                 "remediation_payload": {
+                    "data_missing_in_db": is_missing,
+                    "missing_data_description": missing_desc,
+                    "nodal_officer_input": "",
                     "grounded_response_template": audit_result.get("grounded_response_template") or "",
                     "suggested_follow_ups": audit_result.get("suggested_follow_ups") or []
                 },
-                "status": "ACTIVE"
+                "status": "PENDING_NODAL_INPUT" if is_missing else "ACTIVE"
             }
 
             rem_id = DataRepository.save_learned_remediation(remediation_record)
             # Invalidate in-memory cache to make it active instantly
             cls._cache_active_remediations = None
-            logger.info(f"[FeedbackRemediator] Stored active learned remediation '{rem_id}' for intent: {remediation_record['intended_intent']}")
+            logger.info(f"[FeedbackRemediator] Stored learned remediation '{rem_id}' (status={remediation_record['status']}) for intent: {remediation_record['intended_intent']}")
             return rem_id
 
         except Exception as e:
@@ -332,6 +385,92 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
         return None
 
     @classmethod
+    def local_fallback_audit(
+        cls,
+        user_query: str,
+        bot_output: str,
+        student_comment: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Deterministic, offline factual audit engine when Gemini is offline or unconfigured.
+        Cross-checks query against known database landmarks and tools:
+        - If query matches a known database landmark/tool: routes accurately with real data.
+        - If query asks for unknown/missing information: flags data_missing_in_db=True to alert Nodal Officer.
+        """
+        q_clean = user_query.strip().lower()
+        from app.agent.tool_registry import ToolRegistry
+
+        # 1. Check if user asked for known campus landmarks
+        known_aliases = list(ToolRegistry.CAMPUS_ALIASES.keys())
+        matched_alias = next((a for a in known_aliases if a in q_clean), None)
+        if matched_alias and any(k in q_clean for k in ["where", "direction", "how to reach", "locate", "block", "canteen", "library", "hostel", "hall"]):
+            return {
+                "mismatch_detected": True,
+                "mismatch_reason": f"Disliked response lacked accurate spatial directions for {matched_alias.upper()}. Remediated to Dijkstra campus navigation tool.",
+                "remediation_needed": True,
+                "data_missing_in_db": False,
+                "missing_data_description": None,
+                "intended_intent": "CAMPUS_DIRECTIONS",
+                "target_entity": matched_alias.upper(),
+                "trigger_patterns": [q_clean, f"where is {matched_alias}", f"directions to {matched_alias}"],
+                "routing_action": "TOOL:get_campus_location_and_navigation",
+                "remediation_type": "TOOL_ROUTING",
+                "grounded_response_template": f"Use get_campus_location_and_navigation({matched_alias})",
+                "suggested_follow_ups": ["View campus map", "Show landmarks"]
+            }
+
+        # 2. Check known bus/transport queries
+        if any(w in q_clean for w in ["bus", "shuttle", "transport", "van"]):
+            return {
+                "mismatch_detected": True,
+                "mismatch_reason": "Query asked for bus transit or shuttle timings. Remediated to verified university transport timetable tool.",
+                "remediation_needed": True,
+                "data_missing_in_db": False,
+                "missing_data_description": None,
+                "intended_intent": "TRANSPORT",
+                "target_entity": "BUS_FLEET",
+                "trigger_patterns": [q_clean, "bus timings", "hostel shuttle"],
+                "routing_action": "TOOL:get_transport_summary",
+                "remediation_type": "TOOL_ROUTING",
+                "grounded_response_template": "Use get_transport_summary()",
+                "suggested_follow_ups": ["Check route 1", "Hostel bus schedule"]
+            }
+
+        # 3. Check known library queries
+        if any(w in q_clean for w in ["library", "books", "borrow"]):
+            return {
+                "mismatch_detected": True,
+                "mismatch_reason": "Query asked for library hours or policies. Remediated to Central Library registry.",
+                "remediation_needed": True,
+                "data_missing_in_db": False,
+                "missing_data_description": None,
+                "intended_intent": "LIBRARY",
+                "target_entity": "CENTRAL_LIBRARY",
+                "trigger_patterns": [q_clean, "library timings", "is library open on sunday"],
+                "routing_action": "TOOL:get_library_info",
+                "remediation_type": "TOOL_ROUTING",
+                "grounded_response_template": "Use get_library_info()",
+                "suggested_follow_ups": ["Sunday library hours", "Book borrow limit"]
+            }
+
+        # 4. Unknown or Missing Information in Database:
+        # Prevent fake or invented data! Flag data_missing_in_db=True to alert Nodal Officer.
+        return {
+            "mismatch_detected": True,
+            "mismatch_reason": "The factual data required to answer this inquiry is not present in the institutional database. Flagged for Nodal Officer official verification to prevent hallucinating fake data.",
+            "remediation_needed": True,
+            "data_missing_in_db": True,
+            "missing_data_description": f"Verified university information for inquiry '{user_query}' is missing from database records. Requires official Nodal Officer data entry.",
+            "intended_intent": "GENERAL",
+            "target_entity": None,
+            "trigger_patterns": [q_clean],
+            "routing_action": "PENDING_OFFICIAL_INPUT",
+            "remediation_type": "PENDING_OFFICIAL_INPUT",
+            "grounded_response_template": None,
+            "suggested_follow_ups": ["Contact Student Helpdesk", "Visit Admin Office"]
+        }
+
+    @classmethod
     def apply_remediation(
         cls,
         remediation: Dict[str, Any],
@@ -352,6 +491,31 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
         payload = remediation.get("remediation_payload") or {}
         follow_ups = payload.get("suggested_follow_ups") or ["Check campus map", "Ask another question"]
         template = payload.get("grounded_response_template") or ""
+
+        # 0. HUMAN-VERIFIED NODAL OFFICER DATA (Absolute Authoritative Priority)
+        if payload.get("nodal_officer_input"):
+            official_data = payload.get("nodal_officer_input").strip()
+            return {
+                "category": "INSTITUTIONAL_INFO",
+                "topic": "Official University Record (Verified by Nodal Officer)",
+                "source_agent": "Nodal Officer Desk & University Governance",
+                "content": f"📋 **Official University Information (Verified by Nodal Officer):**\n\n{official_data}",
+                "citations": [{
+                    "title": "Nodal Officer Directive",
+                    "clause": "Institutional Verification",
+                    "effective_date": "2026-11-01",
+                    "summary": "Human-verified university record."
+                }],
+                "structured_card": None,
+                "suggested_follow_ups": follow_ups,
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "nodal-verified-rule",
+                "used_fallback": False,
+                "routed_by": "learned_remediation",
+                "action": None
+            }
 
         # 1. TOOL ROUTING (e.g. Campus Navigation to N-Block, Zest, Library, etc.)
         if rem_type == "TOOL_ROUTING" and "get_campus_location_and_navigation" in routing_action:

@@ -1365,11 +1365,19 @@ class ToolRegistry:
             {"id": "POL-01", "title": "Institutional Attendance Policy (R23 Clause 4.2)", "summary": "Mandatory 75% attendance. Condonation permitted between 65% and 74.9% with Dean approval and medical certificate within 5 days. Debarment below 65%."},
             {"id": "POL-02", "title": "University Examination Conduct & Malpractice Rules", "summary": "Biometric & digital hall tickets required. Severe disciplinary referral to Unfair Means Committee (UMC) for unauthorized electronics or formula sheets."},
             {"id": "POL-03", "title": "Continuous Internal Evaluation (CIE) Grading Scale", "summary": "10-point letter grading scale. Internal evaluation weightage: 40% formative assessments, 60% summative end-semester exam."},
-            {"id": "POL-04", "title": "Hostel Residence & Dining Bylaws (HD-01 to HD-06)", "summary": "Curfew 6:00 PM; gate closure 10:00 PM; decentralized internal ground-floor dining halls; dinner 7:30 PM - 9:00 PM; no high-wattage electrical appliances."}
+            {"id": "POL-04", "title": "Hostel Residence & Dining Bylaws (HD-01 to HD-06)", "summary": "Curfew 6:00 PM; gate closure 10:00 PM; decentralized internal ground-floor dining halls; dinner 7:30 PM - 9:00 PM; no high-wattage electrical appliances."},
+            {"id": "POL-CONDONATION-ANNEXURE2", "title": "Procedure for paying Condonation fee (Annexure – 2)", "summary": "Fee: Rs. 500/- for each course (flat Rs. 2,000/- for 4+ courses). Mode: Voucher payment (Not online) at PNB Bank Vadlamudi branch. Original challan to Examination section for receipt. Hall-Tickets issued only after paying condonation fee."}
         ]
 
         q = (policy_id_or_keyword or "").strip().lower()
-        if "attend" in q or "condon" in q or "shortage" in q:
+        if "condon" in q and any(k in q for k in ["fee", "pay", "voucher", "bank", "challan", "hall ticket", "pnb", "cost", "fine", "amount", "annexure", "procedure"]):
+            direct_answer = (
+                "Under VFSTR Annexure – 2 (Procedure for paying Condonation fee, Office of Dean – Academics, Assessment and Awards): "
+                "Students have to pay Rs. 500/- for each course as condonation fee for shortage of attendance (flat Rs. 2,000/- for 4 or more courses). "
+                "Payment must be made by voucher (Not online) at PNB Bank, Vadlamudi branch. After payment, the original copy of the challan should be submitted "
+                "at the Examination section by the student to get a receipt. Hall-Tickets will be issued to the candidate only after paying the condonation fee."
+            )
+        elif "attend" in q or "condon" in q or "shortage" in q:
             direct_answer = (
                 "Under VFSTR Academic Regulation R23 Clause 4.2, every student must maintain at least 75% attendance; "
                 "students between 65.0% and 74.9% may apply for medical condonation, while attendance below 65% results in course detention."

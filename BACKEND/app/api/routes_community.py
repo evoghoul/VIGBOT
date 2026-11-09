@@ -59,10 +59,11 @@ def _execute_insert_and_commit(query: str, params: tuple = ()) -> List[Dict[str,
     with get_db_connection() as conn:
         if isinstance(conn, sqlite3.Connection):
             cur = conn.execute(query, params)
-            conn.commit()
+            res = []
             if "RETURNING" in query.upper():
-                return [dict(row) for row in cur.fetchall()]
-            return []
+                res = [dict(row) for row in cur.fetchall()]
+            conn.commit()
+            return res
         else:
             query_pg = query.replace("?", "%s")
             with conn.cursor() as cur:

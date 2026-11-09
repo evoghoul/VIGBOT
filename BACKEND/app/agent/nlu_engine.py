@@ -122,15 +122,73 @@ class NLUEngine:
         target_course = None
         if att_records:
             target_course = next((a for a in att_records if a.get("current_pct", 100) < 75.0), att_records[0])
+        elif active_subject:
+            all_records = DataRepository.get_attendance(session)
+            if all_records:
+                enrolled_lines = "\n".join(
+                    f"• **{r['course_code']}**: {r['course_title']} (Attendance: {r['current_pct']:.1f}%, {r['classes_attended']}/{r['classes_held']} classes attended)"
+                    for r in all_records
+                )
+                return {
+                    "category": "PERSONAL_DATA",
+                    "topic": "Attendance Record Not Found",
+                    "source_agent": "Attendance System",
+                    "content": (
+                        f"Subject **{active_subject}** was not found in your registered academic courses for this semester.\n\n"
+                        f"**Your registered subjects for this semester are:**\n{enrolled_lines}\n\n"
+                        f"I can calculate exam eligibility or recovery classes for any of your enrolled courses above."
+                    ),
+                    "citations": [
+                        {
+                            "title": "Academic Regulations R23",
+                            "clause": "Clause 4.2: Attendance Eligibility & Course Registration",
+                            "effective_date": "2023-07-15",
+                            "summary": "Attendance evaluation is restricted strictly to enrolled course registrations."
+                        }
+                    ],
+                    "structured_card": {
+                        "type": "attendance",
+                        "title": f"Course Not Found: {active_subject}",
+                        "subtitle": "Subject not found in semester enrollment records",
+                        "badge": "Not Enrolled",
+                        "badgeVariant": "amber",
+                        "data": {
+                            "queried_subject": active_subject,
+                            "enrolled_courses": [r["course_title"] for r in all_records]
+                        },
+                        "actionLabel": "View Enrolled Attendance",
+                        "actionIntent": "view:attendance"
+                    },
+                    "suggested_follow_ups": [f"What is my attendance in {r['course_title']}?" for r in all_records[:3]],
+                    "active_subject": None,
+                    "language": effective_lang,
+                    "llm_provider": "local",
+                    "model_used": "rules",
+                    "used_fallback": False,
+                    "routed_by": "rules",
+                }
+            else:
+                target_course = {
+                    "course_title": "Digital Electronics (CS302)",
+                    "classes_attended": 34,
+                    "classes_held": 50,
+                    "current_pct": 68.0,
+                    "required_pct": 75.0,
+                    "deadline": "2026-11-20"
+                }
         else:
-            target_course = {
-                "course_title": "Digital Electronics (CS302)",
-                "classes_attended": 34,
-                "classes_held": 50,
-                "current_pct": 68.0,
-                "required_pct": 75.0,
-                "deadline": "2026-11-20"
-            }
+            all_records = DataRepository.get_attendance(session)
+            if all_records:
+                target_course = next((a for a in all_records if a.get("current_pct", 100) < 75.0), all_records[0])
+            else:
+                target_course = {
+                    "course_title": "Digital Electronics (CS302)",
+                    "classes_attended": 34,
+                    "classes_held": 50,
+                    "current_pct": 68.0,
+                    "required_pct": 75.0,
+                    "deadline": "2026-11-20"
+                }
 
         c_name = target_course.get("course_title", "Digital Electronics (CS302)")
         held = int(target_course.get("classes_held", 50))
@@ -365,20 +423,21 @@ class NLUEngine:
             }
 
         # ---------------- 0.45. UNIVERSAL CAPABILITY, NAVIGATION & DISCOURSE DISPATCH ----------------
-        # Universally dispatches any query matching the 27 application capabilities, navigation requests,
-        # status lookups, or cancellations to UniversalNLU for rich Answer-First resolution.
+        # Universally dispatches queries matching explicit navigation requests, status lookups, cancellations,
+        # or distinctive non-intent application capabilities (bookings, lost-and-found, marketplace, polling, alumni, map)
         try:
             from app.agent.universal_nlu import UniversalNLU, CommunicationIntent
             from app.agent.capability_registry import find_matching_capability
             comm_intent = UniversalNLU.parse_communication_intent(q, conversation_history)
             matching_cap = UniversalNLU.resolve_contextual_capability(q, conversation_history)
 
-            if matching_cap is not None or comm_intent in (
+            DISTINCTIVE_CAPS = {"bookings", "lost-and-found", "marketplace", "polling", "alumni", "map", "calendar", "career"}
+            if comm_intent in (
                 CommunicationIntent.NAVIGATION_REQUEST,
                 CommunicationIntent.AMBIGUOUS,
                 CommunicationIntent.STATUS_LOOKUP,
                 CommunicationIntent.CANCEL_REQUEST
-            ):
+            ) or (matching_cap and matching_cap["feature_id"] in DISTINCTIVE_CAPS):
                 universal_res = UniversalNLU.resolve_and_execute(
                     session=session,
                     query=q,
@@ -498,6 +557,16 @@ class NLUEngine:
                 f"for '{title}'. Assigned Office: {sr_res['record']['assigned_office']}, Status: {sr_res['record']['status']}, "
                 f"SLA Due Date: {sr_res['record']['sla_due_date']}. Inform the student warmly of this tracking number.]"
             )
+
+        # A0. Hostel Bus & Shuttle Timings (Specific match before general hostel/mess)
+        elif cls.has_any_word(q_lower, ["hostel bus", "hostel bus timing", "hostel bus timings", "hostel shuttle", "bus to hostel", "bus for hostel"]):
+            trans_res = get_transport_summary(session, q)
+            direct_response_text = trans_res.get("text", "")
+            card_data = trans_res.get("structured_card")
+            citations = trans_res.get("citations", [])
+            category = "INSTITUTIONAL_INFO"
+            topic = "Hostel Shuttle & Campus Transport"
+            source_agent = "Campus Transport Service"
 
         # A1. Hostel Regulations & Dining Summary
         elif cls.has_any_word(q_lower, ["hostel", "hostels", "curfew", "outing pass", "outpass", "mess timing", "mess timings", "hostel mess", "hostel rules", "warden", "chief warden", "mess"]):
@@ -944,12 +1013,14 @@ class NLUEngine:
         from app.agent.universal_nlu import UniversalNLU
         matching_cap = find_matching_capability(query)
         if matching_cap and matching_cap["feature_id"] in (
-            "bookings", "lost-and-found", "marketplace", "polling", "alumni", "map",
-            "wellness", "events", "calendar", "career", "clubs", "policies", "hostel", "transport", "library"
+            "bookings", "lost-and-found", "marketplace", "polling", "alumni", "map", "calendar", "career"
         ):
             cross_res = UniversalNLU.resolve_and_execute(session, query)
             if cross_res is not None:
                 cross_res["routed_by"] = routed_by
+                cross_res["llm_provider"] = "local"
+                cross_res["model_used"] = "intent-classifier"
+                cross_res["used_fallback"] = False
                 return cross_res
 
         # 1. Distress safety path: confident prediction provides supportive counseling response without crisis overlay
@@ -1027,7 +1098,7 @@ class NLUEngine:
         if intent == "attendance":
             att_res = get_attendance_summary(session, active_subject)
             return {
-                "category": "PERSONAL_DATA",
+                "category": "ATTENDANCE",
                 "topic": "Attendance Analytics",
                 "source_agent": "Attendance System",
                 "content": att_res.get("text", ""),
@@ -1052,7 +1123,7 @@ class NLUEngine:
         elif intent == "exams":
             exam_res = get_exams_summary(session)
             return {
-                "category": "PERSONAL_DATA",
+                "category": "EXAMS",
                 "topic": "Examinations & Assessments",
                 "source_agent": "Examination Hub",
                 "content": exam_res.get("text", ""),
@@ -1077,7 +1148,7 @@ class NLUEngine:
         elif intent == "fees":
             fee_res = get_fees_summary(session)
             return {
-                "category": "TRANSACTIONAL",
+                "category": "FEES",
                 "topic": "Student Fee Ledgers",
                 "source_agent": "Finance Engine",
                 "content": fee_res.get("text", ""),
@@ -1102,7 +1173,7 @@ class NLUEngine:
         elif intent == "timetable":
             tt_res = get_timetable_summary(session)
             return {
-                "category": "PERSONAL_DATA",
+                "category": "TIMETABLE",
                 "topic": "Academic Timetable",
                 "source_agent": "Scheduling Service",
                 "content": tt_res.get("text", ""),
@@ -1127,7 +1198,7 @@ class NLUEngine:
         elif intent == "marks":
             marks_res = get_marks_summary(session)
             return {
-                "category": "PERSONAL_DATA",
+                "category": "MARKS",
                 "topic": "Academic Performance & Marks",
                 "source_agent": "Assessment Engine",
                 "content": marks_res.get("text", ""),
@@ -1152,7 +1223,7 @@ class NLUEngine:
         elif intent == "curriculum":
             curr_res = get_curriculum_summary(session)
             return {
-                "category": "ACADEMIC_AUDIT",
+                "category": "CURRICULUM",
                 "topic": "Curriculum & Degree Audit",
                 "source_agent": "Curriculum Engine",
                 "content": curr_res.get("text", ""),
@@ -1175,9 +1246,37 @@ class NLUEngine:
             }
 
         elif intent == "library":
+            from app.agent.tool_registry import ToolRegistry
+            if any(w in q_lower for w in ["hour", "hours", "timing", "timings", "open", "close", "sunday", "weekend", "saturday"]):
+                tool_res = ToolRegistry.get_library_info(day_of_week="Sunday" if "sunday" in q_lower else None, resource_query=query)
+                direct_ans = tool_res.get("direct_answer", "")
+                card = tool_res.get("structured_card")
+                return {
+                    "category": "LIBRARY",
+                    "topic": "Central Library Operating Hours",
+                    "source_agent": "Central Library Desk",
+                    "content": direct_ans,
+                    "citations": [{"title": "Central Library Operating Hours", "clause": "Policy 2026", "effective_date": "2026-08-01", "summary": "Library operating and Sunday timings."}],
+                    "structured_card": card,
+                    "suggested_follow_ups": ["Can I borrow books on Sunday?", "What are weekday library hours?"],
+                    "active_subject": active_subject,
+                    "language": effective_lang,
+                    "llm_provider": "local",
+                    "model_used": "intent-classifier",
+                    "used_fallback": False,
+                    "routed_by": routed_by,
+                    "redirect_path": "library",
+                    "action": {
+                        "type": "navigate",
+                        "label": "Go to Library Portal",
+                        "target": "library",
+                        "route": "/?tab=library"
+                    },
+                }
+
             lib_res = get_library_summary(session)
             return {
-                "category": "PERSONAL_DATA",
+                "category": "LIBRARY",
                 "topic": "Library Circulation Records",
                 "source_agent": "Library System",
                 "content": lib_res.get("text", ""),
@@ -1253,6 +1352,7 @@ class NLUEngine:
             # 2. FALSE-ACTION GUARD: If inquiry is asking where to go/find, or resolves to 'OTHER',
             # return guidance and navigation action. NEVER create a ticket for an informational query!
             is_where_info = any(w in q_lower for w in ["where do i go", "where can i find", "where to go", "where is", "tell me where", "where can i get", "where can i report"])
+            is_info_query = is_where_info or any(w in q_lower for w in ["how to apply", "how do i apply", "how can i apply", "what is the procedure", "procedure for", "rules for", "how to get", "steps to apply", "process for", "what is the process", "procedure"])
             if is_where_info:
                 from app.agent.tool_registry import CampusGraphService
                 if (
@@ -1264,22 +1364,28 @@ class NLUEngine:
                         map_res["routed_by"] = routed_by
                         return map_res
 
-            if sr_cat == "OTHER" or is_where_info:
+            if sr_cat == "OTHER" or is_info_query:
                 cap = APPLICATION_CAPABILITIES.get("services")
-                guidance = cap["guidance_text"] if cap else "You can submit administrative requests in the **Student Services** section."
+                guidance = instructions if (is_info_query and instructions) else (cap["guidance_text"] if cap else "You can submit administrative requests in the **Student Services** section.")
                 return {
                     "category": "SERVICES",
-                    "topic": "Student Services Guidance",
+                    "topic": f"Procedure: {title}" if is_info_query else "Student Services Guidance",
                     "source_agent": "VIGBOT (Services Guide)",
                     "content": f"{guidance}\n\nYou can access it directly using the button below.",
-                    "citations": [],
+                    "citations": [{"title": "VFSTR Student Services Standard Procedure", "clause": "Administrative Guidelines", "effective_date": "2026-08-01", "summary": "Application rules and guidelines."}],
                     "structured_card": {
-                        "type": "navigation",
-                        "title": "Student Services",
-                        "subtitle": "Official University Administrative Requests",
-                        "badge": "Services Hub",
+                        "type": "service",
+                        "title": title if is_info_query else "Student Services",
+                        "subtitle": f"Official Procedure: {title}" if is_info_query else "Official University Administrative Requests",
+                        "badge": "Procedure Guide" if is_info_query else "Services Hub",
                         "badgeVariant": "blue",
-                        "actionLabel": "Go to Student Services",
+                        "data": {
+                            "category": sr_cat,
+                            "title": title,
+                            "description": desc,
+                            "instructions": instructions
+                        },
+                        "actionLabel": f"Open {title} Form" if is_info_query else "Go to Student Services",
                         "actionIntent": "navigate:services",
                         "target": "services",
                     },
@@ -1346,9 +1452,39 @@ class NLUEngine:
             }
 
         elif intent == "hostel":
+            # Dual-tool execution when top-2 classifier predictions are close between hostel & transport
+            if clf_result.get("is_close_top2") and clf_result.get("second_intent") == "transport":
+                trans_res = get_transport_summary(session, query)
+                hostel_res = get_hostel_summary(session, query)
+                combined_content = f"{trans_res.get('text', '')}\n\n---\n🏢 **Hostel Resident Notes:**\n• Curfew reporting is mandatory by **6:00 PM** (Movement register entry for late reporting; campus gates close strictly at **10:00 PM**).\n• Chief Warden Office: Ground Floor Block H (+91-863-2344700 / Ext. 301)."
+                card = trans_res.get("structured_card") or hostel_res.get("structured_card")
+                citations = trans_res.get("citations", []) + hostel_res.get("citations", [])
+                return {
+                    "category": "HOSTEL",
+                    "topic": "Hostel Shuttle & Resident Transit",
+                    "source_agent": "Hostel & Transport Dual Dispatch",
+                    "content": combined_content,
+                    "citations": citations,
+                    "structured_card": card,
+                    "suggested_follow_ups": ["View evening shuttle timings", "Hostel curfew rules"],
+                    "active_subject": active_subject,
+                    "language": effective_lang,
+                    "llm_provider": "local",
+                    "model_used": "intent-classifier",
+                    "used_fallback": False,
+                    "routed_by": routed_by,
+                    "redirect_path": "transport",
+                    "action": {
+                        "type": "navigate",
+                        "label": "Go to Transport & Hostels",
+                        "target": "transport",
+                        "route": "/?tab=transport"
+                    },
+                }
+
             hostel_res = get_hostel_summary(session, query)
             return {
-                "category": "INSTITUTIONAL_INFO",
+                "category": "HOSTEL",
                 "topic": "Hostel & Dining Services",
                 "source_agent": "Hostel Administration",
                 "content": hostel_res.get("text", ""),
@@ -1371,9 +1507,39 @@ class NLUEngine:
             }
 
         elif intent == "transport":
+            # Dual-tool execution when top-2 classifier predictions are close between transport & hostel
+            if clf_result.get("is_close_top2") and clf_result.get("second_intent") == "hostel":
+                trans_res = get_transport_summary(session, query)
+                hostel_res = get_hostel_summary(session, query)
+                combined_content = f"{trans_res.get('text', '')}\n\n---\n🏢 **Hostel Resident Notes:**\n• Curfew reporting is mandatory by **6:00 PM** (Movement register entry for late reporting; campus gates close strictly at **10:00 PM**).\n• Chief Warden Office: Ground Floor Block H (+91-863-2344700 / Ext. 301)."
+                card = trans_res.get("structured_card") or hostel_res.get("structured_card")
+                citations = trans_res.get("citations", []) + hostel_res.get("citations", [])
+                return {
+                    "category": "TRANSPORT",
+                    "topic": "Hostel Shuttle & Campus Transport",
+                    "source_agent": "Hostel & Transport Dual Dispatch",
+                    "content": combined_content,
+                    "citations": citations,
+                    "structured_card": card,
+                    "suggested_follow_ups": ["View evening shuttle timings", "Hostel curfew rules"],
+                    "active_subject": active_subject,
+                    "language": effective_lang,
+                    "llm_provider": "local",
+                    "model_used": "intent-classifier",
+                    "used_fallback": False,
+                    "routed_by": routed_by,
+                    "redirect_path": "transport",
+                    "action": {
+                        "type": "navigate",
+                        "label": "Go to Transport & Hostels",
+                        "target": "transport",
+                        "route": "/?tab=transport"
+                    },
+                }
+
             trans_res = get_transport_summary(session, query)
             return {
-                "category": "INSTITUTIONAL_INFO",
+                "category": "TRANSPORT",
                 "topic": "University Bus & Transport Services",
                 "source_agent": "Campus Transport Service",
                 "content": trans_res.get("text", ""),
@@ -1398,7 +1564,7 @@ class NLUEngine:
         elif intent == "circulars":
             circ_res = get_circulars_summary(session, query)
             return {
-                "category": "INSTITUTIONAL_INFO",
+                "category": "CIRCULARS",
                 "topic": "Official Administrative Circulars",
                 "source_agent": "Registrar Circulars Desk",
                 "content": circ_res.get("text", ""),
@@ -1423,7 +1589,7 @@ class NLUEngine:
         elif intent == "events":
             ev_res = get_events_summary(session, query)
             return {
-                "category": "INSTITUTIONAL_INFO",
+                "category": "EVENTS",
                 "topic": "Campus Events & Activities",
                 "source_agent": "Campus Events Cell",
                 "content": ev_res.get("text", ""),
@@ -1967,11 +2133,25 @@ class NLUEngine:
             )
 
         # 10. Policies & Condonation
-        if cls.has_any_word(q_lower, ["policy", "condonation", "regulation", "rule", "bylaw"]):
+        if (
+            cls.has_any_word(q_lower, ["condonation fee", "paying condonation", "condonation challan", "condonation voucher", "pnb bank", "annexure 2", "annexure-2"])
+            or ("condon" in q_lower and any(w in q_lower for w in ["fee", "pay", "voucher", "bank", "challan", "hall ticket", "procedure", "how to", "how do"]))
+        ):
+            return (
+                f"Hello {first_name}, according to the Office of Dean – Academics, Assessment and Awards (**Annexure – 2: Procedure for paying Condonation fee**):\n\n"
+                f"• **Condonation Fee:** Students have to pay **Rs. 500/- for each course** as condonation fee for shortage of attendance.\n"
+                f"• **Flat Fee Cap:** Students having **four or more courses** have to pay a flat fee of **Rs. 2000/-**.\n"
+                f"• **Payment Mode:** Payment must be made by **voucher (Not online)**:\n"
+                f"  - **Bank Name:** PNB Bank (Punjab National Bank)\n"
+                f"  - **Branch:** Vadlamudi\n"
+                f"• **Submission & Receipt:** After payment, original copy of the challan should be submitted at the **Examination section** by the Student and get a receipt.\n"
+                f"• **Hall-Ticket Release:** **Hall-Tickets will be issued to the candidate only after paying the condonation fee**."
+            )
+        elif cls.has_any_word(q_lower, ["policy", "condonation", "regulation", "rule", "bylaw"]):
             return (
                 f"Hello {first_name}, according to Academic Regulation **R23, Clause 4.2** (Effective Date: **2023-07-15**):\n\n"
                 f"• Minimum attendance required is 75%.\n"
-                f"• Condonation of attendance shortage up to 10% (between 65% and 74%) may be granted on approved medical grounds.\n"
+                f"• Condonation of attendance shortage up to 10% (between 65% and 74%) may be granted on approved medical grounds upon paying the condonation fee (Rs. 500/course or Rs. 2000 for 4+ courses via PNB Bank Vadlamudi voucher, per Annexure – 2).\n"
                 f"• Students with attendance below 65% shall be detained and must repeat the semester."
             )
 
@@ -2187,7 +2367,13 @@ class NLUEngine:
                         "algorithms", "c++", "c programming", "seminar", "project", "lab", "practicals",
                         "this subject", "all subjects", "overall"
                     }
-                    if target not in self_words and not any(s in target for s in subject_words):
+                    temporal_words = {
+                        "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+                        "today", "tomorrow", "yesterday", "this week", "next week", "week",
+                        "current semester", "next semester", "semester", "term", "period", "next period",
+                        "first period", "second period", "morning", "afternoon", "evening"
+                    }
+                    if target not in self_words and not any(s in target for s in subject_words) and not any(t in target for t in temporal_words):
                         cur_parts = set(cur_name.split())
                         target_parts = set(target.split())
                         if not target_parts.issubset(cur_parts) and target != cur_name and target != cur_roll:

@@ -263,6 +263,24 @@ export async function deleteRemediationRule(remediationId: string) {
   return { success: false, error: "Network error deleting remediation rule." };
 }
 
+export async function provideNodalRemediationData(remediationId: string, officialInformation: string) {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/remediations/${remediationId}/provide-data`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ official_information: officialInformation })
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+    const errData = await res.json().catch(() => ({}));
+    return { success: false, error: errData.error || "Failed to submit official data." };
+  } catch (error) {
+    console.warn("provideNodalRemediationData failed:", error);
+    return { success: false, error: "Network error submitting official information." };
+  }
+}
+
 export async function fetchGeminiStatus() {
   try {
     const res = await fetch(`${BACKEND_BASE_URL}/admin/gemini/status`, { cache: 'no-store' });

@@ -20,12 +20,45 @@ def calculate_consecutive_needed(attended: int, held: int, target_pct: float = 7
 def get_attendance_summary(session: DatabaseSession, subject_query: Optional[str] = None) -> Dict[str, Any]:
     records = DataRepository.get_attendance(session, subject_query)
     if not records:
-        # If filtered by specific subject and none found
         all_records = DataRepository.get_attendance(session)
         if not all_records:
             return {
                 "text": "No attendance records found for your student profile in the current term.",
                 "has_records": False
+            }
+        if subject_query:
+            # Subject was explicitly queried but not found in student's record
+            enrolled_lines = "\n".join(
+                f"• **{r['course_code']}**: {r['course_title']} (Attendance: {r['current_pct']:.1f}%, {r['classes_attended']}/{r['classes_held']} classes attended)"
+                for r in all_records
+            )
+            text = (
+                f"Subject **{subject_query}** was not found in your registered academic records for this semester.\n\n"
+                f"**Your registered subjects for this semester are:**\n{enrolled_lines}\n\n"
+                f"I can check your attendance or calculate recovery classes for any of your registered courses above."
+            )
+            card_data = {
+                "type": "attendance",
+                "title": f"Course Not Found: {subject_query}",
+                "subtitle": "Subject not found in student semester enrollment",
+                "badge": "Not Enrolled",
+                "badgeVariant": "amber",
+                "data": {
+                    "queried_subject": subject_query,
+                    "enrolled_courses": [r["course_title"] for r in all_records]
+                },
+                "actionLabel": "View Enrolled Attendance",
+                "actionIntent": "view:attendance"
+            }
+            return {
+                "text": text,
+                "has_records": True,
+                "not_found": True,
+                "queried_subject": subject_query,
+                "all_records": all_records,
+                "critical_record": None,
+                "structured_card": card_data,
+                "context_subject": None
             }
         records = all_records
 

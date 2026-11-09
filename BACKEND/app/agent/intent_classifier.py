@@ -150,6 +150,16 @@ class IntentClassifierService:
             predicted_intent = str(self.model.classes_[best_idx])
             confidence = float(proba[best_idx])
 
+            # Top-2 extraction for dual-tool execution when predictions are close
+            sorted_indices = proba.argsort()[::-1]
+            top_k = [
+                {"intent": str(self.model.classes_[idx]), "confidence": float(proba[idx])}
+                for idx in sorted_indices[:2]
+            ]
+            second_intent = top_k[1]["intent"] if len(top_k) > 1 else None
+            second_confidence = top_k[1]["confidence"] if len(top_k) > 1 else 0.0
+            is_close_top2 = bool(len(top_k) > 1 and (confidence - second_confidence <= 0.50) and (second_confidence >= 0.15))
+
             # Determine specific threshold for the predicted intent
             if predicted_intent == "distress_support":
                 threshold = self.distress_threshold
@@ -176,6 +186,10 @@ class IntentClassifierService:
                 "threshold": threshold,
                 "is_confident": is_confident,
                 "routed_by": self.routed_by_label,
+                "top_k": top_k,
+                "second_intent": second_intent,
+                "second_confidence": second_confidence,
+                "is_close_top2": is_close_top2,
             }
         except Exception as e:
             logger.error("Intent classification prediction error: %s", e)

@@ -4,8 +4,13 @@ from app.database import DataRepository, DatabaseSession
 def get_hostel_summary(session: Optional[DatabaseSession] = None, query: str = "") -> Dict[str, Any]:
     """
     Returns grounded VFSTR hostel rules, mess timings/menu, outing pass procedure,
-    and warden contact details from the database policies table.
+    warden contact details, and hostel-specific bus schedules.
     """
+    q_lower = query.lower()
+    if any(w in q_lower for w in ["bus", "shuttle", "transport", "bus timing", "bus timings"]):
+        from app.tools.transport_tool import get_transport_summary
+        return get_transport_summary(session, query)
+
     all_policies = DataRepository.get_all_policies()
     hostel_policies = [p for p in all_policies if p.get("clause_no", "").startswith("HD-")]
 

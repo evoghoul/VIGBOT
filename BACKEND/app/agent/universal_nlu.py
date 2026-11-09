@@ -517,11 +517,13 @@ class UniversalNLU:
                         steps_lines = "\n".join(f"• {s}" for s in data["steps"])
                         b_name = data.get("destination", "Target Block")
                         b_dist = data.get("total_distance_meters", 0.0)
-                        origin = data.get("origin", "Main Gate")
+                        dist_val = int(round(b_dist)) if isinstance(b_dist, (int, float)) else b_dist
+                        raw_origin = data.get("origin", "Main Gate")
+                        origin = re.sub(r"\s*\(Node\s*\d+\)", "", str(raw_origin))
                         content_text = (
                             f"📍 **{b_name} Location & Campus Directions:**\n\n"
                             f"{direct_ans}\n\n"
-                            f"**🚶 Turn-by-Turn Walking Route from {origin} ({b_dist}m):**\n"
+                            f"**🚶 Turn-by-Turn Walking Route from {origin} ({dist_val}m):**\n"
                             f"{steps_lines}\n\n"
                             f"You can also explore the interactive 2D layout in the **Campus Map** tab."
                         )
@@ -612,7 +614,8 @@ class UniversalNLU:
                         f"• **Route 1 (Guntur):** Leaves 06:45 AM | Returns 04:45 PM (Old Bus Stand – Collectorate – Campus)\n"
                         f"• **Route 2 (Vijayawada):** Leaves 06:30 AM | Returns 04:45 PM (Benz Circle – Auto Nagar – Campus)\n"
                         f"• **Route 3 (Tenali):** Leaves 07:00 AM | Returns 04:45 PM (Railway Station – Chenchupet – Campus)\n"
-                        f"• **Route 4 (Mangalagiri):** Leaves 07:10 AM | Returns 04:45 PM (Main Bazaar – NRI Hospital – Campus)\n\n"
+                        f"• **Route 4 (Chilakaluripet):** Leaves 07:10 AM | Arrives 07:30 AM | Returns 04:45 PM (Clock Tower – Ganapavaram – Campus)\n"
+                        f"• **Route 5 (Mangalagiri):** Leaves 07:10 AM | Arrives 07:35 AM | Returns 04:45 PM (Main Bazaar – NRI Hospital – Campus)\n\n"
                         f"You can track bus routes and live transport passes in the **Transport** tab."
                     )
                     suggested_follow_ups = ["Can I get college bus from Vijayawada?", "What time does the evening bus leave?", "How to get a bus pass?"]
@@ -628,23 +631,48 @@ class UniversalNLU:
                 elif cap_id == "policies":
                     tool_res = ToolRegistry.get_university_policies(query)
                     direct_ans = tool_res.get("direct_answer", "")
-                    content_text = (
-                        f"📜 **University Academic Policies & Bylaws:**\n\n"
-                        f"{direct_ans}\n\n"
-                        f"• **Mandatory 75% Rule:** Under R23 Clause 4.2, students must maintain ≥ 75.0% cumulative attendance to write end-semester exams.\n"
-                        f"• **Condonation Window (65%–74.9%):** May be condoned by the Dean on valid medical grounds upon payment of the ₹1,000 statutory condonation fee.\n"
-                        f"• **Detention (<65%):** Students below 65% are detained and not permitted to write summative exams under any circumstances.\n\n"
-                        f"You can review full academic regulations and ordinances in the **Policies & Regulations** tab."
-                    )
-                    suggested_follow_ups = ["What is the condonation fee if attendance is 70%?", "What happens if attendance is below 65?", "Check my current attendance"]
-                    citations = [
-                        {
-                            "title": "VFSTR Academic Regulations R23",
-                            "clause": "Clause 4.2: Attendance Norms & Condonation",
-                            "effective_date": "2023-07-15",
-                            "summary": "Mandates 75% minimum attendance, condonation bracket (65-74.9%), and detention policy."
-                        }
-                    ]
+                    q_low = query.lower()
+                    if "condon" in q_low and any(k in q_low for k in ["fee", "pay", "voucher", "bank", "challan", "hall ticket", "pnb", "amount", "annexure", "procedure"]):
+                        content_text = (
+                            f"📜 **VFSTR Office of Dean – Academics, Assessment and Awards**\n"
+                            f"### Annexure – 2: Procedure for paying Condonation fee\n\n"
+                            f"• **Condonation Fee Structure:**\n"
+                            f"  - Students have to pay **Rs. 500/- for each course** as condonation fee for shortage of attendance.\n"
+                            f"  - Students having **four or more courses** have to pay a flat fee of **Rs. 2000/-**.\n"
+                            f"• **Mode of Payment:** Payment must be made by **voucher (Not online)**:\n"
+                            f"  - **Bank Name:** PNB Bank (Punjab National Bank)\n"
+                            f"  - **Branch:** Vadlamudi\n"
+                            f"• **Challan Submission & Receipt:** After payment, the original copy of the challan should be submitted at the **Examination section** by the Student and get a receipt.\n"
+                            f"• **Hall-Ticket Issuance:** **Hall-Tickets will be issued to the candidate only after paying the condonation fee**.\n\n"
+                            f"You can review official regulations in the **Policies & Regulations** tab."
+                        )
+                        citations = [
+                            {
+                                "title": "VFSTR Office of Dean – Academics, Assessment and Awards",
+                                "clause": "Annexure – 2: Procedure for paying Condonation fee",
+                                "effective_date": "2024-07-01",
+                                "summary": "Rs. 500/course (Rs. 2000 for 4+ courses) payable by voucher at PNB Bank Vadlamudi. Original challan to Examination section for Hall-Ticket release."
+                            }
+                        ]
+                        suggested_follow_ups = ["What is the attendance condonation window?", "Where is the Examination section located?", "Check my attendance records"]
+                    else:
+                        content_text = (
+                            f"📜 **University Academic Policies & Bylaws:**\n\n"
+                            f"{direct_ans}\n\n"
+                            f"• **Mandatory 75% Rule:** Under R23 Clause 4.2, students must maintain ≥ 75.0% cumulative attendance to write end-semester exams.\n"
+                            f"• **Condonation Window (65%–74.9%):** May be condoned by the Dean on valid medical grounds upon payment of the condonation fee (Rs. 500/course, flat Rs. 2,000 for 4+ courses via PNB Bank Vadlamudi voucher per Annexure – 2).\n"
+                            f"• **Detention (<65%):** Students below 65% are detained and not permitted to write summative exams under any circumstances.\n\n"
+                            f"You can review full academic regulations and ordinances in the **Policies & Regulations** tab."
+                        )
+                        suggested_follow_ups = ["Procedure for paying Condonation fee", "What happens if attendance is below 65?", "Check my current attendance"]
+                        citations = [
+                            {
+                                "title": "VFSTR Academic Regulations R23",
+                                "clause": "Clause 4.2: Attendance Norms & Condonation",
+                                "effective_date": "2023-07-15",
+                                "summary": "Mandates 75% minimum attendance, condonation bracket (65-74.9%), and detention policy."
+                            }
+                        ]
 
                 elif cap_id == "clubs":
                     tool_res = ToolRegistry.get_clubs_directory(query)
@@ -674,8 +702,9 @@ class UniversalNLU:
                         f"🏟️ **Campus Facility Booking & Venues:**\n\n"
                         f"{direct_ans}\n\n"
                         f"• **Seminar Halls 1 & 2:** Capacity: 250 | Audio-visual projector & air-conditioned\n"
-                        f"• **Main Convocation Auditorium:** Capacity: 1,500 | Large stage, professional acoustics\n"
-                        f"• **Sports Complex:** Cricket Ground, Outdoor Basketball Courts, Indoor Badminton Arena\n"
+                        f"• **Main Auditorium:** Capacity: 1,200 | Large stage, professional acoustics\n"
+                        f"• **Open Air Theatre (OAT):** Capacity: 2,500 | Outdoor amphitheatre for major events\n"
+                        f"• **Sports Complex:** Cricket Ground, Outdoor Basketball Courts, Indoor Badminton Arena (Capacity: 500)\n"
                         f"• **Advance Reservation:** Facility booking requests must be submitted at least 48 hours prior with faculty coordinator sign-off.\n\n"
                         f"You can check live slot availability and reserve venues in the **Facility Booking** tab."
                     )

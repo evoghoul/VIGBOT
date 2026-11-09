@@ -264,6 +264,7 @@ async def get_cognitive_remediations():
         active_count = sum(1 for r in remediations if r.get("status") == "ACTIVE")
         policy_count = sum(1 for r in remediations if r.get("status") == "POLICY_PROTECTED")
         inactive_count = sum(1 for r in remediations if r.get("status") == "INACTIVE")
+        pending_nodal_count = sum(1 for r in remediations if r.get("status") == "PENDING_NODAL_INPUT" or r.get("data_missing_in_db"))
 
         return {
             "success": True,
@@ -272,6 +273,7 @@ async def get_cognitive_remediations():
                 "active_rules": active_count,
                 "policy_protected": policy_count,
                 "inactive_rules": inactive_count,
+                "pending_nodal_input": pending_nodal_count,
                 "raw_feedback_count": len(feedback_rows)
             },
             "remediations": remediations,
@@ -279,6 +281,32 @@ async def get_cognitive_remediations():
         }
     except Exception as e:
         return {"success": False, "error": f"Failed to fetch remediations: {str(e)}"}
+
+
+class ProvideOfficialDataRequest(BaseModel):
+    official_information: str
+
+
+@router.post("/remediations/{remediation_id}/provide-data")
+async def provide_remediation_official_data(remediation_id: str, req: ProvideOfficialDataRequest):
+    """
+    Submits verified institutional facts from the Nodal Officer for a query where facts were missing in DB.
+    Grounds the AI with 100% real human-verified information and activates the rule in Neon DB.
+    """
+    try:
+        if not req.official_information.strip():
+            return {"success": False, "error": "Official information cannot be empty."}
+
+        success = DataRepository.submit_nodal_remediation_input(remediation_id, req.official_information.strip())
+        from app.agent.feedback_remediator import FeedbackRemediationService
+        FeedbackRemediationService._cache_active_remediations = None
+        return {
+            "success": success,
+            "remediation_id": remediation_id,
+            "message": "Official university data successfully recorded and rule activated in Neon DB. Gemini is now grounded with verified factual data for this query."
+        }
+    except Exception as e:
+        return {"success": False, "error": f"Failed to record official information: {str(e)}"}
 
 
 @router.patch("/remediations/{remediation_id}/status")

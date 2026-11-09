@@ -97,8 +97,24 @@ def resolve_service_subtype(query: str) -> Tuple[str, str, str, str]:
     """
     q_lower = query.lower()
 
+    # 0. Attendance Shortage Condonation Fee (Annexure – 2)
+    if "condon" in q_lower:
+        return (
+            "CONDONATION_FEE_PROCEDURE",
+            "Procedure for Paying Condonation Fee",
+            f"Inquiry on attendance shortage condonation fee payment: '{query}'",
+            "📋 **Step-by-Step Procedure for Paying Condonation Fee (Annexure – 2):**\n"
+            "1. **Fee Calculation:** Students have to pay **Rs. 500/- for each course** as condonation fee for shortage of attendance.\n"
+            "2. **Fee Cap:** Students having **four or more courses** have to pay a flat fee of **Rs. 2000/-**.\n"
+            "3. **Payment Mode:** Payment must be made by **voucher (Not online)**:\n"
+            "   • **Bank Name:** PNB Bank (Punjab National Bank)\n"
+            "   • **Branch:** Vadlamudi\n"
+            "4. **Challan Submission:** After payment, original copy of the challan should be submitted at the **Examination section** by the Student and get a receipt.\n"
+            "5. **Hall-Ticket Release:** **Hall-Tickets will be issued to the candidate only after paying the condonation fee**."
+        )
+
     # 1. ID Card Replacement
-    if any(k in q_lower for k in ["id card", "identity card", "lost card", "replacement card", "duplicate id", "duplicate card"]):
+    elif any(k in q_lower for k in ["id card", "identity card", "lost card", "replacement card", "duplicate id", "duplicate card"]):
         return (
             "ID_CARD_REPLACEMENT",
             "Student ID Card Replacement",

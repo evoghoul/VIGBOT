@@ -83,4 +83,20 @@ export const POLICIES_DATA: PolicyItem[] = [
     ],
     fullText: `Academic standing is reviewed after each semester examination cycle. Remedial mentoring is mandated for students whose CGPA falls below 6.0.`,
   },
+  {
+    id: "POL-06",
+    title: "Procedure for Paying Condonation Fee (Annexure – 2)",
+    category: "Attendance",
+    shortDescription: "Fee structure (Rs. 500/course, flat Rs. 2,000 for 4+ courses), PNB Vadlamudi voucher payment, and Examination Section receipt for Hall-Ticket.",
+    effectiveDate: "01 July 2026",
+    sourceAgent: "Office of Dean – Academics, Assessment and Awards",
+    keyPoints: [
+      "Fee Calculation: Students have to pay Rs. 500/- for each course as condonation fee for shortage of attendance.",
+      "Fee Cap: Students having four or more courses have to pay a flat fee of Rs. 2,000/-.",
+      "Payment Mode (Not Online): Payment must be made by voucher (Not online) at PNB Bank (Punjab National Bank), Vadlamudi Branch.",
+      "Original Challan Submission: After payment, the original copy of the challan should be submitted at the Examination section by the Student and get a receipt.",
+      "Hall-Ticket Release: Hall-Tickets will be issued to the candidate only after paying the condonation fee.",
+    ],
+    fullText: `VFSTR :: VADLAMUDI (Deemed to be UNIVERSITY)\nOffice of Dean – Academics, Assessment and Awards\nAnnexure – 2: Procedure for paying Condonation fee\n\n1. Students have to pay Rs. 500/- for each course as condonation fee for shortage of attendance.\n2. Students having four or more courses has to pay Rs 2000/-\n3. Payment should be made by voucher (Not online):\n   • Bank name: PNB Bank\n   • Branch: Vadlamudi\n4. After payment, original copy of the challan should be submitted at the Examination section by the Student and get a receipt.\n5. Hall-Tickets will be issued to the candidate only after paying the condonation fee.`,
+  },
 ];
