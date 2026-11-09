@@ -68,17 +68,6 @@ function VigbotContent() {
   const [hasEnteredLogin, setHasEnteredLogin] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Restore authenticated student session if present in localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("vigbot_token") || localStorage.getItem("agent65_token");
-      if (token) {
-        setIsAuthenticated(true);
-        setHasEnteredLogin(true);
-      }
-    }
-  }, []);
-
   // Navigation & Localization
   const [activeTab, setActiveTab] = useState<string>("home");
   const { language: currentLang, setLanguage: setCurrentLang, t, tDynamic } = useLanguage();
