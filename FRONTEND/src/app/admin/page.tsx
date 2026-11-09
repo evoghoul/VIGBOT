@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   fetchAllTickets,
@@ -22,6 +23,7 @@ import {
 } from 'recharts';
 import {
   LogOut,
+  GraduationCap,
   ShieldCheck,
   Search,
   Filter,
@@ -227,7 +229,7 @@ export default function AdminDashboard() {
     // Check auth
     const session = localStorage.getItem('adminSession');
     if (!session) {
-      router.push('/admin/login');
+      router.replace('/admin/login');
       return;
     }
     setAdminUser(JSON.parse(session));
@@ -262,7 +264,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('adminSession');
-    router.push('/admin/login');
+    router.replace('/admin/login');
   };
 
   const handleStatusUpdate = async (id: string | number, type: 'service_request' | 'hostel' | 'grievance' | 'club' | 'booking' | 'lost_found', status: string) => {
@@ -577,6 +579,16 @@ export default function AdminDashboard() {
                 )}
               </div>
 
+              {/* Switch to Student Portal Button */}
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50/90 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                title="Switch to Student Helpdesk & Chatbot"
+              >
+                <GraduationCap className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                <span className="hidden sm:inline">Student Portal</span>
+              </Link>
+
               {/* User Profile Card */}
               <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs shadow-2xs">
                 <div className="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xs">
@@ -631,6 +643,19 @@ export default function AdminDashboard() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Switch to Student Portal (Mobile Drawer) */}
+              <Link
+                href="/"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold transition-all shadow-2xs hover:bg-blue-100"
+              >
+                <span className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-blue-600" />
+                  <span>Switch to Student Portal</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-blue-500" />
+              </Link>
 
               {/* Module Filter Input */}
               <div className="relative">
@@ -794,7 +819,18 @@ export default function AdminDashboard() {
               </div>
 
               {/* Collapsed Bottom Telemetry Indicator */}
-              <div className="pt-2 border-t border-slate-100 w-full flex justify-center shrink-0">
+              <div className="pt-2 border-t border-slate-100 w-full flex flex-col items-center gap-2 shrink-0">
+                <Link
+                  href="/"
+                  className="w-9 h-9 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 flex items-center justify-center transition-all cursor-pointer group relative"
+                  title="Switch to Student Portal"
+                >
+                  <GraduationCap className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                  <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-xl whitespace-nowrap shadow-xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                    Switch to Student Portal
+                  </div>
+                </Link>
+
                 <div
                   className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center group relative cursor-pointer"
                   title="Telemetry Online"
@@ -911,6 +947,18 @@ export default function AdminDashboard() {
                       <span className="text-blue-700 font-semibold">Clause 2.1 RLAC</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Switch to Student Portal Button (Sidebar Rail) */}
+                <div className="pt-2">
+                  <Link
+                    href="/"
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-blue-50/80 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold transition-all shadow-2xs hover:shadow-xs cursor-pointer group"
+                    title="Return to Student Helpdesk & Chatbot"
+                  >
+                    <GraduationCap className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                    <span>Switch to Student Portal</span>
+                  </Link>
                 </div>
               </div>
             </div>

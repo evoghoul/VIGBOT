@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 import React, { useState } from "react";
 import {
@@ -8,6 +9,7 @@ import {
   Bot,
   Sparkles,
   ArrowRight,
+  ArrowLeft,
   Lock,
   User,
   CheckCircle2,
@@ -94,6 +96,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
       <header className="relative z-10 w-full border-b border-slate-200 bg-card/80 backdrop-blur-md px-4 sm:px-6 py-3.5">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors cursor-pointer mr-1 shadow-2xs"
+                title="Back to Landing Page"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-slate-400" />
+                <span className="hidden sm:inline">Back</span>
+              </button>
+            )}
             {/* Vignan University Official Logo */}
             <Image
               src="/vignan-logo.png"
@@ -287,13 +300,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin, onBack }) => {
 
             {/* Admin Portal Link */}
             <div className="pt-4 border-t border-slate-200 text-center">
-              <a
+              <Link
                 href="/admin/login"
-                className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+                className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors cursor-pointer"
               >
                 <ShieldCheck className="h-4 w-4" />
                 Nodal Officer / Admin Login
-              </a>
+              </Link>
             </div>
           </div>
         </div>

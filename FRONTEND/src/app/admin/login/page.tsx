@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { adminLogin } from "@/actions/admin";
 import { useRouter } from "next/navigation";
 import {
@@ -17,6 +18,8 @@ import {
   CheckCircle2,
   Database,
   ArrowRight,
+  ArrowLeft,
+  GraduationCap,
 } from "lucide-react";
 
 export default function AdminLogin() {
@@ -25,8 +28,28 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [currentTime, setCurrentTime] = useState<string>("");
   const router = useRouter();
+
+  // If already authenticated, redirect forward to /admin instead of showing login form again
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const session = localStorage.getItem("adminSession");
+      if (session) {
+        try {
+          const parsed = JSON.parse(session);
+          if (parsed && (parsed.username || parsed.name)) {
+            router.replace("/admin");
+            return;
+          }
+        } catch {
+          localStorage.removeItem("adminSession");
+        }
+      }
+      setCheckingAuth(false);
+    }
+  }, [router]);
 
   // Clock effect for Indian Standard Time
   useEffect(() => {
@@ -56,7 +79,8 @@ export default function AdminLogin() {
       const res = await adminLogin(username, password);
       if (res.success) {
         localStorage.setItem("adminSession", JSON.stringify(res.admin));
-        router.push("/admin");
+        // Use replace so login is replaced in history and browser back doesn't trap at login
+        router.replace("/admin");
       } else {
         setError(res.error || "Invalid administrator credentials. Access denied.");
       }
@@ -73,6 +97,17 @@ export default function AdminLogin() {
     setError("");
   };
 
+  if (checkingAuth) {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-slate-50 text-slate-900 font-sans">
+        <div className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm text-xs font-semibold text-slate-600">
+          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <span>Verifying Nodal Officer session...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center bg-slate-50 text-slate-900 p-4 relative overflow-hidden font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* Light Dot Grid Background matching Landing Page */}
@@ -85,8 +120,22 @@ export default function AdminLogin() {
       />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-100/50 rounded-full blur-[130px] pointer-events-none" />
 
+      {/* Top Header Navigation: Switch back to Student Portal */}
+      <div className="w-full max-w-md flex items-center justify-between mb-4 relative z-10 animate-in fade-in-50 duration-300">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:text-blue-700 hover:border-blue-300 shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
+          title="Return to Student Helpdesk & Chatbot"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:-translate-x-0.5 transition-all" />
+          <GraduationCap className="w-4 h-4 text-blue-600" />
+          <span>Back to Student Portal</span>
+        </Link>
+        <span className="text-[11px] font-mono text-slate-400 font-medium">VFSTR Command Center</span>
+      </div>
+
       {/* Top Institutional Crest & Badge */}
-      <div className="mb-6 text-center space-y-2 relative z-10 animate-in fade-in-50 slide-in-from-top-3 duration-300">
+      <div className="mb-5 text-center space-y-2 relative z-10 animate-in fade-in-50 slide-in-from-top-3 duration-300">
         <div className="flex justify-center mb-2">
           <Image
             src="/vignan-logo.png"
@@ -109,9 +158,9 @@ export default function AdminLogin() {
       {/* Main Secure Login Card matching landing page aesthetic */}
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl shadow-slate-200/60 overflow-hidden border border-slate-200 relative z-10 animate-in fade-in-50 zoom-in-95 duration-300">
         {/* Card Header Strip */}
-        <div className="bg-white px-6 pt-8 pb-6 text-center border-b border-slate-100 relative">
-          <div className="mx-auto w-14 h-14 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-center mb-3 relative group shadow-sm">
-            <Lock className="w-7 h-7 text-blue-600 relative z-10" />
+        <div className="bg-white px-6 pt-7 pb-5 text-center border-b border-slate-100 relative">
+          <div className="mx-auto w-13 h-13 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-center mb-3 relative group shadow-sm">
+            <Lock className="w-6 h-6 text-blue-600 relative z-10" />
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Nodal Officer Portal</h1>
           <p className="text-slate-500 text-xs mt-1 font-medium">Secure Access for University Administrators & Ombudsmen</p>
@@ -131,7 +180,7 @@ export default function AdminLogin() {
         </div>
 
         {/* Card Form Body */}
-        <div className="p-6 sm:p-7 space-y-5 bg-white">
+        <div className="p-6 sm:p-7 space-y-4 bg-white">
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
               <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-center gap-3 text-xs animate-in fade-in-50">
@@ -227,10 +276,22 @@ export default function AdminLogin() {
               )}
             </button>
           </form>
+
+          {/* Student Portal Switch Link - Exact Vice-Versa of Student Login */}
+          <div className="pt-3 border-t border-slate-100 text-center">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200 hover:border-blue-200 text-xs font-semibold text-slate-600 hover:text-blue-700 transition-all cursor-pointer group"
+            >
+              <GraduationCap className="h-4 w-4 text-blue-600 group-hover:scale-110 transition-transform" />
+              <span>Login as Student / Switch to Student Portal</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
         </div>
 
         {/* Card Footer: Real-time Clock & Status */}
-        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+        <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="font-semibold text-slate-600">SESSION GATEWAY ACTIVE</span>
@@ -244,9 +305,17 @@ export default function AdminLogin() {
         </div>
       </div>
 
-      {/* University Regulatory Footer */}
-      <div className="mt-6 text-center max-w-sm text-[11px] text-slate-500 leading-relaxed relative z-10">
-        Authorized University Personnel Only. All authentication attempts are logged and monitored under UGC & AICTE Higher Education Regulations.
+      {/* University Regulatory Footer with Student Link */}
+      <div className="mt-5 text-center max-w-sm text-[11px] text-slate-500 leading-relaxed relative z-10 space-y-1.5">
+        <p>
+          Authorized University Personnel Only. All authentication attempts are logged and monitored under UGC & AICTE Higher Education Regulations.
+        </p>
+        <p>
+          Are you a student?{" "}
+          <Link href="/" className="font-bold text-blue-600 hover:text-blue-700 underline underline-offset-2">
+            Open Student Helpdesk & Chatbot
+          </Link>
+        </p>
       </div>
     </div>
   );

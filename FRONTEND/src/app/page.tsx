@@ -68,6 +68,17 @@ function VigbotContent() {
   const [hasEnteredLogin, setHasEnteredLogin] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
+  // Restore authenticated student session if present in localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("vigbot_token") || localStorage.getItem("agent65_token");
+      if (token) {
+        setIsAuthenticated(true);
+        setHasEnteredLogin(true);
+      }
+    }
+  }, []);
+
   // Navigation & Localization
   const [activeTab, setActiveTab] = useState<string>("home");
   const { language: currentLang, setLanguage: setCurrentLang, t, tDynamic } = useLanguage();
@@ -119,6 +130,7 @@ function VigbotContent() {
     logout();
     handleResetChat();
     setIsAuthenticated(false);
+    setHasEnteredLogin(false);
     setActiveTab("home");
   };
 
@@ -187,7 +199,15 @@ function VigbotContent() {
 
   // 2. Then the institutional Login screen
   if (!isAuthenticated) {
-    return <LoginView onLogin={() => setIsAuthenticated(true)} />;
+    return (
+      <LoginView
+        onLogin={() => {
+          setIsAuthenticated(true);
+          setHasEnteredLogin(true);
+        }}
+        onBack={() => setHasEnteredLogin(false)}
+      />
+    );
   }
 
   // 3. Once authenticated, display the unified VIGBOT Dashboard
