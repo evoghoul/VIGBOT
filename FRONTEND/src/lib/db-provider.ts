@@ -2,11 +2,14 @@ import path from 'path';
 import fs from 'fs';
 
 export function getDb(): any {
-  const isVercel = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+  const isServerless = process.env.VERCEL === '1' || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
   const vigbotPath = path.resolve(process.cwd(), '../database/vigbot.db');
-  let dbPath = fs.existsSync(vigbotPath) ? vigbotPath : path.resolve(process.cwd(), '../database/student_helpdesk.db');
+  const directPath = path.resolve(process.cwd(), 'database/vigbot.db');
+  let dbPath = fs.existsSync(vigbotPath)
+    ? vigbotPath
+    : (fs.existsSync(directPath) ? directPath : path.resolve(process.cwd(), '../database/student_helpdesk.db'));
   
-  if (isVercel) {
+  if (isServerless) {
     dbPath = fs.existsSync('/tmp/vigbot.db') ? '/tmp/vigbot.db' : '/tmp/student_helpdesk.db';
     const bundledPath = fs.existsSync(path.resolve(process.cwd(), 'vigbot.db')) 
       ? path.resolve(process.cwd(), 'vigbot.db') 

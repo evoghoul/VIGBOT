@@ -7,7 +7,10 @@ const BACKEND_BASE_URL = getBackendUrl();
 
 export async function getWellnessResources() {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/community/wellness`, { cache: 'no-store' });
+    const res = await fetch(`${BACKEND_BASE_URL}/community/wellness`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(2000),
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.resources)) {

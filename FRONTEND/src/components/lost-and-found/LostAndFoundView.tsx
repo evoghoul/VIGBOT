@@ -39,7 +39,7 @@ export const LostAndFoundView = () => {
     let loaded = false;
     try {
       const res = await fetchLostAndFoundItems(filterType);
-      if (res?.success && Array.isArray(res?.items) && res.items.length > 0) {
+      if (res?.success && Array.isArray(res?.items)) {
         setItems(res.items as LostAndFoundItem[]);
         loaded = true;
       }

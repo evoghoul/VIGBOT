@@ -8,7 +8,8 @@ const BACKEND_BASE_URL = getBackendUrl();
 export async function getMarketplaceListings() {
   try {
     const res = await fetch(`${BACKEND_BASE_URL}/community/marketplace`, {
-      cache: 'no-store'
+      cache: 'no-store',
+      signal: AbortSignal.timeout(2000),
     });
     if (res.ok) {
       const json = await res.json();

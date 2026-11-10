@@ -7,7 +7,10 @@ const BACKEND_BASE_URL = getBackendUrl();
 
 export async function getLibraryResources() {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/community/library`, { cache: 'no-store' });
+    const res = await fetch(`${BACKEND_BASE_URL}/community/library`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(2000),
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.resources)) {

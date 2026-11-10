@@ -8,7 +8,8 @@ const BACKEND_BASE_URL = getBackendUrl();
 export async function fetchLostAndFoundItems(filterType: 'all' | 'lost' | 'found' = 'all') {
   try {
     const res = await fetch(`${BACKEND_BASE_URL}/community/lost-and-found?filter_type=${filterType}`, {
-      cache: 'no-store'
+      cache: 'no-store',
+      signal: AbortSignal.timeout(2000),
     });
     if (res.ok) {
       const data = await res.json();

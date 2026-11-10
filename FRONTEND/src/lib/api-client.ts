@@ -100,6 +100,7 @@ class VigbotApiClient {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
+        signal: AbortSignal.timeout(3000),
       });
       if (!resp.ok) {
         const errJson = await resp.json().catch(() => null);
@@ -155,6 +156,7 @@ class VigbotApiClient {
         headers: { 
           Authorization: `Bearer ${token}` 
         },
+        signal: AbortSignal.timeout(2500),
       });
       if (resp.status === 401) {
         this.token = null;
@@ -165,6 +167,7 @@ class VigbotApiClient {
             headers: { 
               Authorization: `Bearer ${token}` 
             },
+            signal: AbortSignal.timeout(2500),
           });
         }
       }
@@ -183,6 +186,7 @@ class VigbotApiClient {
         headers: { 
           Authorization: `Bearer ${token}` 
         },
+        signal: AbortSignal.timeout(2500),
       });
       if (resp.status === 401) {
         this.token = null;
@@ -193,6 +197,7 @@ class VigbotApiClient {
             headers: { 
               Authorization: `Bearer ${token}` 
             },
+            signal: AbortSignal.timeout(2500),
           });
         }
       }

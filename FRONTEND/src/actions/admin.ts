@@ -11,7 +11,8 @@ export async function adminLogin(username: string, passwordHash: string) {
     const res = await fetch(`${BACKEND_BASE_URL}/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password: passwordHash })
+      body: JSON.stringify({ username, password: passwordHash }),
+      signal: AbortSignal.timeout(2500),
     });
     if (res.ok) {
       const data = await res.json();
@@ -50,7 +51,10 @@ export async function adminLogin(username: string, passwordHash: string) {
 
 export async function fetchAllTickets() {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/admin/overview`, { cache: 'no-store' });
+    const res = await fetch(`${BACKEND_BASE_URL}/admin/overview`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(2500)
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.success) {
@@ -115,14 +119,44 @@ export async function updateTicketStatus(ticketId: string | number, type: 'club'
     const res = await fetch(endpoint, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
+      body: JSON.stringify({ status: newStatus }),
+      signal: AbortSignal.timeout(2500),
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.success) return { success: true };
+      if (data.success) {
+        // Also sync local SQLite
+        try {
+          const db = getDb();
+          if (db) {
+            if (type === 'grievance') db.prepare(`UPDATE studentlife_grievance SET status = ? WHERE tracking_id = ?`).run(newStatus, ticketId);
+            else if (type === 'club') db.prepare(`UPDATE studentlife_club_application SET status = ? WHERE id = ?`).run(newStatus, ticketId);
+            else if (type === 'booking') db.prepare(`UPDATE bookings SET status = ? WHERE id = ?`).run(newStatus, ticketId);
+            else if (type === 'lost_found') db.prepare(`UPDATE lost_and_found SET status = ? WHERE id = ?`).run(newStatus, ticketId);
+            else if (type === 'service_request') db.prepare(`UPDATE service_requests SET status = ? WHERE service_request_id = ? OR request_no = ?`).run(newStatus.toUpperCase(), ticketId, ticketId);
+            db.close();
+          }
+        } catch (_) {}
+        return { success: true };
+      }
     }
   } catch (backendError) {
     console.warn("Backend ticket update failed, attempting local fallback:", backendError);
+  }
+
+  // Also attempt updating live Render endpoint if local backend was unreachable
+  if (BACKEND_BASE_URL.includes("localhost") || BACKEND_BASE_URL.includes("127.0.0.1")) {
+    try {
+      const prodEndpoint = type === 'service_request'
+        ? `https://vigbot-api.onrender.com/api/v1/admin/service-requests/${ticketId}`
+        : `https://vigbot-api.onrender.com/api/v1/admin/tickets/${type}/${ticketId}`;
+      await fetch(prodEndpoint, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+        signal: AbortSignal.timeout(2500),
+      });
+    } catch (_) {}
   }
 
   try {
@@ -164,14 +198,42 @@ export async function deleteTicket(ticketId: string | number, type: 'club' | 'gr
       : `${BACKEND_BASE_URL}/admin/tickets/${type}/${ticketId}`;
 
     const res = await fetch(endpoint, {
-      method: 'DELETE'
+      method: 'DELETE',
+      signal: AbortSignal.timeout(2500),
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.success) return { success: true };
+      if (data.success) {
+        // Also delete from local SQLite so both stay in sync
+        try {
+          const db = getDb();
+          if (db) {
+            if (type === 'grievance') db.prepare(`DELETE FROM studentlife_grievance WHERE tracking_id = ?`).run(ticketId);
+            else if (type === 'club') db.prepare(`DELETE FROM studentlife_club_application WHERE id = ?`).run(ticketId);
+            else if (type === 'booking') db.prepare(`DELETE FROM bookings WHERE id = ?`).run(ticketId);
+            else if (type === 'lost_found') db.prepare(`DELETE FROM lost_and_found WHERE id = ?`).run(ticketId);
+            else if (type === 'service_request') db.prepare(`DELETE FROM service_requests WHERE service_request_id = ? OR request_no = ?`).run(ticketId, ticketId);
+            db.close();
+          }
+        } catch (_) {}
+        return { success: true };
+      }
     }
   } catch (backendError) {
     console.warn("Backend ticket deletion failed, attempting local fallback:", backendError);
+  }
+
+  // Also attempt deletion on live Render endpoint if local backend was unreachable
+  if (BACKEND_BASE_URL.includes("localhost") || BACKEND_BASE_URL.includes("127.0.0.1")) {
+    try {
+      const prodEndpoint = type === 'service_request'
+        ? `https://vigbot-api.onrender.com/api/v1/admin/service-requests/${ticketId}`
+        : `https://vigbot-api.onrender.com/api/v1/admin/tickets/${type}/${ticketId}`;
+      await fetch(prodEndpoint, {
+        method: 'DELETE',
+        signal: AbortSignal.timeout(2500),
+      });
+    } catch (_) {}
   }
 
   try {

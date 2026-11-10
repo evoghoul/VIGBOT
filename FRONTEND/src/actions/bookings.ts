@@ -28,7 +28,10 @@ export interface Booking {
 
 export async function getFacilities(): Promise<Facility[]> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/community/facilities`, { cache: 'no-store' });
+    const res = await fetch(`${BACKEND_BASE_URL}/community/facilities`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(2000),
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.facilities)) {
@@ -54,7 +57,10 @@ export async function getFacilities(): Promise<Facility[]> {
 
 export async function getBookingsForFacility(facilityId: number, date: string): Promise<Booking[]> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/community/bookings?facility_id=${facilityId}&date=${date}`, { cache: 'no-store' });
+    const res = await fetch(`${BACKEND_BASE_URL}/community/bookings?facility_id=${facilityId}&date=${date}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(2000),
+    });
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.bookings)) {
