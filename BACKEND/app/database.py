@@ -3,8 +3,110 @@ import datetime
 import os
 import sqlite3
 import json
-from typing import Dict, Any, List, Optional
+import time
+import logging
+from typing import Dict, Any, List, Optional, Tuple
 from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IN-MEMORY CATALOG CACHE (Reduces static table lookups from 20 to 0 per turn)
+# ─────────────────────────────────────────────────────────────────────────────
+_CATALOG_CACHE: Dict[str, Tuple[float, Any]] = {}
+
+def get_cached_catalog(cache_key: str, ttl_seconds: float, query_fn):
+    now = time.time()
+    if cache_key in _CATALOG_CACHE:
+        timestamp, val = _CATALOG_CACHE[cache_key]
+        if (now - timestamp) < ttl_seconds:
+            return val
+    val = query_fn()
+    _CATALOG_CACHE[cache_key] = (now, val)
+    return val
+
+def invalidate_catalog_cache(key_prefix: Optional[str] = None):
+    global _CATALOG_CACHE
+    if key_prefix:
+        _CATALOG_CACHE = {k: v for k, v in _CATALOG_CACHE.items() if not k.startswith(key_prefix)}
+    else:
+        _CATALOG_CACHE.clear()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POSTGRESQL CONNECTION POOLING (Threaded, Reusable, Sub-Millisecond Queries)
+# ─────────────────────────────────────────────────────────────────────────────
+_pg_pool = None
+
+class PooledConnectionProxy:
+    """
+    Transparent proxy around a pooled PostgreSQL connection.
+    Supports both `with get_db_connection() as conn:` context management
+    and manual `conn.close()` without dropping the underlying socket.
+    """
+    def __init__(self, pool, conn):
+        self._pool = pool
+        self._conn = conn
+        self._closed = False
+        try:
+            import psycopg2.extras
+            if hasattr(self._conn, "cursor_factory"):
+                self._conn.cursor_factory = psycopg2.extras.RealDictCursor
+        except Exception:
+            pass
+
+    def cursor(self, *args, **kwargs):
+        try:
+            import psycopg2.extras
+            if "cursor_factory" not in kwargs and hasattr(psycopg2.extras, "RealDictCursor"):
+                kwargs["cursor_factory"] = psycopg2.extras.RealDictCursor
+        except Exception:
+            pass
+        return self._conn.cursor(*args, **kwargs)
+
+    def commit(self):
+        return self._conn.commit()
+
+    def rollback(self):
+        return self._conn.rollback()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            try:
+                self._conn.rollback()
+            except Exception:
+                pass
+        self.close()
+
+    def close(self):
+        if not self._closed:
+            try:
+                self._pool.putconn(self._conn)
+            except Exception:
+                pass
+            self._closed = True
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+def _init_pg_pool():
+    global _pg_pool
+    if _pg_pool is not None:
+        return _pg_pool
+    if not is_postgres_configured():
+        return None
+    db_url = (getattr(settings, "DATABASE_URL", "") or "").replace("postgresql+psycopg://", "postgresql://")
+    try:
+        import psycopg2.pool
+        _pg_pool = psycopg2.pool.ThreadedConnectionPool(minconn=2, maxconn=10, dsn=db_url)
+        logger.info("Initialized PostgreSQL ThreadedConnectionPool (min=2, max=10)")
+    except Exception as e:
+        logger.warning(f"Could not initialize psycopg2 ThreadedConnectionPool: {e}")
+        _pg_pool = None
+    return _pg_pool
+
 def is_postgres_configured() -> bool:
     if getattr(settings, "USE_IN_MEMORY_DB", False):
         return False
@@ -15,19 +117,49 @@ def is_postgres_configured() -> bool:
 
 def get_db_connection():
     if is_postgres_configured():
-        db_url = getattr(settings, "DATABASE_URL", "")
-        cleaned_url = db_url.replace("postgresql+psycopg://", "postgresql://")
-        try:
-            import psycopg
-            from psycopg.rows import dict_row
-            return psycopg.connect(cleaned_url, row_factory=dict_row, connect_timeout=3)
-        except Exception:
+        pool = _init_pg_pool()
+        if pool:
             try:
-                import psycopg2
-                import psycopg2.extras
-                return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
+                raw_conn = pool.getconn()
+                is_dead = False
+                if hasattr(raw_conn, "closed") and raw_conn.closed:
+                    is_dead = True
+                else:
+                    try:
+                        with raw_conn.cursor() as cur:
+                            cur.execute("SELECT 1")
+                    except Exception:
+                        is_dead = True
+                if is_dead:
+                    try:
+                        pool.putconn(raw_conn, close=True)
+                    except Exception:
+                        pass
+                    raw_conn = pool.getconn()
+                return PooledConnectionProxy(pool, raw_conn)
+            except Exception as e:
+                logger.warning(f"Connection pool error: {e}. Falling back to single connection.")
+                cleaned_url = getattr(settings, "DATABASE_URL", "").replace("postgresql+psycopg://", "postgresql://")
+                try:
+                    import psycopg2
+                    import psycopg2.extras
+                    return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
+                except Exception:
+                    pass
+        else:
+            db_url = getattr(settings, "DATABASE_URL", "")
+            cleaned_url = db_url.replace("postgresql+psycopg://", "postgresql://")
+            try:
+                import psycopg
+                from psycopg.rows import dict_row
+                return psycopg.connect(cleaned_url, row_factory=dict_row, connect_timeout=3)
             except Exception:
-                pass
+                try:
+                    import psycopg2
+                    import psycopg2.extras
+                    return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
+                except Exception:
+                    pass
 
     db_vigbot = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
     db_fallback = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
@@ -189,16 +321,23 @@ class DataRepository:
     def _resolve_student_id(session: DatabaseSession) -> Optional[str]:
         if not session or not session.student_id:
             return None
+        if hasattr(session, "_resolved_id") and getattr(session, "_resolved_id", None):
+            return session._resolved_id
         res = DataRepository._execute_query(
             "SELECT student_id FROM students WHERE student_id = ? OR roll_no = ? LIMIT 1",
             (session.student_id, session.student_id)
         )
         if res:
-            return res[0]["student_id"]
+            resolved = res[0]["student_id"]
+            session._resolved_id = resolved
+            return resolved
         # Fallback to an existing student in the DB so foreign key constraints are not violated in mock/test sessions
         all_s = DataRepository._execute_query("SELECT student_id FROM students LIMIT 1")
         if all_s:
-            return all_s[0]["student_id"]
+            resolved = all_s[0]["student_id"]
+            session._resolved_id = resolved
+            return resolved
+        session._resolved_id = session.student_id
         return session.student_id
 
     @staticmethod
@@ -361,7 +500,7 @@ class DataRepository:
     @staticmethod
     def search_fresher_faqs(query_text: str) -> List[Dict[str, Any]]:
         try:
-            faqs = DataRepository._execute_query("SELECT * FROM fresher_faqs")
+            faqs = DataRepository.get_all_faqs()
         except Exception:
             return []
         import re
@@ -389,11 +528,15 @@ class DataRepository:
     @staticmethod
     def search_policies(query_text: str) -> List[Dict[str, Any]]:
         try:
+            policies = DataRepository.get_all_policies()
+            if not policies:
+                return []
             q_clean = query_text.lower().strip()
             # 1. Exact substring match
-            query = "SELECT * FROM policies WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ? OR LOWER(clause_no) LIKE ?"
-            like_val = f"%{q_clean}%"
-            matches = DataRepository._execute_query(query, (like_val, like_val, like_val))
+            matches = [
+                p for p in policies
+                if q_clean in p.get("title", "").lower() or q_clean in p.get("summary", "").lower() or q_clean in p.get("clause_no", "").lower()
+            ]
             if matches:
                 return matches
 
@@ -402,38 +545,33 @@ class DataRepository:
             stop_words = {"what", "when", "where", "which", "with", "from", "have", "that", "this", "does", "about", "how", "the", "for", "and", "are", "can", "not", "all", "who", "out", "any"}
             keywords = [w for w in re.findall(r"\w+", q_clean) if len(w) >= 3 and w not in stop_words]
             if keywords:
-                conds = " OR ".join(["LOWER(title) LIKE ? OR LOWER(summary) LIKE ? OR LOWER(clause_no) LIKE ?" for _ in keywords])
-                params = []
-                for kw in keywords:
-                    val = f"%{kw}%"
-                    params.extend([val, val, val])
-                kw_matches = DataRepository._execute_query(f"SELECT * FROM policies WHERE {conds}", tuple(params))
-                if kw_matches:
-                    seen = set()
-                    unique_matches = []
-                    for m in kw_matches:
-                        pid = m.get("policy_id")
-                        if pid not in seen:
-                            seen.add(pid)
-                            unique_matches.append(m)
-                    def score_pol(p):
-                        text = f"{p.get('title', '')} {p.get('summary', '')} {p.get('clause_no', '')}".lower()
-                        return sum(1 for kw in keywords if kw in text)
-                    unique_matches.sort(key=score_pol, reverse=True)
-                    return unique_matches[:3]
+                scored = []
+                for p in policies:
+                    text = f"{p.get('title', '')} {p.get('summary', '')} {p.get('clause_no', '')}".lower()
+                    score = sum(1 for kw in keywords if kw in text)
+                    if score > 0:
+                        scored.append((score, p))
+                scored.sort(key=lambda x: x[0], reverse=True)
+                if scored:
+                    return [item[1] for item in scored[:3]]
 
-            return DataRepository._execute_query("SELECT * FROM policies LIMIT 2")
+            return policies[:2]
         except Exception:
             return []
 
     @staticmethod
     def search_circulars(query_text: str) -> List[Dict[str, Any]]:
         try:
-            query = "SELECT * FROM circulars WHERE LOWER(title) LIKE ? OR LOWER(summary) LIKE ?"
-            like_val = f"%{query_text.lower()}%"
-            matches = DataRepository._execute_query(query, (like_val, like_val))
+            circulars = DataRepository.get_all_circulars()
+            if not circulars:
+                return []
+            q_clean = query_text.lower().strip()
+            matches = [
+                c for c in circulars
+                if q_clean in c.get("title", "").lower() or q_clean in c.get("summary", "").lower()
+            ]
             if not matches:
-                return DataRepository._execute_query("SELECT * FROM circulars LIMIT 2")
+                return circulars[:2]
             return matches
         except Exception:
             return []
@@ -444,7 +582,8 @@ class DataRepository:
 
     @staticmethod
     def get_conversation(session: DatabaseSession, conversation_id: str) -> Optional[Dict[str, Any]]:
-        res = DataRepository._execute_query("SELECT * FROM conversations WHERE conversation_id = ? AND student_id = ?", (conversation_id, session.student_id))
+        sid = DataRepository._resolve_student_id(session)
+        res = DataRepository._execute_query("SELECT * FROM conversations WHERE conversation_id = ? AND student_id = ?", (conversation_id, sid))
         if res:
             data = res[0]
             if isinstance(data.get("context_data"), str):
@@ -456,22 +595,24 @@ class DataRepository:
     @staticmethod
     def update_conversation_context(session: DatabaseSession, conversation_id: str, context_data: Dict[str, Any]) -> None:
         """Persist conversation memory while enforcing the authenticated student boundary."""
+        sid = DataRepository._resolve_student_id(session)
         DataRepository._execute_insert(
             "UPDATE conversations SET context_data = ?, updated_at = ? WHERE conversation_id = ? AND student_id = ?",
-            (json.dumps(context_data), datetime.datetime.now(datetime.timezone.utc).isoformat(), conversation_id, session.student_id)
+            (json.dumps(context_data), datetime.datetime.now(datetime.timezone.utc).isoformat(), conversation_id, sid)
         )
 
     @staticmethod
     def create_conversation(session: DatabaseSession, title: str) -> Dict[str, Any]:
         conv_id = f"conv-{uuid.uuid4().hex[:8]}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        sid = DataRepository._resolve_student_id(session)
         query = "INSERT INTO conversations (conversation_id, student_id, title, status, context_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        DataRepository._execute_insert(query, (conv_id, session.student_id, title or "New Conversation", "ACTIVE", "{}", now, now))
+        DataRepository._execute_insert(query, (conv_id, sid, title or "New Conversation", "ACTIVE", "{}", now, now))
         return DataRepository.get_conversation(session, conv_id)
 
     @staticmethod
-    def get_conversation_messages(session: DatabaseSession, conversation_id: str) -> List[Dict[str, Any]]:
-        conv = DataRepository.get_conversation(session, conversation_id)
+    def get_conversation_messages(session: DatabaseSession, conversation_id: str, verified_conv: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        conv = verified_conv or DataRepository.get_conversation(session, conversation_id)
         if not conv:
             return []
         msgs = DataRepository._execute_query("SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC", (conversation_id,))
@@ -485,30 +626,47 @@ class DataRepository:
         return msgs
 
     @staticmethod
-    def add_message(session: DatabaseSession, conversation_id: str, message_data: Dict[str, Any]) -> Dict[str, Any]:
-        conv = DataRepository.get_conversation(session, conversation_id)
-        if not conv:
-            raise PermissionError("Access denied: conversation does not belong to the authenticated student.")
+    def add_message(session: DatabaseSession, conversation_id: str, message_data: Dict[str, Any], verified: bool = False) -> Dict[str, Any]:
+        if not verified:
+            conv = DataRepository.get_conversation(session, conversation_id)
+            if not conv:
+                raise PermissionError("Access denied: conversation does not belong to the authenticated student.")
         
         msg_id = f"msg-{uuid.uuid4().hex[:8]}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        citations = json.dumps(message_data.get("citations", []))
-        structured_card = json.dumps(message_data.get("structured_card")) if message_data.get("structured_card") else None
+        citations_list = message_data.get("citations", [])
+        citations = json.dumps(citations_list)
+        card_obj = message_data.get("structured_card")
+        structured_card = json.dumps(card_obj) if card_obj else None
         
-        query = "INSERT INTO messages (message_id, conversation_id, sender_role, content, category, source_agent, citations, structured_card, is_distress, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        DataRepository._execute_insert(query, (msg_id, conversation_id, message_data.get("sender_role", "STUDENT"), message_data.get("content"), message_data.get("category"), message_data.get("source_agent", "VIGBOT"), citations, structured_card, 1 if message_data.get("is_distress") else 0, now))
+        query1 = "INSERT INTO messages (message_id, conversation_id, sender_role, content, category, source_agent, citations, structured_card, is_distress, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        query2 = "UPDATE conversations SET updated_at = ? WHERE conversation_id = ?"
         
-        DataRepository._execute_insert("UPDATE conversations SET updated_at = ? WHERE conversation_id = ?", (now, conversation_id))
+        with get_db_connection() as conn:
+            if isinstance(conn, sqlite3.Connection):
+                conn.execute(query1, (msg_id, conversation_id, message_data.get("sender_role", "STUDENT"), message_data.get("content"), message_data.get("category"), message_data.get("source_agent", "VIGBOT"), citations, structured_card, 1 if message_data.get("is_distress") else 0, now))
+                conn.execute(query2, (now, conversation_id))
+                conn.commit()
+            else:
+                q1_pg = query1.replace("?", "%s")
+                q2_pg = query2.replace("?", "%s")
+                with conn.cursor() as cur:
+                    cur.execute(q1_pg, (msg_id, conversation_id, message_data.get("sender_role", "STUDENT"), message_data.get("content"), message_data.get("category"), message_data.get("source_agent", "VIGBOT"), citations, structured_card, 1 if message_data.get("is_distress") else 0, now))
+                    cur.execute(q2_pg, (now, conversation_id))
+                conn.commit()
         
-        res = DataRepository._execute_query("SELECT * FROM messages WHERE message_id = ?", (msg_id,))
-        m = res[0]
-        if isinstance(m.get("citations"), str):
-            try: m["citations"] = json.loads(m["citations"])
-            except: pass
-        if isinstance(m.get("structured_card"), str):
-            try: m["structured_card"] = json.loads(m["structured_card"])
-            except: pass
-        return m
+        return {
+            "message_id": msg_id,
+            "conversation_id": conversation_id,
+            "sender_role": message_data.get("sender_role", "STUDENT"),
+            "content": message_data.get("content"),
+            "category": message_data.get("category"),
+            "source_agent": message_data.get("source_agent", "VIGBOT"),
+            "citations": citations_list,
+            "structured_card": card_obj,
+            "is_distress": bool(message_data.get("is_distress")),
+            "created_at": now
+        }
 
     @staticmethod
     def create_service_request(session: DatabaseSession, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -560,80 +718,51 @@ class DataRepository:
 
     @staticmethod
     def get_clubs() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM studentlife_club")
-        except Exception:
-            return []
+        return get_cached_catalog("clubs", 300.0, lambda: DataRepository._execute_query("SELECT * FROM studentlife_club"))
 
     @staticmethod
     def get_all_faqs() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM fresher_faqs")
-        except Exception:
-            return []
+        return get_cached_catalog("all_faqs", 300.0, lambda: DataRepository._execute_query("SELECT * FROM fresher_faqs"))
 
     @staticmethod
     def get_all_policies() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM policies")
-        except Exception:
-            return []
+        return get_cached_catalog("all_policies", 300.0, lambda: DataRepository._execute_query("SELECT * FROM policies"))
 
     @staticmethod
     def get_all_circulars() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM circulars ORDER BY issued_date DESC")
-        except Exception:
-            return []
+        return get_cached_catalog("all_circulars", 300.0, lambda: DataRepository._execute_query("SELECT * FROM circulars ORDER BY issued_date DESC"))
 
     @staticmethod
     def get_facilities() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM facilities")
-        except Exception:
-            return []
+        return get_cached_catalog("facilities", 300.0, lambda: DataRepository._execute_query("SELECT * FROM facilities"))
 
     @staticmethod
     def get_transport_routes() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM transportation_routes")
-        except Exception:
-            return []
+        return get_cached_catalog("transport_routes", 300.0, lambda: DataRepository._execute_query("SELECT * FROM transportation_routes"))
 
     @staticmethod
     def get_hostel_bus_schedules() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM hostel_bus_schedules ORDER BY id ASC")
-        except Exception:
-            return []
+        return get_cached_catalog("hostel_bus_schedules", 300.0, lambda: DataRepository._execute_query("SELECT * FROM hostel_bus_schedules ORDER BY id ASC"))
 
     @staticmethod
     def get_wellness_resources() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM wellness_resources")
-        except Exception:
-            return []
+        return get_cached_catalog("wellness_resources", 300.0, lambda: DataRepository._execute_query("SELECT * FROM wellness_resources"))
 
     @staticmethod
     def get_library_resources() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM library_resources LIMIT 20")
-        except Exception:
-            return []
+        return get_cached_catalog("library_resources", 300.0, lambda: DataRepository._execute_query("SELECT * FROM library_resources LIMIT 20"))
+
+    @staticmethod
+    def get_library_operating_hours() -> List[Dict[str, Any]]:
+        return get_cached_catalog("library_operating_hours", 300.0, lambda: DataRepository._execute_query("SELECT * FROM library_operating_hours ORDER BY id ASC"))
 
     @staticmethod
     def get_campus_locations() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM campus_locations")
-        except Exception:
-            return []
+        return get_cached_catalog("campus_locations", 300.0, lambda: DataRepository._execute_query("SELECT * FROM campus_locations"))
 
     @staticmethod
     def get_broadcast_alerts() -> List[Dict[str, Any]]:
-        try:
-            return DataRepository._execute_query("SELECT * FROM broadcast_alerts WHERE is_active = TRUE ORDER BY timestamp DESC LIMIT 5")
-        except Exception:
-            return []
+        return get_cached_catalog("broadcast_alerts", 60.0, lambda: DataRepository._execute_query("SELECT * FROM broadcast_alerts WHERE is_active = TRUE ORDER BY timestamp DESC LIMIT 5"))
 
     @staticmethod
     def get_lost_and_found() -> List[Dict[str, Any]]:
@@ -645,7 +774,7 @@ class DataRepository:
     @staticmethod
     def get_upcoming_events() -> List[Dict[str, Any]]:
         try:
-            return DataRepository._execute_query("SELECT * FROM calendar_events ORDER BY start_time ASC LIMIT 10")
+            return get_cached_catalog("upcoming_events", 300.0, lambda: DataRepository._execute_query("SELECT * FROM calendar_events ORDER BY start_time ASC LIMIT 10"))
         except Exception:
             return []
 

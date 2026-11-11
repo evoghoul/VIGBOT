@@ -88,9 +88,11 @@ class VIGBOTOrchestrator:
             }
 
         # ---------------- 2. MULTI-TURN CONTEXT RESOLUTION (Workflow Step 5) ----------------
-        history = DataRepository.get_conversation_messages(session, conversation_id)
         conv = DataRepository.get_conversation(session, conversation_id)
+        if not conv:
+            raise PermissionError("Access denied: conversation does not belong to the authenticated student.")
         context_data = conv.get("context_data", {}) if conv else {}
+        history = DataRepository.get_conversation_messages(session, conversation_id, verified_conv=conv)
 
         # ---------------- 3. RECORD STUDENT MESSAGE ----------------
         DataRepository.add_message(session, conversation_id, {
@@ -98,7 +100,7 @@ class VIGBOTOrchestrator:
             "content": query,
             "category": "GENERAL" if not is_distress_detected else "DISTRESS_SUPPORT",
             "is_distress": is_distress_detected
-        })
+        }, verified=True)
 
         # ---------------- 4. LOCAL NLU REASONING & TOOL DISPATCH ----------------
         nlu_result = NLUEngine.classify_and_reason(
@@ -133,7 +135,7 @@ class VIGBOTOrchestrator:
             "citations": nlu_result.get("citations", []),
             "structured_card": nlu_result.get("structured_card"),
             "is_distress": False
-        })
+        }, verified=True)
 
         return {
             "message_id": agent_msg["message_id"],

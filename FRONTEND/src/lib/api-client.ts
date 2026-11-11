@@ -210,6 +210,13 @@ class VigbotApiClient {
 
   async getOrCreateConversation(forceNew: boolean = false): Promise<string> {
     if (!forceNew && this.activeConversationId) return this.activeConversationId;
+    if (!forceNew && typeof window !== "undefined") {
+      const stored = localStorage.getItem("vigbot_conv_id") || localStorage.getItem("agent65_conv_id");
+      if (stored) {
+        this.activeConversationId = stored;
+        return stored;
+      }
+    }
 
     const token = await this.ensureAuthenticated();
     if (token) {

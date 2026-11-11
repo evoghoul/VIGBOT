@@ -393,27 +393,28 @@ class ToolRegistry:
     # 4. LIBRARY (Module 1 Grounded)
     @staticmethod
     def get_library_info(day_of_week: Optional[str] = None, resource_query: Optional[str] = None) -> ToolResult:
-        with get_db_connection() as conn:
-            if isinstance(conn, sqlite3.Connection):
-                    conn.row_factory = sqlite3.Row
-            cur = conn.cursor()
+        all_hours = DataRepository.get_library_operating_hours()
+        target_day = (day_of_week or "Sunday").strip().capitalize()
+        day_record = next((r for r in all_hours if r.get("day_of_week", "").lower() == target_day.lower()), None)
 
-            target_day = (day_of_week or "Sunday").strip().capitalize()
-            q1 = "SELECT * FROM library_operating_hours WHERE day_of_week=%s" if not isinstance(conn, sqlite3.Connection) else "SELECT * FROM library_operating_hours WHERE day_of_week=?"
-            cur.execute(q1, (target_day,))
-            day_record = cur.fetchone()
+        resources = []
+        if resource_query:
+            all_res = DataRepository.get_library_resources()
+            rq_lower = resource_query.lower()
+            resources = [r for r in all_res if rq_lower in r.get("title", "").lower() or rq_lower in r.get("course_code", "").lower()][:5]
 
-            cur.execute("SELECT * FROM library_operating_hours")
-            all_hours = [dict(r) for r in cur.fetchall()]
-
-            resources = []
-            if resource_query:
-                q2 = "SELECT * FROM library_resources WHERE title LIKE %s OR course_code LIKE %s" if not isinstance(conn, sqlite3.Connection) else "SELECT * FROM library_resources WHERE title LIKE ? OR course_code LIKE ?"
-                cur.execute(q2, (f"%{resource_query}%", f"%{resource_query}%"))
-                resources = [dict(r) for r in cur.fetchall()]
-
-        if not day_record:
-            day_record = next((r for r in all_hours if r["day_of_week"].lower() == "sunday"), all_hours[0])
+        if not day_record and all_hours:
+            day_record = next((r for r in all_hours if r.get("day_of_week", "").lower() == "sunday"), all_hours[0])
+        elif not day_record:
+            day_record = {
+                "day_of_week": target_day,
+                "status": "Regular Hours",
+                "open_time": "08:00 AM",
+                "close_time": "10:00 PM",
+                "reading_room_hours": "08:00 AM - 10:00 PM",
+                "circulation_counter_hours": "09:00 AM - 06:00 PM",
+                "notes": "Full library services, book lending, and digital lab active."
+            }
 
         d_name = day_record["day_of_week"]
         status = day_record["status"]

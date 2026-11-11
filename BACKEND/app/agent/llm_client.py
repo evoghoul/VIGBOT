@@ -329,14 +329,20 @@ class LLMClient:
         if not getattr(settings, "ENABLE_GEMINI", False):
             return ""
         key = getattr(settings, "GEMINI_API_KEY", "").strip()
-        return key if (key and not key.startswith("YOUR_")) else ""
+        # Google Gemini API keys start with AIzaSy and are at least 30 characters
+        if not key or not key.startswith("AIzaSy") or key.startswith("YOUR_") or len(key) < 30:
+            return ""
+        return key
 
     @classmethod
     def _groq_key(cls) -> str:
         if not getattr(settings, "ENABLE_GROQ", False):
             return ""
         key = getattr(settings, "GROQ_API_KEY", "").strip()
-        return key if (key and not key.startswith("YOUR_")) else ""
+        # Groq API keys start with gsk_
+        if not key or not key.startswith("gsk_") or key.startswith("YOUR_") or len(key) < 20:
+            return ""
+        return key
 
     @classmethod
     def is_available(cls) -> bool:
@@ -514,12 +520,8 @@ class LLMClient:
         try:
             from google import genai
 
-            candidate_models = [
-                getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
-                "gemini-2.5-flash",
-                "gemini-1.5-flash",
-                "gemini-2.0-flash",
-            ]
+            pref_model = getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash")
+            candidate_models = list(dict.fromkeys([pref_model, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash"]))
 
             contents = []
             for msg in messages:
@@ -567,8 +569,11 @@ class LLMClient:
                             cleaned = re.sub(r"<think>.*?</think>", "", raw_text, flags=re.DOTALL).strip()
                         return cleaned if cleaned else None
                 except Exception as inner_e:
-                    err_str = str(inner_e)
-                    if "404" in err_str or "NOT_FOUND" in err_str:
+                    err_str = str(inner_e).lower()
+                    if any(auth_err in err_str for auth_err in ["api_key_invalid", "api key not valid", "permission_denied", "unauthenticated", "invalid api key"]):
+                        logger.warning(f"Gemini API key is invalid or unauthorized ({inner_e}). Skipping further candidate models.")
+                        break
+                    if "404" in err_str or "not_found" in err_str:
                         logger.warning(f"Gemini model {model_name} not found, trying fallback...")
                         continue
                     raise inner_e

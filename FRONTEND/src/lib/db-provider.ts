@@ -30,6 +30,7 @@ export function getDb(): any {
   }
   
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Database = require('better-sqlite3');
     if (fs.existsSync(dbPath)) {
       return new Database(dbPath);
