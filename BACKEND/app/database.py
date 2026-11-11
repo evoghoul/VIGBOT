@@ -83,7 +83,10 @@ class PooledConnectionProxy:
     def close(self):
         if not self._closed:
             try:
-                self._pool.putconn(self._conn)
+                if hasattr(self._conn, "closed") and self._conn.closed != 0:
+                    self._pool.putconn(self._conn, close=True)
+                else:
+                    self._pool.putconn(self._conn)
             except Exception:
                 pass
             self._closed = True
@@ -121,16 +124,7 @@ def get_db_connection():
         if pool:
             try:
                 raw_conn = pool.getconn()
-                is_dead = False
-                if hasattr(raw_conn, "closed") and raw_conn.closed:
-                    is_dead = True
-                else:
-                    try:
-                        with raw_conn.cursor() as cur:
-                            cur.execute("SELECT 1")
-                    except Exception:
-                        is_dead = True
-                if is_dead:
+                if hasattr(raw_conn, "closed") and raw_conn.closed != 0:
                     try:
                         pool.putconn(raw_conn, close=True)
                     except Exception:
@@ -295,27 +289,44 @@ class DataRepository:
     
     @staticmethod
     def _execute_query(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
-        with get_db_connection() as conn:
-            if isinstance(conn, sqlite3.Connection):
-                cur = conn.execute(query, params)
-                return [dict(row) for row in cur.fetchall()]
-            else:
-                query_pg = query.replace("?", "%s")
-                with conn.cursor() as cur:
-                    cur.execute(query_pg, params)
-                    return [dict(row) for row in cur.fetchall()]
+        for attempt in range(2):
+            try:
+                with get_db_connection() as conn:
+                    if isinstance(conn, sqlite3.Connection):
+                        cur = conn.execute(query, params)
+                        return [dict(row) for row in cur.fetchall()]
+                    else:
+                        query_pg = query.replace("?", "%s")
+                        with conn.cursor() as cur:
+                            cur.execute(query_pg, params)
+                            return [dict(row) for row in cur.fetchall()]
+            except Exception as e:
+                err_str = str(e).lower()
+                if attempt == 0 and ("closed" in err_str or "connection" in err_str or "terminated" in err_str or "broken" in err_str):
+                    logger.debug(f"Retrying query on fresh connection due to: {e}")
+                    continue
+                raise
 
     @staticmethod
     def _execute_insert(query: str, params: tuple = ()):
-        with get_db_connection() as conn:
-            if isinstance(conn, sqlite3.Connection):
-                conn.execute(query, params)
-                conn.commit()
-            else:
-                query_pg = query.replace("?", "%s")
-                with conn.cursor() as cur:
-                    cur.execute(query_pg, params)
-                conn.commit()
+        for attempt in range(2):
+            try:
+                with get_db_connection() as conn:
+                    if isinstance(conn, sqlite3.Connection):
+                        conn.execute(query, params)
+                        conn.commit()
+                    else:
+                        query_pg = query.replace("?", "%s")
+                        with conn.cursor() as cur:
+                            cur.execute(query_pg, params)
+                        conn.commit()
+                return
+            except Exception as e:
+                err_str = str(e).lower()
+                if attempt == 0 and ("closed" in err_str or "connection" in err_str or "terminated" in err_str or "broken" in err_str):
+                    logger.debug(f"Retrying insert on fresh connection due to: {e}")
+                    continue
+                raise
 
     @staticmethod
     def _resolve_student_id(session: DatabaseSession) -> Optional[str]:
@@ -353,8 +364,13 @@ class DataRepository:
         sid = DataRepository._resolve_student_id(session)
         if not sid:
             return None
+        if hasattr(session, "_cached_profile") and getattr(session, "_cached_profile", None):
+            return session._cached_profile
         res = DataRepository._execute_query("SELECT * FROM students WHERE student_id = ?", (sid,))
-        return res[0] if res else None
+        profile = res[0] if res else None
+        if profile and session:
+            session._cached_profile = profile
+        return profile
 
     @staticmethod
     def get_student_advisors(session: DatabaseSession) -> Optional[Dict[str, Any]]:
@@ -789,7 +805,7 @@ class DataRepository:
         return res[0] if res else None
 
     @staticmethod
-    def record_query_metric(intent_category: str, topic: str, language: str = "en", is_distress: bool = False, is_escalated: bool = False):
+    def _record_query_metric_sync(intent_category: str, topic: str, language: str = "en", is_distress: bool = False, is_escalated: bool = False):
         today_str = datetime.date.today().isoformat()
         try:
             existing = DataRepository._execute_query("SELECT * FROM analytics_daily WHERE stat_date = ? AND intent_category = ? AND topic = ? AND language_code = ?", (today_str, intent_category, topic, language))
@@ -801,6 +817,15 @@ class DataRepository:
                 DataRepository._execute_insert(query, (today_str, intent_category, topic, language, 1 if is_escalated else 0, 1 if is_distress else 0))
         except Exception:
             pass
+
+    @staticmethod
+    def record_query_metric(intent_category: str, topic: str, language: str = "en", is_distress: bool = False, is_escalated: bool = False):
+        import threading
+        threading.Thread(
+            target=DataRepository._record_query_metric_sync,
+            args=(intent_category, topic, language, is_distress, is_escalated),
+            daemon=True
+        ).start()
 
     @staticmethod
     def get_analytics_summary() -> List[Dict[str, Any]]:
@@ -1099,6 +1124,22 @@ class DataRepository:
             "total_requests_all_time": total_count,
             "recent_calls": recent_calls
         }
+
+    @staticmethod
+    def warm_cache():
+        """Pre-warm static institutional catalogs and connection pool on startup."""
+        try:
+            DataRepository.get_all_policies()
+            DataRepository.get_all_circulars()
+            DataRepository.get_campus_locations()
+            DataRepository.get_library_operating_hours()
+            DataRepository.get_library_resources()
+            DataRepository.get_wellness_resources()
+            DataRepository.get_transport_routes()
+            DataRepository.get_facilities()
+            logger.info("Pre-warmed all institutional catalogs into in-memory cache.")
+        except Exception as e:
+            logger.warning(f"Cache pre-warming notice: {e}")
 
 
 class _CrisisEscalationsProxy:

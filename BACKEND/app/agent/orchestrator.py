@@ -27,7 +27,8 @@ class VIGBOTOrchestrator:
         conversation_id: str,
         user_message: str,
         language: str = "en",
-        selected_model: str = "8B"
+        selected_model: str = "8B",
+        verified_conv: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         query = user_message.strip()
 

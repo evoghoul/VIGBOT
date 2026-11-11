@@ -41,7 +41,7 @@ class FeedbackRemediationService:
 
     _cache_active_remediations: Optional[List[Dict[str, Any]]] = None
     _last_cache_time: float = 0.0
-    CACHE_TTL_SECONDS: float = 10.0  # Hot cache re-sync interval
+    CACHE_TTL_SECONDS: float = 300.0  # In-memory cache interval (invalidated on update)
 
     @classmethod
     def get_gemini_api_key(cls) -> str:

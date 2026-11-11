@@ -61,6 +61,7 @@ async def send_message(
     current_student: dict = Depends(get_current_student)
 ):
     session = DatabaseSession(student_id=current_student["student_id"], user_id=current_student["user_id"])
+    session._resolved_id = current_student["student_id"]
     conv = DataRepository.get_conversation(session, conversation_id)
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found or access denied.")
@@ -71,7 +72,8 @@ async def send_message(
             conversation_id=conversation_id,
             user_message=msg.content,
             language=msg.language or "en",
-            selected_model=msg.selected_model or "8B"
+            selected_model=msg.selected_model or "8B",
+            verified_conv=conv
         )
     except Exception as exc:
         logger.exception("VIGBOT message processing failed for conversation %s", conversation_id)

@@ -40,6 +40,13 @@ async def on_startup():
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(f"db_init startup error (non-fatal): {e}")
+    try:
+        from app.database import DataRepository, _init_pg_pool
+        _init_pg_pool()
+        DataRepository.warm_cache()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Pool/cache pre-warming notice: {e}")
 
 
 # CORS configuration
