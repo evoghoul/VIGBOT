@@ -25,7 +25,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
   const { studentData } = useStudent();
   const { t, tDynamic } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
-  
+
   const [records, setRecords] = useState<any[]>([]);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export const MarksView: React.FC<MarksViewProps> = ({ onAskHelpdesk }) => {
               ))}
             </div>
           </div>
-          
+
           {/* Semester Breakdown Table */}
           <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden mt-6">
             <div className="border-b border-border bg-muted/30 px-6 py-4">

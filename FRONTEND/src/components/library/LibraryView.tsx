@@ -52,7 +52,7 @@ export function LibraryView() {
       <div className="space-y-4">
         <h3 className="text-xl font-semibold">My Books & Borrowing</h3>
         <div className="grid gap-4 md:grid-cols-3">
-          
+
           <Dialog>
             <DialogTrigger className="w-full text-left outline-none">
               <div className="p-4 rounded-xl border bg-card text-card-foreground shadow-sm flex items-center gap-4 cursor-pointer hover:bg-muted/50 transition-colors">

@@ -41,11 +41,11 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        
+
         // Max dimensions
         const MAX_WIDTH = 800;
         const MAX_HEIGHT = 800;
-        
+
         if (width > height) {
           if (width > MAX_WIDTH) {
             height *= MAX_WIDTH / width;
@@ -57,7 +57,7 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
             height = MAX_HEIGHT;
           }
         }
-        
+
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
@@ -110,8 +110,8 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
               type="button"
               onClick={() => setType('lost')}
               className={`flex-1 rounded-xl py-3 text-sm font-bold border-2 transition-colors ${
-                type === 'lost' 
-                  ? 'border-rose-500 bg-rose-50 text-rose-700' 
+                type === 'lost'
+                  ? 'border-rose-500 bg-rose-50 text-rose-700'
                   : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'
               }`}
             >
@@ -121,8 +121,8 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
               type="button"
               onClick={() => setType('found')}
               className={`flex-1 rounded-xl py-3 text-sm font-bold border-2 transition-colors ${
-                type === 'found' 
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
+                type === 'found'
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                   : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'
               }`}
             >
@@ -195,9 +195,9 @@ export const ReportItemModal: React.FC<ReportItemModalProps> = ({
                  <p className="text-sm font-medium text-slate-700">{imageUrl ? 'Change Image' : 'Upload an Image'}</p>
                  <p className="text-xs text-slate-500 mt-1">Click to browse or drag and drop</p>
                </div>
-               <input 
-                 type="file" 
-                 accept="image/*" 
+               <input
+                 type="file"
+                 accept="image/*"
                  onChange={handleImageUpload}
                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                />

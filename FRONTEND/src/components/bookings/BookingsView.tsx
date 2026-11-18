@@ -54,7 +54,7 @@ export function BookingsView() {
   }, []);
 
   const filteredFacilities = facilities.filter(facility => {
-    const matchesSearch = facility.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = facility.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           facility.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = activeType === "All" || facility.type === activeType;
     return matchesSearch && matchesType;
@@ -62,7 +62,7 @@ export function BookingsView() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
+
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end justify-between">
         <div>
@@ -80,8 +80,8 @@ export function BookingsView() {
               key={type}
               onClick={() => setActiveType(type)}
               className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                activeType === type 
-                ? "bg-slate-800 text-white shadow-sm" 
+                activeType === type
+                ? "bg-slate-800 text-white shadow-sm"
                 : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
               }`}
             >
@@ -133,7 +133,7 @@ export function BookingsView() {
               <div className="p-5 flex-1 flex flex-col">
                 <h3 className="text-lg font-semibold text-slate-800 line-clamp-1">{facility.name}</h3>
                 <p className="text-sm text-slate-500 mt-1 line-clamp-2 flex-1">{facility.description}</p>
-                
+
                 <div className="mt-4 flex items-center gap-4 text-sm text-slate-600">
                   <div className="flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-slate-400" />
@@ -141,7 +141,7 @@ export function BookingsView() {
                   </div>
                 </div>
 
-                <button 
+                <button
                   onClick={() => setSelectedFacility(facility)}
                   className="mt-5 w-full bg-slate-50 hover:bg-blue-50 text-blue-600 font-medium py-2 rounded-lg transition-colors border border-slate-200 hover:border-blue-200 flex items-center justify-center gap-2"
                 >
@@ -157,7 +157,7 @@ export function BookingsView() {
           <Activity className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-800">No facilities found</h3>
           <p className="text-slate-500 mt-1 max-w-sm mx-auto">We couldn't find any facilities matching your current filters.</p>
-          <button 
+          <button
             onClick={() => {setSearchQuery(""); setActiveType("All");}}
             className="mt-6 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
           >
@@ -168,10 +168,10 @@ export function BookingsView() {
 
       {/* Modal */}
       {selectedFacility && (
-        <BookingModal 
-          facility={selectedFacility} 
-          isOpen={true} 
-          onClose={() => setSelectedFacility(null)} 
+        <BookingModal
+          facility={selectedFacility}
+          isOpen={true}
+          onClose={() => setSelectedFacility(null)}
         />
       )}
     </div>

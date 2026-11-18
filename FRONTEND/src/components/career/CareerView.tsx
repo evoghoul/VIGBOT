@@ -7,7 +7,7 @@ import { CURRENT_STUDENT } from "@/data/student";
 export const CareerView = () => {
   const { studentData } = useStudent();
   const student = studentData?.profile || CURRENT_STUDENT;
-  
+
   const [skills, setSkills] = useState("");
   const [projects, setProjects] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -29,7 +29,7 @@ export const CareerView = () => {
   const handleGenerate = async () => {
     setIsGenerating(true);
     await saveResumeData(student.id, skills, projects);
-    
+
     // Simulate AI generation delay
     setTimeout(() => {
       setIsGenerating(false);
@@ -54,7 +54,7 @@ export const CareerView = () => {
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
                 <Code className="h-4 w-4 text-blue-600" /> Technical Skills
               </label>
-              <textarea 
+              <textarea
                 value={skills}
                 onChange={(e) => setSkills(e.target.value)}
                 placeholder="E.g., React, TypeScript, Python, SQL, Machine Learning..."
@@ -62,12 +62,12 @@ export const CareerView = () => {
                 className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
               />
             </div>
-            
+
             <div>
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
                 <Briefcase className="h-4 w-4 text-indigo-600" /> Key Projects
               </label>
-              <textarea 
+              <textarea
                 value={projects}
                 onChange={(e) => setProjects(e.target.value)}
                 placeholder="Describe 1-2 major projects you built..."
@@ -76,7 +76,7 @@ export const CareerView = () => {
               />
             </div>
 
-            <button 
+            <button
               onClick={handleGenerate}
               disabled={isGenerating || (!skills && !projects)}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium text-sm px-4 py-3 rounded-lg transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
@@ -109,7 +109,7 @@ export const CareerView = () => {
                     <h1 className="text-2xl font-bold uppercase tracking-widest text-slate-800">{student.name}</h1>
                     <p className="text-sm text-slate-500 mt-1">{student.id} | B.Tech Computer Science | {student.email}</p>
                   </div>
-                  
+
                   <div>
                     <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-700 mb-2 border-b pb-1 border-indigo-100">Skills & Competencies</h2>
                     <div className="flex flex-wrap gap-2">
@@ -123,7 +123,7 @@ export const CareerView = () => {
                     <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-700 mb-2 border-b pb-1 border-indigo-100">Professional Projects</h2>
                     <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{projects}</p>
                   </div>
-                  
+
                   <div className="mt-8 pt-4 border-t border-dashed border-slate-200 text-center opacity-50">
                     <Sparkles className="h-4 w-4 mx-auto text-indigo-400 mb-1" />
                     <p className="text-[10px]">Formatted by VIGBOT Career Hub</p>

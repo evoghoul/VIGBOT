@@ -30,7 +30,7 @@ class ToolResult(TypedDict, total=False):
 
 class CampusGraphService:
     """Directed graph model of VFSTR campus for turn-by-turn pathfinding."""
-    
+
     _nodes: Optional[Dict[str, Dict[str, Any]]] = None
     _adj: Optional[Dict[str, List[Tuple[str, float, str, str]]]] = None
 

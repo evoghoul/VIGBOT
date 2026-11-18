@@ -51,22 +51,22 @@ import { useStudent } from "@/context/StudentContext";
 const InteractiveAttendanceCard = ({ card, tone, onOpenServiceModal, onNavigateTab }: any) => {
   const [simulatedClasses, setSimulatedClasses] = React.useState(0);
   const data = card.data || {};
-  
+
   const calculateSimulatedPct = () => {
     let held = Number(data.classesHeld || 40);
     let attended = Number(data.classesAttended || 29);
-    
+
     if (data.current_attendance) {
       const current = parseFloat(data.current_attendance.replace('%', ''));
       held = 100;
       attended = current;
     }
-    
+
     const newHeld = held + simulatedClasses;
     const newAtt = attended + simulatedClasses;
     return Math.min(100, Math.round((newAtt / newHeld) * 100));
   };
-  
+
   const currentPct = parseFloat(String(data.currentPct || data.current_attendance || "75").replace('%', ''));
   const targetPct = 75;
 
@@ -77,7 +77,7 @@ const InteractiveAttendanceCard = ({ card, tone, onOpenServiceModal, onNavigateT
         <span className="text-xs font-bold text-slate-900">{card.title}</span>
       </div>
       <p className="text-xs text-slate-700 mb-3 font-medium">{card.subtitle}</p>
-      
+
       <div className="grid grid-cols-2 gap-2 mb-4">
         <div className="rounded-lg bg-card p-2.5 border border-slate-200">
           <div className="text-xs text-muted-foreground">{data.current_cgpa ? "Current CGPA" : "Current Pct"}</div>
@@ -97,7 +97,7 @@ const InteractiveAttendanceCard = ({ card, tone, onOpenServiceModal, onNavigateT
           </span>
           <span className="text-[10px] font-mono text-slate-600 font-bold">Target: {targetPct}%</span>
         </div>
-        
+
         <input
           type="range"
           min="0"
@@ -106,7 +106,7 @@ const InteractiveAttendanceCard = ({ card, tone, onOpenServiceModal, onNavigateT
           onChange={(e) => setSimulatedClasses(parseInt(e.target.value))}
           className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600 mb-2"
         />
-        
+
         <div className="flex justify-between items-center bg-slate-50 rounded p-1.5 border border-slate-100">
           <span className="text-[11px] text-slate-600">+ {simulatedClasses} classes</span>
           <span className="text-xs font-bold text-slate-900">{calculateSimulatedPct()}%</span>
@@ -352,7 +352,7 @@ export const AiHelpdeskPanel: React.FC<AiHelpdeskPanelProps> = ({
             <span className="text-xs font-bold text-cyan-950">{card.title}</span>
           </div>
           <p className="text-xs text-cyan-900/90 mb-3 font-medium">{card.subtitle}</p>
-          
+
           <div className="space-y-2 mb-4">
             {Object.entries(data).map(([role, info]: [string, any]) => (
               <div key={role} className="flex justify-between items-center rounded-lg bg-card p-2 border border-cyan-100 shadow-sm text-xs">

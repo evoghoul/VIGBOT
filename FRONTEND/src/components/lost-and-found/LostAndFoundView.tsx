@@ -26,7 +26,7 @@ interface LostAndFoundItem {
 export const LostAndFoundView = () => {
   const { studentData } = useStudent();
   const student = studentData?.profile;
-  
+
   const [items, setItems] = useState<LostAndFoundItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<'all' | 'lost' | 'found'>('all');
@@ -150,8 +150,8 @@ export const LostAndFoundView = () => {
     }
   };
 
-  const filteredItems = items.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredItems = items.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.tags?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -166,7 +166,7 @@ export const LostAndFoundView = () => {
             Help your fellow students by reporting found items or posting what you've lost.
           </p>
         </div>
-        
+
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition-colors cursor-pointer"
@@ -184,8 +184,8 @@ export const LostAndFoundView = () => {
               key={type}
               onClick={() => setFilterType(type)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize whitespace-nowrap transition-all ${
-                filterType === type 
-                  ? "bg-white text-slate-800 shadow-sm" 
+                filterType === type
+                  ? "bg-white text-slate-800 shadow-sm"
                   : "text-slate-500 hover:text-slate-700 hover:bg-slate-200"
               }`}
             >
@@ -221,12 +221,12 @@ export const LostAndFoundView = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredItems.map(item => (
             <div key={item.id} className="group relative flex flex-col overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all">
-              
+
               {/* Type Badge */}
               <div className="absolute top-3 left-3 z-10">
                 <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full backdrop-blur-md shadow-sm ${
-                  item.type === 'lost' 
-                    ? 'bg-rose-500/90 text-white' 
+                  item.type === 'lost'
+                    ? 'bg-rose-500/90 text-white'
                     : 'bg-emerald-500/90 text-white'
                 }`}>
                   {item.type}
@@ -275,7 +275,7 @@ export const LostAndFoundView = () => {
                     <User className="h-3.5 w-3.5" />
                     <span className="truncate">{item.contact_info}</span>
                   </div>
-                  
+
                   <button
                     onClick={() => handleClaim(item.id)}
                     disabled={actionLoading === item.id || item.student_id === student?.id}
@@ -303,10 +303,10 @@ export const LostAndFoundView = () => {
         </div>
       )}
 
-      <ReportItemModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSubmit={handleReportItem} 
+      <ReportItemModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleReportItem}
       />
     </div>
   );

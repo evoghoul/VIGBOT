@@ -3,7 +3,7 @@ import { MapPin, Search, Compass, Navigation, LocateFixed, Layers, Maximize, Min
 import { getCampusLocations } from "@/actions/campus";
 import dynamic from "next/dynamic";
 
-const DynamicMap = dynamic(() => import("./DynamicMap"), { 
+const DynamicMap = dynamic(() => import("./DynamicMap"), {
   ssr: false,
   loading: () => (
     <div className="flex-1 bg-slate-100 flex items-center justify-center relative overflow-hidden h-full min-h-[400px]">
@@ -20,7 +20,7 @@ export const CampusMapView = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<any | null>(null);
   const [userCharacter, setUserCharacter] = useState("dot"); // Default dot
-  
+
   // New Map States
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -34,7 +34,7 @@ export const CampusMapView = () => {
     { id: "happy", label: "Happy", emoji: "😁" },
     { id: "teacher", label: "Teacher", emoji: "🧑‍🏫" }
   ];
-  
+
   const categories = ["All", "Academic", "Administrative", "Facility", "Hostel", "Food"];
 
   const mapContainerRef = React.useRef<HTMLDivElement>(null);
@@ -109,16 +109,16 @@ export const CampusMapView = () => {
 
   const normalizedSearch = searchTerm.toLowerCase().replace(/[\s-]/g, '');
   const filteredLocations = locations.filter(l => {
-    const matchesSearch = l.name.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch) || 
+    const matchesSearch = l.name.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch) ||
       l.building.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch) ||
       (l.description && l.description.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch)) ||
       (l.type && l.type.toLowerCase().replace(/[\s-]/g, '').includes(normalizedSearch));
 
     if (activeCategory === "All") return matchesSearch;
-    
+
     const typeLower = (l.type || "").toLowerCase();
     let matchesCategory = false;
-    
+
     switch(activeCategory) {
       case "Food": matchesCategory = typeLower.includes("food") || typeLower.includes("canteen") || typeLower.includes("cafeteria"); break;
       case "Academic": matchesCategory = typeLower.includes("academic") || typeLower.includes("lab") || typeLower.includes("classroom") || typeLower.includes("office"); break;
@@ -127,12 +127,12 @@ export const CampusMapView = () => {
       case "Facility": matchesCategory = typeLower.includes("facility") || typeLower.includes("bank") || typeLower.includes("atm") || typeLower.includes("library"); break;
       default: matchesCategory = true;
     }
-    
+
     return matchesSearch && matchesCategory;
   });
 
-  const wrapperClass = isFullScreen 
-    ? "fixed inset-0 z-[9999] bg-card p-4 flex flex-col" 
+  const wrapperClass = isFullScreen
+    ? "fixed inset-0 z-[9999] bg-card p-4 flex flex-col"
     : "space-y-6 animate-in fade-in zoom-in-95 duration-300 flex flex-col h-auto lg:h-[calc(100vh-12rem)] lg:min-h-[500px]";
 
   return (
@@ -163,8 +163,8 @@ export const CampusMapView = () => {
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeCategory === cat 
-                    ? 'bg-blue-600 text-white shadow-sm' 
+                  activeCategory === cat
+                    ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -184,7 +184,7 @@ export const CampusMapView = () => {
                 <Compass className="h-5 w-5 text-blue-600" />
                 <h3 className="font-semibold text-sm hidden sm:inline-block">Interactive Map</h3>
               </div>
-              <button 
+              <button
                 onClick={handleLocateMe}
                 disabled={isLocating}
                 className="flex items-center gap-1.5 text-xs font-medium bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50"
@@ -192,7 +192,7 @@ export const CampusMapView = () => {
                 <LocateFixed className={`h-4 w-4 text-blue-600 ${isLocating ? 'animate-spin' : ''}`} />
                 {isLocating ? 'Locating...' : 'Locate Me'}
               </button>
-              <button 
+              <button
                 onClick={toggleFullScreen}
                 className="flex items-center gap-1.5 text-xs font-medium bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50 text-slate-700 transition-colors"
                 title="Toggle Full Screen"
@@ -201,7 +201,7 @@ export const CampusMapView = () => {
                 <span className="hidden sm:inline">{isFullScreen ? 'Exit' : 'Full Screen'}</span>
               </button>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <div className="flex items-center bg-white border border-border rounded-lg px-2 py-1 gap-1 hidden sm:flex">
                 <span className="text-xs text-muted-foreground mr-1">You:</span>
@@ -217,7 +217,7 @@ export const CampusMapView = () => {
                 ))}
               </div>
               {selectedLocation && (
-                <button 
+                <button
                   onClick={() => setSelectedLocation(null)}
                   className="text-xs bg-white border border-border px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
                 >
@@ -227,10 +227,10 @@ export const CampusMapView = () => {
             </div>
           </div>
           <div className="flex-1 relative z-0 min-h-0">
-            <DynamicMap 
-              locations={filteredLocations} 
-              selectedLocation={selectedLocation} 
-              userCharacter={userCharacter} 
+            <DynamicMap
+              locations={filteredLocations}
+              selectedLocation={selectedLocation}
+              userCharacter={userCharacter}
               userLocation={userLocation}
               routeTo={routeTo}
               onLocationSelect={setSelectedLocation}
@@ -249,7 +249,7 @@ export const CampusMapView = () => {
                   <h3 className="font-bold text-lg">{selectedLocation.name}</h3>
                   <p className="text-blue-100 text-sm">{selectedLocation.building}, Floor {selectedLocation.floor}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSelectedLocation(null)}
                   className="bg-blue-700/50 hover:bg-blue-700 rounded-full p-1.5 transition-colors"
                 >
@@ -257,9 +257,9 @@ export const CampusMapView = () => {
                 </button>
               </div>
               <div className="p-4 flex-1 overflow-y-auto space-y-4">
-                
+
                 {/* Directions Button - NEW */}
-                <button 
+                <button
                   onClick={handleGetDirections}
                   className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 py-3 px-4 rounded-lg text-sm font-semibold transition-colors border border-blue-200"
                 >
@@ -271,13 +271,13 @@ export const CampusMapView = () => {
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Description</h4>
                   <p className="text-sm">{selectedLocation.description || "No description available for this location."}</p>
                 </div>
-                
+
                 <div className="space-y-2 pt-4 border-t border-border">
                   {selectedLocation.features && selectedLocation.features.length > 0 ? (
                     selectedLocation.features.map((feature: string, idx: number) => {
                       let btnClass = "w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition-colors ";
                       let icon = null;
-                      
+
                       if (feature.includes('Directions')) {
                         btnClass += "bg-blue-600 hover:bg-blue-700 text-white shadow-sm";
                         icon = <Navigation className="h-4 w-4" />;
@@ -311,12 +311,12 @@ export const CampusMapView = () => {
               <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin min-h-0">
                 {filteredLocations.length > 0 ? (
                   filteredLocations.map((loc) => (
-                    <div 
-                      key={loc.id} 
+                    <div
+                      key={loc.id}
                       onClick={() => setSelectedLocation(loc)}
                       className={`p-3 rounded-lg border transition-colors cursor-pointer group ${
-                        selectedLocation?.id === loc.id 
-                          ? 'border-blue-500 bg-blue-50/80 shadow-sm' 
+                        selectedLocation?.id === loc.id
+                          ? 'border-blue-500 bg-blue-50/80 shadow-sm'
                           : 'border-slate-100 hover:border-blue-200 hover:bg-blue-50/50'
                       }`}
                     >

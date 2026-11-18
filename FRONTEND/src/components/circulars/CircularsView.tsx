@@ -35,7 +35,7 @@ export const CircularsView: React.FC<CircularsViewProps> = ({ onAskHelpdesk }) =
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.circularsTitle || "Official University Circulars"}</h2>
-            
+
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.circularsSubtitle || "Official announcements issued by the Registrar and Controller of Examinations."}

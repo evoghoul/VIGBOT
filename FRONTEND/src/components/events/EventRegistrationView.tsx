@@ -66,7 +66,7 @@ export const EventRegistrationView = () => {
                       <Ticket className="h-4 w-4" /> Registered
                     </span>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => handleRegister(ev.name)}
                       className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors shadow-sm"
                     >

@@ -64,21 +64,21 @@ def get_attendance_summary(session: DatabaseSession, subject_query: Optional[str
 
     # Select the subject of interest (or the most critical one if multiple)
     critical_record = min(records, key=lambda r: r["current_pct"])
-    
+
     # Calculate recovery for the critical subject
     classes_needed = calculate_consecutive_needed(
         critical_record["classes_attended"],
         critical_record["classes_held"],
         critical_record["required_pct"]
     )
-    
+
     is_at_risk = critical_record["current_pct"] < critical_record["required_pct"]
-    
+
     text = (
         f"Your attendance in **{critical_record['course_title']} ({critical_record['course_code']})** is "
         f"**{critical_record['current_pct']:.1f}%** ({critical_record['classes_attended']} out of {critical_record['classes_held']} classes attended).\n\n"
     )
-    
+
     if is_at_risk:
         text += (
             f"⚠️ **Status: Below Mandatory 75% Threshold**\n"

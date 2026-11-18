@@ -98,7 +98,7 @@ class UniversalNLU:
                 content = msg.get("content", "").lower()
                 meta = msg.get("responseMeta") or {}
                 redirect_path = meta.get("redirect_path") or msg.get("redirect_path")
-                
+
                 # Check explicit redirect_path in metadata
                 if redirect_path and redirect_path in APPLICATION_CAPABILITIES:
                     return APPLICATION_CAPABILITIES[redirect_path]
@@ -492,15 +492,15 @@ class UniversalNLU:
                     tool_res = ToolRegistry.get_campus_location_and_navigation(destination=query)
                     direct_ans = tool_res.get("direct_answer", "")
                     data = tool_res.get("data")
-                    
+
                     q_lower = query.lower()
                     is_directional = bool(re.search(
                         r"\b(?:where\s+is|where\s+are|directions?\s+to|how\s+to\s+reach|how\s+do\s+i\s+(?:reach|get\s+to|go\s+to)|how\s+can\s+i\s+(?:reach|get\s+to|go\s+to)|way\s+to|route\s+to|path\s+to|walking\s+route|from\s+.+\s+to|take\s+me\s+to)\b",
                         q_lower
                     ))
-                    
+
                     profile = data.get("building_profile") if (data and isinstance(data, dict)) else None
-                    
+
                     if not is_directional and profile:
                         # Informational building profile for "what is N-block?", "tell me about N-block", etc.
                         b_title = profile.get("title", data.get("destination", "Campus Facility"))

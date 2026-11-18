@@ -53,7 +53,7 @@ export function BookingModal({ facility, isOpen, onClose }: BookingModalProps) {
     }
 
     setLoading(true);
-    
+
     // Calculate end time (1 hour later)
     const hour = parseInt(selectedTime.split(':')[0]);
     const endTime = `${(hour + 1).toString().padStart(2, '0')}:00`;
@@ -167,7 +167,7 @@ export function BookingModal({ facility, isOpen, onClose }: BookingModalProps) {
                 {TIME_SLOTS.map(slot => {
                   const isBooked = existingBookings.some(b => b.start_time === slot);
                   const isSelected = selectedTime === slot;
-                  
+
                   return (
                     <button
                       key={slot}
@@ -175,10 +175,10 @@ export function BookingModal({ facility, isOpen, onClose }: BookingModalProps) {
                       disabled={isBooked}
                       onClick={() => setSelectedTime(slot)}
                       className={`py-2 text-sm rounded-lg border transition-all flex items-center justify-center gap-1 ${
-                        isBooked 
-                          ? "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed opacity-60" 
-                          : isSelected 
-                            ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20" 
+                        isBooked
+                          ? "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed opacity-60"
+                          : isSelected
+                            ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20"
                             : "bg-white border-slate-200 text-slate-700 hover:border-blue-500 hover:text-blue-600"
                       }`}
                     >

@@ -97,7 +97,7 @@ def get_transport_summary(session: Optional[DatabaseSession] = None, query: str 
         }
 
     db_routes = DataRepository.get_transport_routes()
-    
+
     text_lines: List[str] = [
         "🚌 **VFSTR College Bus Fleet & Campus Transit System:**\n",
         "• **Major Bus Transit Routes:**",

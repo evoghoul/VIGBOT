@@ -153,8 +153,8 @@ class VigbotApiClient {
     if (!token) return null;
     try {
       let resp = await fetch(`${BACKEND_BASE_URL}/me`, {
-        headers: { 
-          Authorization: `Bearer ${token}` 
+        headers: {
+          Authorization: `Bearer ${token}`
         },
         signal: AbortSignal.timeout(2500),
       });
@@ -164,8 +164,8 @@ class VigbotApiClient {
         token = await this.ensureAuthenticated();
         if (token) {
           resp = await fetch(`${BACKEND_BASE_URL}/me`, {
-            headers: { 
-              Authorization: `Bearer ${token}` 
+            headers: {
+              Authorization: `Bearer ${token}`
             },
             signal: AbortSignal.timeout(2500),
           });
@@ -183,8 +183,8 @@ class VigbotApiClient {
     if (!token) return null;
     try {
       let resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
-        headers: { 
-          Authorization: `Bearer ${token}` 
+        headers: {
+          Authorization: `Bearer ${token}`
         },
         signal: AbortSignal.timeout(2500),
       });
@@ -194,8 +194,8 @@ class VigbotApiClient {
         token = await this.ensureAuthenticated();
         if (token) {
           resp = await fetch(`${BACKEND_BASE_URL}/student/dashboard`, {
-            headers: { 
-              Authorization: `Bearer ${token}` 
+            headers: {
+              Authorization: `Bearer ${token}`
             },
             signal: AbortSignal.timeout(2500),
           });

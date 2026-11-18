@@ -10,7 +10,7 @@ def search_policies_and_circulars(query: str) -> Dict[str, Any]:
     # 1. SQL policies and circulars
     policies = DataRepository.search_policies(query) if asks_for_policies or not asks_for_circulars else []
     circulars = DataRepository.search_circulars(query) if asks_for_circulars or not asks_for_policies else []
-    
+
     citations = []
     text_lines = []
 

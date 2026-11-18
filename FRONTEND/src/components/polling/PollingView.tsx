@@ -83,7 +83,7 @@ export function PollingView() {
             ) : (
               <div className="space-y-2">
                 {poll.options.map((option: string, idx: number) => (
-                  <button 
+                  <button
                     key={idx}
                     onClick={() => handleVote(poll.id)}
                     className="w-full text-left px-4 py-3 rounded-lg border hover:bg-muted hover:border-primary/50 transition-colors text-sm font-medium"

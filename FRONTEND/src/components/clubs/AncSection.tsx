@@ -17,7 +17,7 @@ export function AncSection({ club }: AncSectionProps) {
 
   const [showComplaintForm, setShowComplaintForm] = useState(false);
   const [complaintText, setComplaintText] = useState('');
-  
+
   // Progress tracker state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progressStep, setProgressStep] = useState(0);
@@ -31,16 +31,16 @@ export function AncSection({ club }: AncSectionProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!complaintText.trim()) return;
-    
+
     setIsSubmitting(true);
     setProgressStep(1); // Encrypting...
-    
+
     setTimeout(() => setProgressStep(2), 1200); // Bypassing channels...
     setTimeout(() => setProgressStep(3), 2400); // Securing...
-    
+
     // Actually call the DB
     const res = await submitAncComplaint(complaintText, student.id);
-    
+
     setTimeout(() => {
       setIsSubmitting(false);
       setProgressStep(4);
@@ -53,7 +53,7 @@ export function AncSection({ club }: AncSectionProps) {
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchId.trim()) return;
-    
+
     setIsTracking(true);
     const res = await trackComplaint(searchId, student.id);
     if (res.success) {
@@ -77,16 +77,16 @@ export function AncSection({ club }: AncSectionProps) {
         <ShieldCheck className="w-8 h-8 text-rose-600" />
         <h2 className="text-2xl font-bold text-rose-900">{club.name}</h2>
       </div>
-      
+
       <div className="bg-white p-5 rounded-lg border border-rose-100 mb-6">
         <h3 className="text-lg font-bold text-rose-800 mb-2 flex items-center">
           <AlertTriangle className="w-5 h-5 mr-2" />
           Zero Tolerance Policy
         </h3>
         <p className="text-rose-700 leading-relaxed">
-          {club.description} The state university strictly prohibits any form of ragging. 
-          Consequences of ragging include immediate suspension, rustication from the university, 
-          cancellation of admission, and lodging of an FIR with local police. 
+          {club.description} The state university strictly prohibits any form of ragging.
+          Consequences of ragging include immediate suspension, rustication from the university,
+          cancellation of admission, and lodging of an FIR with local police.
         </p>
       </div>
 
@@ -94,14 +94,14 @@ export function AncSection({ club }: AncSectionProps) {
         <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm flex flex-col">
           <span className="font-bold text-gray-900 mb-2">Track Existing Complaint</span>
           <form onSubmit={handleTrack} className="flex gap-2">
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="e.g. ANC-1234"
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-rose-500"
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
             />
-            <button 
+            <button
               type="submit"
               disabled={isTracking}
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium text-sm flex items-center"
@@ -124,7 +124,7 @@ export function AncSection({ club }: AncSectionProps) {
            {!showComplaintForm && progressStep === 0 && (
              <div className="text-center">
                <h4 className="font-bold text-gray-900 mb-2">Need to report an incident?</h4>
-               <button 
+               <button
                  onClick={() => setShowComplaintForm(true)}
                  className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
                >
@@ -142,7 +142,7 @@ export function AncSection({ club }: AncSectionProps) {
               <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
               <h4 className="text-xl font-bold text-gray-900 mb-2">Complaint Registered Successfully</h4>
               <p className="text-gray-600 mb-4">
-                Your incident has been securely recorded. The Nodal Officer has been notified. 
+                Your incident has been securely recorded. The Nodal Officer has been notified.
                 Your secure Tracking ID is: <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-800 font-bold">{trackingId}</span>
               </p>
               <button onClick={resetForm} className="text-sm font-medium text-rose-600 hover:underline">
@@ -153,7 +153,7 @@ export function AncSection({ club }: AncSectionProps) {
             <div className="py-8 px-4">
               <h4 className="font-bold text-gray-900 mb-6 text-center">Securing your report...</h4>
               <div className="max-w-md mx-auto space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent">
-                
+
                 <div className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${progressStep >= 1 ? 'opacity-100' : 'opacity-30'}`}>
                   <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 border-white bg-slate-300 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow transition-colors ${progressStep >= 1 ? 'bg-rose-500' : ''}`}>
                     {progressStep === 1 && <Loader2 className="w-5 h-5 text-white animate-spin" />}

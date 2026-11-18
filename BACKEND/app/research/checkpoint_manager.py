@@ -247,7 +247,7 @@ class CheckpointManager:
                 json.dump(data, f, indent=2, ensure_ascii=False)
                 f.flush()
                 os.fsync(f.fileno())
-            
+
             # Windows retry loop to gracefully handle transient file locks
             for attempt in range(5):
                 try:

@@ -8,18 +8,18 @@ export function getDb(): any {
   let dbPath = fs.existsSync(vigbotPath)
     ? vigbotPath
     : (fs.existsSync(directPath) ? directPath : path.resolve(process.cwd(), '../database/student_helpdesk.db'));
-  
+
   if (isServerless) {
     dbPath = fs.existsSync('/tmp/vigbot.db') ? '/tmp/vigbot.db' : '/tmp/student_helpdesk.db';
-    const bundledPath = fs.existsSync(path.resolve(process.cwd(), 'vigbot.db')) 
-      ? path.resolve(process.cwd(), 'vigbot.db') 
+    const bundledPath = fs.existsSync(path.resolve(process.cwd(), 'vigbot.db'))
+      ? path.resolve(process.cwd(), 'vigbot.db')
       : path.resolve(process.cwd(), 'student_helpdesk.db');
-    
+
     if (!fs.existsSync(dbPath)) {
       if (fs.existsSync(bundledPath)) {
         try {
           fs.copyFileSync(bundledPath, dbPath);
-          console.log("Mock Database copied to /tmp successfully for Vercel execution.");
+          console.info("Mock Database copied to /tmp successfully for Vercel execution.");
         } catch (e) {
           console.warn("Failed to copy bundled DB to /tmp:", e);
         }
@@ -28,7 +28,7 @@ export function getDb(): any {
       }
     }
   }
-  
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Database = require('better-sqlite3');

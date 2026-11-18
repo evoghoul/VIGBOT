@@ -190,7 +190,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (backendResp) {
               const categoryStr = (backendResp.category as string) || "PERSONAL_DATA";
               let mappedRedirectPath: string | undefined = undefined;
-              
+
               const qLower = query.toLowerCase();
               if (categoryStr === "ATTENDANCE" || qLower.includes("attendance")) mappedRedirectPath = "attendance";
               else if (categoryStr === "EXAMS" || qLower.includes("exam")) mappedRedirectPath = "exams";
@@ -242,7 +242,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 },
               ]);
               setIsTyping(false);
-      
+
               if (backendResp.is_distress && distressCallbackRef.current) {
                 distressCallbackRef.current();
               }
@@ -260,7 +260,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } catch (e) {
         console.warn("Error calling askAiKnowledgeBase Server Action:", e);
       }
-      
+
       if (dbSearch && dbSearch.success && dbSearch.answer) {
         setMessages((prev) => [
           ...prev,
@@ -291,7 +291,7 @@ export const AgentChatProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       const localCategoryStr = (response.category as string) || "PERSONAL_DATA";
       let localMappedRedirectPath: string | undefined = undefined;
-      
+
       const qLowerLocal = query.toLowerCase();
       if (localCategoryStr === "ATTENDANCE" || qLowerLocal.includes("attendance")) localMappedRedirectPath = "attendance";
       else if (localCategoryStr === "EXAMS" || qLowerLocal.includes("exam")) localMappedRedirectPath = "exams";

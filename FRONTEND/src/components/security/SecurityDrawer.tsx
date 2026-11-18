@@ -219,7 +219,7 @@ export const SecurityDrawer: React.FC<SecurityDrawerProps> = ({ isOpen, onClose 
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-foreground">{agent.name}</span>
-                        
+
                         {agent.rlsEnforced && (
                           <span className="rounded-full bg-emerald-50 px-1.5 py-0.2 text-xs font-bold text-emerald-700 border border-emerald-200">
                             RLS

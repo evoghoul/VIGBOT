@@ -67,7 +67,7 @@ class VignanHybridRetriever:
                 label = k.replace("_", " ").title()
                 chunk_id = f"{src_id}_{k}"
                 text_content = f"{label}: {v}"
-                
+
                 # Derive keywords
                 words = re.findall(r"\w+", f"{label} {v}".lower())
                 keywords = list(set([w for w in words if len(w) > 2]))

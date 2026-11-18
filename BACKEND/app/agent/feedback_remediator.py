@@ -524,7 +524,7 @@ Respond ONLY with valid JSON (no markdown formatting, no code blocks) matching t
             tool_dict = tool_res if isinstance(tool_res, dict) else (getattr(tool_res, "data", {}) or {})
             data = tool_dict.get("data") if isinstance(tool_dict, dict) else {}
             direct_answer = tool_dict.get("direct_answer", "") if isinstance(tool_dict, dict) else ""
-            
+
             # Check if query was informational vs directional
             is_directional = bool(re.search(r"\b(where|reach|how\s+to\s+(?:go|get|reach)|path|route|direction|directions|way\s+to|walk|walking)\b", query, re.I))
             building_profile = data.get("building_profile") if isinstance(data, dict) else None

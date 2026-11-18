@@ -303,7 +303,7 @@ class NLUEngine:
         )
 
         clean_reply = LLMClient.clean_latex_formatting(llm_reply or "")
-        
+
         # Guard against hallucinated student records (only applies if personal records are mentioned)
         student_context = {
             "profile": DataRepository.get_student_profile(session),
@@ -519,7 +519,7 @@ class NLUEngine:
         direct_response_text = ""
         category = "LOCAL_LLM_REASONING"
         topic = "Conversational AI Assistant"
-        
+
         model_label = f"Local {selected_model} Model"
         source_agent = f"VIGBOT ({model_label})"
 
@@ -619,7 +619,7 @@ class NLUEngine:
             direct_response_text = "I checked the official university records and found that Zest is a utility store on campus where you can buy day-to-day life things and groceries."
             category = "INSTITUTIONAL_INFO"
             topic = "Campus Facilities"
-            source_agent = "Campus Info" 
+            source_agent = "Campus Info"
 
         # A2. Club Information Query (list clubs, process of joining, what clubs exist)
         elif cls.has_any_word(q_lower, ["club", "clubs", "extracurricular", "society", "societies"]) and cls.has_any_word(q_lower, ["process", "how", "what", "list", "available", "which", "tell me", "details", "information", "info", "describe", "show", "know"]):
@@ -660,13 +660,13 @@ class NLUEngine:
                     target_club_id = c["club_id"]
                     target_club_name = c["name"]
                     break
-            
+
             profile = DataRepository.get_student_profile(session)
             student_name = profile.get("full_name", "Student") if profile else "Student"
             first_name = student_name.split()[0] if student_name else "Student"
-            
+
             app = DataRepository.create_club_application(session, target_club_id, student_name)
-            
+
             category = "CLUBS"
             topic = f"Club Application: {target_club_name}"
             source_agent = "Extracurriculars"
@@ -803,7 +803,7 @@ class NLUEngine:
                     sanitized_clf_query = re.sub(r"\b" + re.escape(fname) + r"\b", "[Student]", sanitized_clf_query, flags=re.IGNORECASE)
 
             intent = LLMClient.classify_intent(sanitized_clf_query)
-            
+
             if intent == "ATTENDANCE":
                 att_res = get_attendance_summary(session, active_subject)
                 direct_response_text = att_res.get("text", "")
@@ -814,7 +814,7 @@ class NLUEngine:
                 category = "PERSONAL_DATA"
                 topic = "Attendance Analytics"
                 source_agent = "Attendance System"
-                
+
             elif intent == "EXAMS":
                 exam_res = get_exams_summary(session)
                 direct_response_text = exam_res.get("text", "")
@@ -823,7 +823,7 @@ class NLUEngine:
                 category = "PERSONAL_DATA"
                 topic = "Examinations & Assessments"
                 source_agent = "Examination Hub"
-                
+
             elif intent == "FEES":
                 fee_res = get_fees_summary(session)
                 direct_response_text = fee_res.get("text", "")
@@ -832,7 +832,7 @@ class NLUEngine:
                 category = "TRANSACTIONAL"
                 topic = "Student Fee Ledgers"
                 source_agent = "Finance Engine"
-                
+
             elif intent == "TIMETABLE":
                 tt_res = get_timetable_summary(session)
                 direct_response_text = tt_res.get("text", "")
@@ -840,7 +840,7 @@ class NLUEngine:
                 category = "PERSONAL_DATA"
                 topic = "Academic Timetable"
                 source_agent = "Scheduling Service"
-                
+
             elif intent == "MARKS":
                 marks_res = get_marks_summary(session)
                 direct_response_text = marks_res.get("text", "")
@@ -849,7 +849,7 @@ class NLUEngine:
                 category = "PERSONAL_DATA"
                 topic = "Academic Performance & Marks"
                 source_agent = "Assessment Engine"
-                
+
             elif intent == "CURRICULUM":
                 curr_res = get_curriculum_summary(session)
                 direct_response_text = curr_res.get("text", "")
@@ -858,7 +858,7 @@ class NLUEngine:
                 category = "ACADEMIC_AUDIT"
                 topic = "Curriculum & Degree Audit"
                 source_agent = "Curriculum Engine"
-                
+
             elif intent == "LIBRARY":
                 lib_res = get_library_summary(session)
                 direct_response_text = lib_res.get("text", "")
@@ -867,7 +867,7 @@ class NLUEngine:
                 category = "PERSONAL_DATA"
                 topic = "Library Circulation Records"
                 source_agent = "Library System"
-                
+
             elif intent == "FACULTY":
                 advisors = DataRepository.get_student_advisors(session)
                 if advisors:
@@ -884,7 +884,7 @@ class NLUEngine:
                     category = "PERSONAL_DATA"
                     topic = "Faculty & Advisor Directory"
                     source_agent = "Faculty & Identity System"
-                    
+
             elif intent in [
                 "POLICIES", "CIRCULARS", "CALENDAR", "CLUBS", "LOST_AND_FOUND",
                 "BOOKINGS", "SERVICES", "MAP", "EVENTS", "HOSTEL", "MARKETPLACE",
@@ -893,7 +893,7 @@ class NLUEngine:
                 category = intent
                 topic = intent.replace("_", " ").title()
                 source_agent = "VIGBOT (Navigation Assistant)"
-                
+
             else:
                 # Universal Knowledge Search for KNOWLEDGE_BASE or GENERAL
                 parts = []
@@ -902,12 +902,12 @@ class NLUEngine:
                 if faq_res:
                     for f in faq_res[:2]:
                         parts.append(f"FAQ: {f['topic']} - {f['question']}\nAnswer: {f['answer']}")
-                
+
                 # 2. Policies
                 pol_res = search_policies_and_circulars(query)
                 if pol_res and pol_res.get("text"):
                     parts.append(f"POLICY: {pol_res['text']}")
-                    
+
                 # 3. Campus Location
                 room_match = re.search(r'(?:room|cabin|block)?\s*([A-Za-z]?-?\d{1,3})', q_lower)
                 if room_match:
@@ -915,7 +915,7 @@ class NLUEngine:
                     loc_data = DataRepository.get_campus_location(room_no)
                     if loc_data:
                         parts.append(f"LOCATION: To get to {loc_data['description']} (Room {loc_data['room_number']}), please go to the {loc_data['floor']} of {loc_data['block']}.")
-                        
+
                 if parts:
                     direct_response_text = "\n\n".join(parts)
                     category = "INSTITUTIONAL_INFO"
@@ -927,7 +927,7 @@ class NLUEngine:
         # Verified record lookups, transactional actions, and static institutional lookups
         # do not need an external generation round-trip. We bypass the LLM for these.
         is_transactional_or_static = bool(action_note) or (bool(direct_response_text) and topic != "Knowledge Base")
-        
+
         if (cls.is_fast_record_query(q_lower) or is_transactional_or_static) and not cls.is_stress_or_concern(q_lower):
             fast_reply = direct_response_text if direct_response_text else cls.generate_deterministic_fallback(
                 session, query, active_subject, effective_lang, action_note
@@ -1026,68 +1026,14 @@ class NLUEngine:
         # 1. Distress safety path: confident prediction provides supportive counseling response without crisis overlay
         if intent == "distress_support":
             if is_confident:
-                # If inquiry is specifically academic stress regarding marks/attendance recovery
-                if "can i still pass" in q_lower or ("low marks" in q_lower and "attendance" in q_lower):
-                    recovery_text = cls.generate_deterministic_fallback(session, query, active_subject, effective_lang)
-                    return {
-                        "category": "ACADEMIC_ADVISING",
-                        "topic": "Academic Advising & Stress Recovery",
-                        "source_agent": "VIGBOT (Academic Advising Hub)",
-                        "content": recovery_text,
-                        "citations": [],
-                        "structured_card": None,
-                        "is_distress": False,
-                        "suggested_follow_ups": ["How to apply for condonation", "Book advisor meeting"],
-                        "active_subject": active_subject,
-                        "language": effective_lang,
-                        "llm_provider": "local",
-                        "model_used": "intent-classifier",
-                        "used_fallback": False,
-                        "routed_by": routed_by,
-                    }
-
-                profile = DataRepository.get_student_profile(session) or {}
-                student_name = profile.get("full_name", "Student")
-                first_name = student_name.split()[0] if student_name else "Student"
-                counseling_text = (
-                    f"We are here to support you, {first_name}. You don't have to carry academic pressure or emotional stress alone.\n\n"
-                    f"Our university provides confidential student wellbeing and counseling support:\n"
-                    f"• **Student Wellness Center:** Room 102, Student Activity Building\n"
-                    f"• **Campus Emergency Counselor:** +91-98765-43210 (24/7)\n"
-                    f"• **National Tele-MANAS Helpline:** 14416 (Toll-Free, 24/7)\n"
-                    f"• **Faculty Mentor Support:** You can request a 1-on-1 academic advising consultation.\n\n"
-                    f"Would you like me to help connect you with your mentor or share wellness resources?"
+                return cls._handle_classified_distress(
+                    session=session,
+                    query=query,
+                    q_lower=q_lower,
+                    active_subject=active_subject,
+                    effective_lang=effective_lang,
+                    routed_by=routed_by,
                 )
-                card_data = {
-                    "type": "counseling_support",
-                    "title": "Student Counseling & Wellness Services",
-                    "subtitle": "Confidential support & guidance",
-                    "badge": "Wellbeing Support",
-                    "badgeVariant": "purple",
-                    "data": {
-                        "helpline": "14416 / +91-98765-43210",
-                        "center": "Room 102, Student Wellness Center",
-                        "confidential": True,
-                    },
-                    "actionLabel": "Book Mentor Meeting",
-                    "actionIntent": "Book mentor meeting",
-                }
-                return {
-                    "category": "DISTRESS_SUPPORT",
-                    "topic": "Mental Health & Wellbeing Counseling",
-                    "source_agent": "Distress Escalation & Counseling",
-                    "content": counseling_text,
-                    "citations": [],
-                    "structured_card": card_data,
-                    "is_distress": False,  # Only keyword crisis check triggers the crisis overlay
-                    "suggested_follow_ups": ["Book mentor meeting", "View counseling hours"],
-                    "active_subject": active_subject,
-                    "language": effective_lang,
-                    "llm_provider": "local",
-                    "model_used": "intent-classifier",
-                    "used_fallback": False,
-                    "routed_by": routed_by,
-                }
             return None
 
         # 2. Below threshold fallback: return None to allow existing rules/Gemini pipeline to handle
@@ -1095,6 +1041,125 @@ class NLUEngine:
             return None
 
         # 3. Confident predictions routed according to ml/intents.yaml
+        academic_res = cls._route_academic_intent(
+            session=session,
+            intent=intent,
+            query=query,
+            q_lower=q_lower,
+            active_subject=active_subject,
+            effective_lang=effective_lang,
+            routed_by=routed_by,
+        )
+        if academic_res is not None:
+            return academic_res
+
+        campus_life_res = cls._route_campus_life_intent(
+            session=session,
+            intent=intent,
+            query=query,
+            q_lower=q_lower,
+            active_subject=active_subject,
+            effective_lang=effective_lang,
+            routed_by=routed_by,
+            clf_result=clf_result,
+        )
+        if campus_life_res is not None:
+            return campus_life_res
+
+        return cls._route_general_intent(
+            session=session,
+            intent=intent,
+            query=query,
+            q_lower=q_lower,
+            active_subject=active_subject,
+            effective_lang=effective_lang,
+            routed_by=routed_by,
+        )
+
+    @classmethod
+    def _handle_classified_distress(
+        cls,
+        session: DatabaseSession,
+        query: str,
+        q_lower: str,
+        active_subject: Optional[str],
+        effective_lang: str,
+        routed_by: str,
+    ) -> Optional[Dict[str, Any]]:
+        # If inquiry is specifically academic stress regarding marks/attendance recovery
+        if "can i still pass" in q_lower or ("low marks" in q_lower and "attendance" in q_lower):
+            recovery_text = cls.generate_deterministic_fallback(session, query, active_subject, effective_lang)
+            return {
+                "category": "ACADEMIC_ADVISING",
+                "topic": "Academic Advising & Stress Recovery",
+                "source_agent": "VIGBOT (Academic Advising Hub)",
+                "content": recovery_text,
+                "citations": [],
+                "structured_card": None,
+                "is_distress": False,
+                "suggested_follow_ups": ["How to apply for condonation", "Book advisor meeting"],
+                "active_subject": active_subject,
+                "language": effective_lang,
+                "llm_provider": "local",
+                "model_used": "intent-classifier",
+                "used_fallback": False,
+                "routed_by": routed_by,
+            }
+
+        profile = DataRepository.get_student_profile(session) or {}
+        student_name = profile.get("full_name", "Student")
+        first_name = student_name.split()[0] if student_name else "Student"
+        counseling_text = (
+            f"We are here to support you, {first_name}. You don't have to carry academic pressure or emotional stress alone.\n\n"
+            f"Our university provides confidential student wellbeing and counseling support:\n"
+            f"• **Student Wellness Center:** Room 102, Student Activity Building\n"
+            f"• **Campus Emergency Counselor:** +91-98765-43210 (24/7)\n"
+            f"• **National Tele-MANAS Helpline:** 14416 (Toll-Free, 24/7)\n"
+            f"• **Faculty Mentor Support:** You can request a 1-on-1 academic advising consultation.\n\n"
+            f"Would you like me to help connect you with your mentor or share wellness resources?"
+        )
+        card_data = {
+            "type": "counseling_support",
+            "title": "Student Counseling & Wellness Services",
+            "subtitle": "Confidential support & guidance",
+            "badge": "Wellbeing Support",
+            "badgeVariant": "purple",
+            "data": {
+                "helpline": "14416 / +91-98765-43210",
+                "center": "Room 102, Student Wellness Center",
+                "confidential": True,
+            },
+            "actionLabel": "Book Mentor Meeting",
+            "actionIntent": "Book mentor meeting",
+        }
+        return {
+            "category": "DISTRESS_SUPPORT",
+            "topic": "Mental Health & Wellbeing Counseling",
+            "source_agent": "Distress Escalation & Counseling",
+            "content": counseling_text,
+            "citations": [],
+            "structured_card": card_data,
+            "is_distress": False,  # Only keyword crisis check triggers the crisis overlay
+            "suggested_follow_ups": ["Book mentor meeting", "View counseling hours"],
+            "active_subject": active_subject,
+            "language": effective_lang,
+            "llm_provider": "local",
+            "model_used": "intent-classifier",
+            "used_fallback": False,
+            "routed_by": routed_by,
+        }
+
+    @classmethod
+    def _route_academic_intent(
+        cls,
+        session: DatabaseSession,
+        intent: str,
+        query: str,
+        q_lower: str,
+        active_subject: Optional[str],
+        effective_lang: str,
+        routed_by: str,
+    ) -> Optional[Dict[str, Any]]:
         if intent == "attendance":
             att_res = get_attendance_summary(session, active_subject)
             return {
@@ -1245,7 +1310,21 @@ class NLUEngine:
                 },
             }
 
-        elif intent == "library":
+        return None
+
+    @classmethod
+    def _route_campus_life_intent(
+        cls,
+        session: DatabaseSession,
+        intent: str,
+        query: str,
+        q_lower: str,
+        active_subject: Optional[str],
+        effective_lang: str,
+        routed_by: str,
+        clf_result: Dict[str, Any],
+    ) -> Optional[Dict[str, Any]]:
+        if intent == "library":
             from app.agent.tool_registry import ToolRegistry
             if any(w in q_lower for w in ["hour", "hours", "timing", "timings", "open", "close", "sunday", "weekend", "saturday"]):
                 tool_res = ToolRegistry.get_library_info(day_of_week="Sunday" if "sunday" in q_lower else None, resource_query=query)
@@ -1338,7 +1417,7 @@ class NLUEngine:
         elif intent == "services":
             from app.agent.capability_registry import find_matching_capability, APPLICATION_CAPABILITIES
             from app.agent.universal_nlu import UniversalNLU
-            
+
             # 1. FALSE-ACTION GUARD: Check if query belongs to a different application capability (e.g. Lost & Found)
             matching_cap = find_matching_capability(query)
             if matching_cap and matching_cap["feature_id"] != "services":
@@ -1422,6 +1501,7 @@ class NLUEngine:
                 "routed_by": routed_by,
                 "redirect_path": "services",
             }
+
         elif intent == "clubs":
             clubs = DataRepository.get_clubs()
             profile = DataRepository.get_student_profile(session)
@@ -1611,7 +1691,20 @@ class NLUEngine:
                 },
             }
 
-        elif intent == "policy_bylaws":
+        return None
+
+    @classmethod
+    def _route_general_intent(
+        cls,
+        session: DatabaseSession,
+        intent: str,
+        query: str,
+        q_lower: str,
+        active_subject: Optional[str],
+        effective_lang: str,
+        routed_by: str,
+    ) -> Optional[Dict[str, Any]]:
+        if intent == "policy_bylaws":
             pol_res = search_policies_and_circulars(query)
             return {
                 "category": "POLICIES",
@@ -1712,7 +1805,7 @@ class NLUEngine:
             grounded_context = cls.build_grounded_student_context(session, query, active_subject, redact_pii=True)
             if direct_response_text:
                 grounded_context += f"\n\n- Verified Database Information / System Answer to use:\n{direct_response_text}\n"
-            
+
             action_section = f"\nSystem Action Status:\n{action_note}\n" if action_note else ""
 
             if effective_lang == "hi":
@@ -1746,7 +1839,7 @@ class NLUEngine:
 
             cgpa_val = profile.get("cgpa") if profile else None
             att_val = profile.get("overall_attendance_pct") if profile else None
-            
+
             advisors = DataRepository.get_student_advisors(session) or {}
             coun_name = advisors.get("counsellor", {}).get("name", "your assigned counsellor")
             ct_name = advisors.get("class_teacher", {}).get("name", "your class teacher")
@@ -1757,7 +1850,7 @@ class NLUEngine:
             else:
                 cgpa_str = f"{cgpa_val:.2f}" if cgpa_val is not None else "Not Available"
                 att_str = f"{att_val:.0f}%" if att_val is not None else "Not Available"
-                
+
                 procedural_directive = (
                     "11. PROCEDURAL GUIDANCE: If the student asks how to perform better, improve CGPA/grades, top the class, or study effectively:\n"
                     f"   a) Ground your advice directly in their actual profile metrics (Current CGPA: {cgpa_str}, Overall Attendance: {att_str}). If the data is 'Not Available', state that you do not have access to their current academic metrics.\n"
@@ -1967,14 +2060,14 @@ class NLUEngine:
             coun_email = coun.get("email", "")
 
             is_peer_query = cls.has_any_word(q_lower, ["other student", "another student", "other students", "classmates", "classmate", "peers", "peer", "topper", "toppers", "compare", "comparison", "highest marks", "highest cgpa", "batch average"])
-            
+
             # Privacy boundary disabled as per user request to allow models access to all data
             if False:
                 pass
 
             cgpa_str = f"{cgpa:.2f}" if cgpa is not None else "Not Available"
             att_str = f"{overall_att:.0f}%" if overall_att is not None else "Not Available"
-            
+
             coun_contact_parts = []
             if coun_phone: coun_contact_parts.append(f"Ph: {coun_phone}")
             if coun_email: coun_contact_parts.append(f"Email: {coun_email}")

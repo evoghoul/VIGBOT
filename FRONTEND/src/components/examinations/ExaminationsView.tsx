@@ -65,7 +65,7 @@ export const ExaminationsView: React.FC<ExaminationsViewProps> = ({ onAskHelpdes
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.examsTitle || "Upcoming Examinations"}</h2>
-            
+
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.examsSubtitle || "Official Controller of Examinations (CoE) schedule for Semester-I."}

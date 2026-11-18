@@ -21,6 +21,65 @@ class VIGBOTOrchestrator:
     """
 
     @classmethod
+    def _handle_crisis_turn(
+        cls,
+        session: DatabaseSession,
+        conversation_id: str,
+        query: str,
+        language: str
+    ) -> Dict[str, Any]:
+        """Handles emergency distress and crisis intervention turns with pre-approved protocol."""
+        from app.tools.distress_tool import handle_crisis_escalation
+        crisis_response = handle_crisis_escalation(session, query)
+
+        # Record student message
+        DataRepository.add_message(session, conversation_id, {
+            "sender_role": "STUDENT",
+            "content": query,
+            "category": "DISTRESS_SUPPORT",
+            "is_distress": True
+        })
+
+        # Log anonymous metric (Workflow Step 10)
+        DataRepository.record_query_metric(
+            intent_category="DISTRESS_SUPPORT",
+            topic="Mental Health Crisis Intervention",
+            language=language,
+            is_distress=True
+        )
+
+        # Persist agent response
+        agent_msg = DataRepository.add_message(session, conversation_id, {
+            "sender_role": "VIGBOT",
+            "content": crisis_response["text"],
+            "category": crisis_response["category"],
+            "source_agent": crisis_response["source_agent"],
+            "citations": [],
+            "structured_card": crisis_response.get("structured_card"),
+            "is_distress": True
+        })
+
+        return {
+            "message_id": agent_msg["message_id"],
+            "conversation_id": conversation_id,
+            "sender_role": "VIGBOT",
+            "content": crisis_response["text"],
+            "category": crisis_response["category"],
+            "source_agent": crisis_response["source_agent"],
+            "citations": [],
+            "structured_card": crisis_response.get("structured_card"),
+            "is_distress": True,
+            "suggested_follow_ups": [],
+            "llm_provider": "system",
+            "model_used": "rules",
+            "used_fallback": False,
+            "routed_by": "rules",
+            "redirect_path": None,
+            "action": None,
+            "created_at": agent_msg["created_at"]
+        }
+
+    @classmethod
     def process_message(
         cls,
         session: DatabaseSession,
@@ -32,64 +91,12 @@ class VIGBOTOrchestrator:
     ) -> Dict[str, Any]:
         query = user_message.strip()
 
-        is_distress_detected = False
         # ---------------- 1. MANDATORY SAFETY GUARDRAIL (Workflow Step 9) ----------------
         if detect_distress(query):
-            is_distress_detected = True
-            
-            # Remove silent_mock_alert_counselor and use handle_crisis_escalation instead
-            from app.tools.distress_tool import handle_crisis_escalation
-            crisis_response = handle_crisis_escalation(session, query)
-
-            # ---------------- 3. RECORD STUDENT MESSAGE ----------------
-            DataRepository.add_message(session, conversation_id, {
-                "sender_role": "STUDENT",
-                "content": query,
-                "category": "DISTRESS_SUPPORT",
-                "is_distress": True
-            })
-
-            # Log anonymous metric (Step 10)
-            DataRepository.record_query_metric(
-                intent_category="DISTRESS_SUPPORT",
-                topic="Mental Health Crisis Intervention",
-                language=language,
-                is_distress=True
-            )
-
-            # ---------------- 6. PERSIST AGENT RESPONSE IN DB ----------------
-            agent_msg = DataRepository.add_message(session, conversation_id, {
-                "sender_role": "VIGBOT",
-                "content": crisis_response["text"],
-                "category": crisis_response["category"],
-                "source_agent": crisis_response["source_agent"],
-                "citations": [],
-                "structured_card": crisis_response.get("structured_card"),
-                "is_distress": True
-            })
-
-            return {
-                "message_id": agent_msg["message_id"],
-                "conversation_id": conversation_id,
-                "sender_role": "VIGBOT",
-                "content": crisis_response["text"],
-                "category": crisis_response["category"],
-                "source_agent": crisis_response["source_agent"],
-                "citations": [],
-                "structured_card": crisis_response.get("structured_card"),
-                "is_distress": True,
-                "suggested_follow_ups": [],
-                "llm_provider": "system",
-                "model_used": "rules",
-                "used_fallback": False,
-                "routed_by": "rules",
-                "redirect_path": None,
-                "action": None,
-                "created_at": agent_msg["created_at"]
-            }
+            return cls._handle_crisis_turn(session, conversation_id, query, language)
 
         # ---------------- 2. MULTI-TURN CONTEXT RESOLUTION (Workflow Step 5) ----------------
-        conv = DataRepository.get_conversation(session, conversation_id)
+        conv = verified_conv or DataRepository.get_conversation(session, conversation_id)
         if not conv:
             raise PermissionError("Access denied: conversation does not belong to the authenticated student.")
         context_data = conv.get("context_data", {}) if conv else {}
@@ -99,8 +106,8 @@ class VIGBOTOrchestrator:
         DataRepository.add_message(session, conversation_id, {
             "sender_role": "STUDENT",
             "content": query,
-            "category": "GENERAL" if not is_distress_detected else "DISTRESS_SUPPORT",
-            "is_distress": is_distress_detected
+            "category": "GENERAL",
+            "is_distress": False
         }, verified=True)
 
         # ---------------- 4. LOCAL NLU REASONING & TOOL DISPATCH ----------------

@@ -1,5 +1,8 @@
+import logging
 from typing import Dict, Any
 from app.database import DataRepository, DatabaseSession
+
+logger = logging.getLogger(__name__)
 
 DISTRESS_KEYWORDS = [
     "can't handle this", "cant handle this", "cannot handle this",
@@ -21,7 +24,7 @@ def detect_distress(message_text: str) -> bool:
 def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> Dict[str, Any]:
     student_profile = DataRepository.get_student_profile(session) or {}
     student_name = student_profile.get("full_name", "Student")
-    
+
     # Write emergency crisis record into confidential schema (feeds Crisis Escalation)
     escalation_record = DataRepository.log_crisis_escalation(
         session=session,
@@ -29,8 +32,11 @@ def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> 
         student_info=student_profile
     )
 
-    print(f"\n[MOCK ALERT] SILENT BACKGROUND ALERT SENT TO COUNSELOR FOR STUDENT: {student_name}")
-    print(f"Trigger Message: '{trigger_message}'\n")
+    logger.warning(
+        "[MOCK ALERT] SILENT BACKGROUND ALERT SENT TO COUNSELOR FOR STUDENT: %s | Trigger Message: '%s'",
+        student_name,
+        trigger_message
+    )
 
     # Compassionate, zero-delay crisis response
     text = (
@@ -73,14 +79,17 @@ def handle_crisis_escalation(session: DatabaseSession, trigger_message: str) -> 
 
 def silent_mock_alert_counselor(session: DatabaseSession, trigger_message: str) -> None:
     student_profile = DataRepository.get_student_profile(session) or {}
-    
+
     # Write emergency crisis record into confidential schema (feeds Crisis Escalation)
     DataRepository.log_crisis_escalation(
         session=session,
         trigger_phrase=trigger_message,
         student_info=student_profile
     )
-    
+
     student_name = student_profile.get("full_name", "Unknown")
-    print(f"\n[MOCK ALERT] SILENT BACKGROUND ALERT SENT TO COUNSELOR FOR STUDENT: {student_name}")
-    print(f"Trigger Message: '{trigger_message}'\n")
+    logger.warning(
+        "[MOCK ALERT] SILENT BACKGROUND ALERT SENT TO COUNSELOR FOR STUDENT: %s | Trigger Message: '%s'",
+        student_name,
+        trigger_message
+    )

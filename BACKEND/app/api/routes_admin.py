@@ -260,7 +260,7 @@ async def get_cognitive_remediations():
     try:
         remediations = DataRepository.get_all_learned_remediations()
         feedback_rows = DataRepository._execute_query("SELECT * FROM message_feedback ORDER BY created_at DESC LIMIT 100")
-        
+
         active_count = sum(1 for r in remediations if r.get("status") == "ACTIVE")
         policy_count = sum(1 for r in remediations if r.get("status") == "POLICY_PROTECTED")
         inactive_count = sum(1 for r in remediations if r.get("status") == "INACTIVE")

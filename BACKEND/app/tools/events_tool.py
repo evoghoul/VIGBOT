@@ -7,7 +7,7 @@ def get_events_summary(session: Optional[DatabaseSession] = None, query: str = "
     and academic milestones from the database and calendar records.
     """
     events = DataRepository.get_upcoming_events()
-    
+
     text_lines: List[str] = [
         "🎉 **Upcoming VFSTR Campus Events & Extracurricular Activities:**\n",
         "• **Major University Festivals & Flagship Events:**",

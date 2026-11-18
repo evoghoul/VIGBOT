@@ -13,7 +13,7 @@ export const useDynamicSchedule = () => {
   const d = currentTime || new Date();
   const realToday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()];
   const todaySlots = WEEKLY_TIMETABLE[realToday === "Sunday" ? "Monday" : realToday] || [];
-  
+
   const parseToMinutes = (timeStr: string) => {
     const m = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
     if (!m) return 0;
@@ -26,7 +26,7 @@ export const useDynamicSchedule = () => {
   };
 
   const currentMinutes = d.getHours() * 60 + d.getMinutes();
-  
+
   let nextClassSlot = todaySlots[0];
   if (currentTime) {
     const upcoming = todaySlots.filter(s => {

@@ -11,10 +11,10 @@ import { CURRENT_STUDENT } from '@/data/student';
 export function ClubsView() {
   const ancClub = CLUBS_DATA.find(c => c.id === 'ANC');
   const [searchQuery, setSearchQuery] = useState("");
-  
-  const otherClubs = CLUBS_DATA.filter(c => 
-    c.id !== 'ANC' && 
-    (c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+
+  const otherClubs = CLUBS_DATA.filter(c =>
+    c.id !== 'ANC' &&
+    (c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
      c.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
      c.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -38,7 +38,7 @@ export function ClubsView() {
         <h2 className="text-xl font-bold text-gray-900">Student Organizations</h2>
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input 
+          <input
             type="text"
             placeholder="Search clubs, categories..."
             value={searchQuery}
@@ -47,7 +47,7 @@ export function ClubsView() {
           />
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {otherClubs.map(club => (
           <ClubCard key={club.id} club={club} />
@@ -64,7 +64,7 @@ function ClubCard({ club }: { club: Club }) {
   const [expandedJoin, setExpandedJoin] = useState(false);
   const [expandedActivities, setExpandedActivities] = useState(false);
   const [expandedResources, setExpandedResources] = useState(false);
-  
+
   const [isApplying, setIsApplying] = useState(false);
   const [applySuccess, setApplySuccess] = useState<string | null>(null);
 
@@ -80,15 +80,15 @@ function ClubCard({ club }: { club: Club }) {
 
   const handleApply = async () => {
     setIsApplying(true);
-    
+
     // Use the actual logged in student's name
     const studentName = student.name;
-    
+
     // Give it a tiny simulated delay for realism
     setTimeout(async () => {
       const result = await submitClubApplication(club.id, studentName, student.id);
       setIsApplying(false);
-      
+
       if (result.success) {
         setApplySuccess(`Application successful! Notification forwarded to ${club.members[0]?.name || 'Club Head'} via WhatsApp.`);
       } else {
@@ -130,14 +130,14 @@ function ClubCard({ club }: { club: Club }) {
         {/* Activities Section */}
         {club.activities && club.activities.length > 0 && (
           <div className="pt-4 border-t border-gray-100">
-            <button 
+            <button
               onClick={() => setExpandedActivities(!expandedActivities)}
               className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
             >
               <span className="flex items-center gap-2"><Activity className="w-4 h-4" /> Activities</span>
               {expandedActivities ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
-            
+
             {expandedActivities && (
               <ul className="mt-3 space-y-2 animate-fade-in pl-6 list-disc text-sm text-gray-600">
                 {club.activities.map((activity, idx) => (
@@ -151,14 +151,14 @@ function ClubCard({ club }: { club: Club }) {
         {/* Resources Section */}
         {club.availableResources && club.availableResources.length > 0 && (
           <div className="pt-4 border-t border-gray-100">
-            <button 
+            <button
               onClick={() => setExpandedResources(!expandedResources)}
               className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
             >
               <span className="flex items-center gap-2"><Package className="w-4 h-4" /> Available Resources</span>
               {expandedResources ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
-            
+
             {expandedResources && (
               <ul className="mt-3 space-y-2 animate-fade-in pl-6 list-disc text-sm text-gray-600">
                 {club.availableResources.map((resource, idx) => (
@@ -172,14 +172,14 @@ function ClubCard({ club }: { club: Club }) {
         {/* Joining Steps Section */}
         {club.joiningSteps.length > 0 && (
           <div className="pt-4 border-t border-gray-100">
-            <button 
+            <button
               onClick={() => setExpandedJoin(!expandedJoin)}
               className="flex items-center justify-between w-full text-left text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
             >
               <span>How to Join (End-to-End Process)</span>
               {expandedJoin ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
-            
+
             {expandedJoin && (
               <div className="mt-4 space-y-4 animate-fade-in">
                 {club.joiningSteps.map((step, idx) => (
@@ -194,7 +194,7 @@ function ClubCard({ club }: { club: Club }) {
           </div>
         )}
       </div>
-      
+
       <div className="p-5 border-t border-gray-100 bg-gray-50 mt-auto">
         {applySuccess ? (
           <div className="flex items-start p-3 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-100">
@@ -202,7 +202,7 @@ function ClubCard({ club }: { club: Club }) {
             <p className="text-sm font-medium">{applySuccess}</p>
           </div>
         ) : (
-          <button 
+          <button
             onClick={handleApply}
             disabled={isApplying}
             className={`w-full py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center ${

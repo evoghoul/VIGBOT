@@ -37,7 +37,7 @@ export const PoliciesView: React.FC<PoliciesViewProps> = ({ onAskHelpdesk }) => 
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.policiesTitle || "University Policies & Guidelines"}</h2>
-            
+
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.policiesSubtitle || "Authoritative institutional regulations approved by the Academic Senate."}

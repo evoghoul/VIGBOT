@@ -118,48 +118,46 @@ def is_postgres_configured() -> bool:
         return False
     return db_url.startswith("postgresql://") or db_url.startswith("postgres://") or "+psycopg" in db_url
 
-def get_db_connection():
-    if is_postgres_configured():
-        pool = _init_pg_pool()
-        if pool:
-            try:
+def _get_postgres_connection():
+    if not is_postgres_configured():
+        return None
+    pool = _init_pg_pool()
+    if pool:
+        try:
+            raw_conn = pool.getconn()
+            if hasattr(raw_conn, "closed") and raw_conn.closed != 0:
+                try:
+                    pool.putconn(raw_conn, close=True)
+                except Exception:
+                    pass
                 raw_conn = pool.getconn()
-                if hasattr(raw_conn, "closed") and raw_conn.closed != 0:
-                    try:
-                        pool.putconn(raw_conn, close=True)
-                    except Exception:
-                        pass
-                    raw_conn = pool.getconn()
-                return PooledConnectionProxy(pool, raw_conn)
-            except Exception as e:
-                logger.warning(f"Connection pool error: {e}. Falling back to single connection.")
-                cleaned_url = getattr(settings, "DATABASE_URL", "").replace("postgresql+psycopg://", "postgresql://")
-                try:
-                    import psycopg2
-                    import psycopg2.extras
-                    return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
-                except Exception:
-                    pass
-        else:
-            db_url = getattr(settings, "DATABASE_URL", "")
-            cleaned_url = db_url.replace("postgresql+psycopg://", "postgresql://")
+            return PooledConnectionProxy(pool, raw_conn)
+        except Exception as e:
+            logger.warning(f"Connection pool error: {e}. Falling back to single connection.")
+            cleaned_url = getattr(settings, "DATABASE_URL", "").replace("postgresql+psycopg://", "postgresql://")
             try:
-                import psycopg
-                from psycopg.rows import dict_row
-                return psycopg.connect(cleaned_url, row_factory=dict_row, connect_timeout=3)
+                import psycopg2
+                import psycopg2.extras
+                return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
             except Exception:
-                try:
-                    import psycopg2
-                    import psycopg2.extras
-                    return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
-                except Exception:
-                    pass
+                pass
+    else:
+        db_url = getattr(settings, "DATABASE_URL", "")
+        cleaned_url = db_url.replace("postgresql+psycopg://", "postgresql://")
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+            return psycopg.connect(cleaned_url, row_factory=dict_row, connect_timeout=3)
+        except Exception:
+            try:
+                import psycopg2
+                import psycopg2.extras
+                return psycopg2.connect(cleaned_url, cursor_factory=psycopg2.extras.RealDictCursor, connect_timeout=3)
+            except Exception:
+                pass
+    return None
 
-    db_vigbot = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
-    db_fallback = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
-    db_path = db_vigbot if os.path.exists(db_vigbot) else db_fallback
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
+def _init_sqlite_auxiliary_tables(conn: sqlite3.Connection):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS crisis_escalations (
             crisis_escalation_id TEXT PRIMARY KEY,
@@ -269,6 +267,19 @@ def get_db_connection():
         )
     """)
     conn.commit()
+
+def get_db_connection():
+    if is_postgres_configured():
+        pg_conn = _get_postgres_connection()
+        if pg_conn is not None:
+            return pg_conn
+
+    db_vigbot = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
+    db_fallback = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "database", "vigbot.db"))
+    db_path = db_vigbot if os.path.exists(db_vigbot) else db_fallback
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    _init_sqlite_auxiliary_tables(conn)
     return conn
 
 class DatabaseSession:
@@ -286,7 +297,7 @@ class DataRepository:
     Data repository providing strictly row-level secured access to all student records
     using SQLite or PostgreSQL database directly.
     """
-    
+
     @staticmethod
     def _execute_query(query: str, params: tuple = ()) -> List[Dict[str, Any]]:
         for attempt in range(2):
@@ -521,10 +532,10 @@ class DataRepository:
             return []
         import re
         words = set(re.findall(r'\b\w+\b', query_text.lower()))
-        
+
         best_faq = None
         best_score = 0
-        
+
         for faq in faqs:
             text = (faq['topic'] + " " + faq['question'] + " " + faq['answer'] + " " + faq['keywords']).lower()
             score = 0
@@ -534,11 +545,11 @@ class DataRepository:
                 elif w in ['mhp', 'zest', 'sac', 'fee', 'id']:
                     if w in text:
                         score += 5
-            
+
             if score > best_score:
                 best_score = score
                 best_faq = faq
-                
+
         return [best_faq] if best_faq and best_score > 0 else []
 
     @staticmethod
@@ -647,17 +658,17 @@ class DataRepository:
             conv = DataRepository.get_conversation(session, conversation_id)
             if not conv:
                 raise PermissionError("Access denied: conversation does not belong to the authenticated student.")
-        
+
         msg_id = f"msg-{uuid.uuid4().hex[:8]}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         citations_list = message_data.get("citations", [])
         citations = json.dumps(citations_list)
         card_obj = message_data.get("structured_card")
         structured_card = json.dumps(card_obj) if card_obj else None
-        
+
         query1 = "INSERT INTO messages (message_id, conversation_id, sender_role, content, category, source_agent, citations, structured_card, is_distress, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         query2 = "UPDATE conversations SET updated_at = ? WHERE conversation_id = ?"
-        
+
         with get_db_connection() as conn:
             if isinstance(conn, sqlite3.Connection):
                 conn.execute(query1, (msg_id, conversation_id, message_data.get("sender_role", "STUDENT"), message_data.get("content"), message_data.get("category"), message_data.get("source_agent", "VIGBOT"), citations, structured_card, 1 if message_data.get("is_distress") else 0, now))
@@ -670,7 +681,7 @@ class DataRepository:
                     cur.execute(q1_pg, (msg_id, conversation_id, message_data.get("sender_role", "STUDENT"), message_data.get("content"), message_data.get("category"), message_data.get("source_agent", "VIGBOT"), citations, structured_card, 1 if message_data.get("is_distress") else 0, now))
                     cur.execute(q2_pg, (now, conversation_id))
                 conn.commit()
-        
+
         return {
             "message_id": msg_id,
             "conversation_id": conversation_id,
@@ -691,11 +702,11 @@ class DataRepository:
         req_no = f"SR-2026-{(count_res[0]['c'] + 1):04d}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         sla = (datetime.date.today() + datetime.timedelta(days=3)).isoformat()
-        
+
         sid = DataRepository._resolve_student_id(session)
         query = "INSERT INTO service_requests (service_request_id, request_no, student_id, category, title, description, priority, status, assigned_office, sla_due_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         DataRepository._execute_insert(query, (req_id, req_no, sid, data["category"], data["title"], data["description"], data.get("priority", "NORMAL"), "SUBMITTED", "Registrar Student Affairs", sla, now, now))
-        
+
         res = DataRepository._execute_query("SELECT * FROM service_requests WHERE service_request_id = ?", (req_id,))
         return res[0] if res else None
 
@@ -800,7 +811,7 @@ class DataRepository:
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         query = "INSERT INTO crisis_escalations (crisis_escalation_id, student_id, student_name, roll_no, detected_at, detected_by, trigger_snippet, escalated_to, channel_used, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         DataRepository._execute_insert(query, (esc_id, session.student_id, student_info.get("full_name"), student_info.get("roll_no"), now, "VIGBOT Distress Guardrail", trigger_phrase, "24/7 Student Wellbeing Helpline & On-duty Counselor", "PRIORITY_INTERNAL_DISPATCH", "PAGE_SENT"))
-        
+
         res = DataRepository._execute_query("SELECT * FROM crisis_escalations WHERE crisis_escalation_id = ?", (esc_id,))
         return res[0] if res else None
 
@@ -842,7 +853,7 @@ class DataRepository:
         conv = DataRepository.get_conversation(session, conversation_id)
         if not conv:
             raise PermissionError("Access denied: conversation does not belong to the authenticated student.")
-        
+
         fb_id = f"fb-{uuid.uuid4().hex[:8]}"
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
         query = "INSERT INTO message_feedback (feedback_id, message_id, conversation_id, student_id, rating, comment, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -878,7 +889,7 @@ class DataRepository:
         """Stores a newly learned cognitive query remediation from Gemini feedback evaluation."""
         rem_id = remediation.get("remediation_id") or f"rem-{uuid.uuid4().hex[:10]}"
         now = remediation.get("created_at") or datetime.datetime.now(datetime.timezone.utc).isoformat()
-        
+
         triggers = remediation.get("trigger_patterns", [])
         if isinstance(triggers, list):
             triggers_str = json.dumps(triggers)
@@ -1079,7 +1090,7 @@ class DataRepository:
         today_date = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
         now_utc = datetime.datetime.now(datetime.timezone.utc)
         one_min_ago = (now_utc - datetime.timedelta(seconds=60)).isoformat()
-        
+
         daily_limit = 1500
         rpm_limit = 15
 

@@ -23,14 +23,14 @@ def get_library_summary(session: DatabaseSession) -> Dict[str, Any]:
                 rec["status"] = "Overdue"
         except:
             pass
-            
+
         if rec["status"].lower() == "overdue":
             overdue_books.append(rec)
         else:
             issued_books.append(rec)
 
     text_lines = ["Here are your library records:\n"]
-    
+
     if overdue_books:
         text_lines.append("⚠️ **OVERDUE BOOKS:**")
         for b in overdue_books:

@@ -315,7 +315,7 @@ def generate_vignan_qa_corpus() -> List[Dict[str, Any]]:
             attended = int(held * pct_target)
             curr_pct = round(attended / held * 100.0, 1)
             classes_needed = max(0, int((0.75 * held - attended) / 0.25 + 0.9999))
-            
+
             qa_list.append({
                 "id": f"VIG_QA_{idx:04d}",
                 "question": f"I have attended {attended} out of {held} classes ({curr_pct}%). How many classes must I attend consecutively to reach 75%?",

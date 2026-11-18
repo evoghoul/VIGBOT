@@ -138,7 +138,7 @@ async def claim_lost_and_found(item_id: int, claim: LostAndFoundClaim):
         items = DataRepository._execute_query("SELECT * FROM lost_and_found WHERE id = ?", (item_id,))
         if not items:
             return {"success": False, "error": "Item not found"}
-        
+
         update_query = "UPDATE lost_and_found SET status = 'claimed' WHERE id = ?"
         _execute_insert_and_commit(update_query, (item_id,))
         return {"success": True, "message": f"Item {item_id} marked as claimed by student {claim.student_id}"}

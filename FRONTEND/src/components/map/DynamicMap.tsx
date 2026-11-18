@@ -67,23 +67,23 @@ const hashString = (str: string) => {
 
 
 
-export default function DynamicMap({ 
-  locations, 
-  selectedLocation, 
-  userCharacter = "dot", 
+export default function DynamicMap({
+  locations,
+  selectedLocation,
+  userCharacter = "dot",
   userLocation,
   routeTo,
-  onLocationSelect 
+  onLocationSelect
 }: DynamicMapProps) {
   const [activeBaseLayer, setActiveBaseLayer] = useState("OpenStreetMap");
-  
+
   // Center of Vignan University Campus
   const defaultCenter: [number, number] = [16.232820, 80.550347];
   const actualUserLocation = userLocation || defaultCenter;
-  
+
   const mapCenter = selectedLocation
     ? [
-        selectedLocation.latitude || defaultCenter[0] + (hashString(selectedLocation.id) % 100) * 0.00002, 
+        selectedLocation.latitude || defaultCenter[0] + (hashString(selectedLocation.id) % 100) * 0.00002,
         selectedLocation.longitude || defaultCenter[1] + (hashString(selectedLocation.id + "1") % 100) * 0.00002
       ] as [number, number]
     : userLocation ? userLocation : defaultCenter;
@@ -104,21 +104,21 @@ export default function DynamicMap({
 
   const getRouteCoordinates = (): [number, number][] => {
     if (!routeTo || !actualUserLocation) return [];
-    
+
     const destLat = routeTo.latitude || (defaultCenter[0] + (hashString(routeTo.id) % 100) * 0.00002);
     const destLng = routeTo.longitude || (defaultCenter[1] + (hashString(routeTo.id + "1") % 100) * 0.00002);
-    
+
     // Simulate a path by adding a midpoint to make it look like a route rather than a direct line
     const midLat = (actualUserLocation[0] + destLat) / 2 + 0.0005;
     const midLng = (actualUserLocation[1] + destLng) / 2;
-    
+
     return [actualUserLocation, [midLat, midLng], [destLat, destLng]];
   };
 
   return (
-    <MapContainer 
-      center={mapCenter} 
-      zoom={17} 
+    <MapContainer
+      center={mapCenter}
+      zoom={17}
       style={{ height: "100%", width: "100%", zIndex: 0 }}
       scrollWheelZoom={true}
     >
@@ -130,7 +130,7 @@ export default function DynamicMap({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
         </LayersControl.BaseLayer>
-        
+
         <LayersControl.BaseLayer name="Satellite Imagery">
           <LayerGroup>
             <TileLayer
@@ -153,7 +153,7 @@ export default function DynamicMap({
       )}
 
       {/* "You are here" Marker */}
-      <Marker 
+      <Marker
         position={actualUserLocation}
         icon={L.divIcon({
           className: "bg-transparent",
@@ -169,18 +169,18 @@ export default function DynamicMap({
           <div className="text-xs text-slate-500">Current Location</div>
         </Popup>
       </Marker>
-      
+
       {/* Draw Simulated Route */}
       {routeTo && (
-        <Polyline 
-          positions={getRouteCoordinates()} 
-          color="#3b82f6" 
-          weight={4} 
-          dashArray="10, 10" 
+        <Polyline
+          positions={getRouteCoordinates()}
+          color="#3b82f6"
+          weight={4}
+          dashArray="10, 10"
           className="animate-pulse"
         />
       )}
-      
+
       {/* No location labels rendered on the map per user request */}
 
       {/* Render only the popup for the selected location without any markers */}
@@ -189,7 +189,7 @@ export default function DynamicMap({
         const lngOffset = (hashString(selectedLocation.id + "1") % 100) * 0.00002;
         const lat = selectedLocation.latitude || (defaultCenter[0] + latOffset);
         const lng = selectedLocation.longitude || (defaultCenter[1] + lngOffset);
-        
+
         return (
           <Popup position={[lat, lng]} autoPan={true}>
             <div className="text-sm min-w-[150px]">

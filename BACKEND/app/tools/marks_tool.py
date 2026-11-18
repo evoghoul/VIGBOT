@@ -4,7 +4,7 @@ from app.database import DataRepository, DatabaseSession
 def get_marks_summary(session: DatabaseSession, subject_query: Optional[str] = None) -> Dict[str, Any]:
     marks = DataRepository.get_marks(session, subject_query)
     profile = DataRepository.get_student_profile(session)
-    
+
     if not marks:
         return {
             "text": "No continuous assessment marks found for your profile in this term.",

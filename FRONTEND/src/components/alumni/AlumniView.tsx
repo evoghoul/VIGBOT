@@ -35,11 +35,11 @@ export function AlumniView() {
                 <span>{mentor.company}</span>
               </div>
             </div>
-            <button 
+            <button
               disabled={!mentor.available_for_chat}
               className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-                mentor.available_for_chat 
-                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                mentor.available_for_chat
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : "bg-muted text-muted-foreground cursor-not-allowed"
               }`}
             >

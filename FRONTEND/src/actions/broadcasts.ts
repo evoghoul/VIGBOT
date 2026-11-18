@@ -30,7 +30,7 @@ export async function getActiveBroadcasts() {
     return { success: true, broadcasts };
   } catch (error: any) {
     console.error("Broadcast Fetch Error:", error);
-    console.log("Falling back to static mock data");
+    console.warn("Falling back to static mock data");
     return { success: true, broadcasts: mockBroadcasts.filter(b => b.is_active === 1) };
   }
 }

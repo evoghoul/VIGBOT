@@ -37,10 +37,10 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
   const { studentData } = useStudent();
   const { t, tDynamic } = useLanguage();
   const student = studentData?.profile || CURRENT_STUDENT;
-  
+
   const [dbComplaints, setDbComplaints] = useState<any[]>([]);
   const [dbClubApps, setDbClubApps] = useState<any[]>([]);
-  
+
   const [expandedReq, setExpandedReq] = useState<string | null>(null);
   const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
   const [withdrawReason, setWithdrawReason] = useState("");
@@ -118,7 +118,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.servicesTitle || "Student Services & Applications"}</h2>
-            
+
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.servicesSubtitle || "Convert conversational requests into verified institutional tickets."}
@@ -178,8 +178,8 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
             const isWithdrawn = app.status === 'Withdrawn';
             const expId = `club-${app.id}`;
             return (
-            <div 
-              key={expId} 
+            <div
+              key={expId}
               className={`p-4 hover:bg-muted/50/60 transition-colors cursor-pointer ${isWithdrawn ? 'opacity-75' : ''}`}
               onClick={() => toggleExpand(expId)}
             >
@@ -210,7 +210,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   <span className="text-sm font-medium text-slate-400">Priority: Normal</span>
                 </div>
               </div>
-              
+
               {/* Expanded Status View */}
               {expandedReq === expId && (
                 <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">
@@ -235,8 +235,8 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   </div>
 
                   {!isWithdrawn && withdrawingId !== expId && (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setWithdrawingId(expId); }} 
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setWithdrawingId(expId); }}
                       className="mt-4 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 inline-flex items-center gap-1 transition-colors"
                     >
                       Withdraw Request
@@ -246,25 +246,25 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   {withdrawingId === expId && (
                     <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
                       <p className="text-sm font-bold text-rose-900 mb-2">Why are you withdrawing this application?</p>
-                      <input 
-                        type="text" 
-                        value={withdrawReason} 
-                        onChange={(e) => setWithdrawReason(e.target.value)} 
-                        className="w-full text-sm p-2.5 rounded-lg border border-rose-200 mb-3 focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white" 
-                        placeholder="Reason for withdrawal..." 
+                      <input
+                        type="text"
+                        value={withdrawReason}
+                        onChange={(e) => setWithdrawReason(e.target.value)}
+                        className="w-full text-sm p-2.5 rounded-lg border border-rose-200 mb-3 focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                        placeholder="Reason for withdrawal..."
                         autoFocus
                       />
                       <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleWithdraw(app.id, 'club')} 
-                          disabled={isSubmittingWithdraw || !withdrawReason.trim()} 
+                        <button
+                          onClick={() => handleWithdraw(app.id, 'club')}
+                          disabled={isSubmittingWithdraw || !withdrawReason.trim()}
                           className="bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-rose-700 disabled:opacity-50 transition-colors flex items-center"
                         >
                           {isSubmittingWithdraw ? <Loader2 className="w-3 h-3 animate-spin mr-1"/> : null}
                           Confirm Withdrawal
                         </button>
-                        <button 
-                          onClick={() => { setWithdrawingId(null); setWithdrawReason(''); }} 
+                        <button
+                          onClick={() => { setWithdrawingId(null); setWithdrawReason(''); }}
                           className="text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 border border-slate-300 bg-white transition-colors"
                         >
                           Cancel
@@ -289,8 +289,8 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
             const isWithdrawn = comp.status === 'Withdrawn';
             const expId = comp.id;
             return (
-            <div 
-              key={expId} 
+            <div
+              key={expId}
               className={`p-4 hover:bg-muted/50/60 transition-colors cursor-pointer ${isWithdrawn ? 'opacity-75' : ''}`}
               onClick={() => toggleExpand(expId)}
             >
@@ -322,7 +322,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   <span className="text-sm font-medium text-rose-500">Priority: High</span>
                 </div>
               </div>
-              
+
               {/* Expanded Status View */}
               {expandedReq === expId && (
                 <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">
@@ -347,8 +347,8 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   </div>
 
                   {!isWithdrawn && withdrawingId !== expId && (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setWithdrawingId(expId); }} 
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setWithdrawingId(expId); }}
                       className="mt-4 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 inline-flex items-center gap-1 transition-colors"
                     >
                       Withdraw Request
@@ -358,25 +358,25 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   {withdrawingId === expId && (
                     <div className="mt-4 p-4 bg-rose-50 rounded-xl border border-rose-200 shadow-sm" onClick={(e) => e.stopPropagation()}>
                       <p className="text-sm font-bold text-rose-900 mb-2">Why are you withdrawing this grievance?</p>
-                      <input 
-                        type="text" 
-                        value={withdrawReason} 
-                        onChange={(e) => setWithdrawReason(e.target.value)} 
-                        className="w-full text-sm p-2.5 rounded-lg border border-rose-200 mb-3 focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white" 
-                        placeholder="Reason for withdrawal..." 
+                      <input
+                        type="text"
+                        value={withdrawReason}
+                        onChange={(e) => setWithdrawReason(e.target.value)}
+                        className="w-full text-sm p-2.5 rounded-lg border border-rose-200 mb-3 focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"
+                        placeholder="Reason for withdrawal..."
                         autoFocus
                       />
                       <div className="flex gap-2">
-                        <button 
-                          onClick={() => handleWithdraw(comp.id, 'grievance')} 
-                          disabled={isSubmittingWithdraw || !withdrawReason.trim()} 
+                        <button
+                          onClick={() => handleWithdraw(comp.id, 'grievance')}
+                          disabled={isSubmittingWithdraw || !withdrawReason.trim()}
                           className="bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-rose-700 disabled:opacity-50 transition-colors flex items-center"
                         >
                           {isSubmittingWithdraw ? <Loader2 className="w-3 h-3 animate-spin mr-1"/> : null}
                           Confirm Withdrawal
                         </button>
-                        <button 
-                          onClick={() => { setWithdrawingId(null); setWithdrawReason(''); }} 
+                        <button
+                          onClick={() => { setWithdrawingId(null); setWithdrawReason(''); }}
                           className="text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-slate-100 border border-slate-300 bg-white transition-colors"
                         >
                           Cancel
@@ -398,8 +398,8 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
 
           {/* Static Mock Services */}
           {services.map((req) => (
-            <div 
-              key={req.id} 
+            <div
+              key={req.id}
               className="p-4 hover:bg-muted/50/60 transition-colors cursor-pointer"
               onClick={() => toggleExpand(req.id)}
             >
@@ -432,7 +432,7 @@ export const StudentServicesView: React.FC<StudentServicesViewProps> = ({
                   </span>
                 </div>
               </div>
-              
+
               {/* Expanded Status View */}
               {expandedReq === req.id && (
                 <div className="mt-4 pt-4 border-t border-slate-100 animate-fade-in pl-2">

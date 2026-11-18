@@ -33,7 +33,7 @@ export function HostelBusTimetable() {
             <div className="bg-muted px-4 py-3 border-b">
               <h3 className="font-semibold text-lg">{schedule.hostel}</h3>
             </div>
-            
+
             <div className="p-4 space-y-6">
               <div>
                 <div className="flex items-center gap-2 mb-3 text-emerald-600 dark:text-emerald-500 font-medium">

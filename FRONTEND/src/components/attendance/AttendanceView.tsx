@@ -49,7 +49,7 @@ export const AttendanceView: React.FC<AttendanceViewProps> = ({ onAskHelpdesk })
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.attendanceTitle || "Attendance Telemetry"}</h2>
-            
+
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.attendanceSubtitle || "Biometric and lecture-by-lecture records. Statutory minimum threshold: 75%."}

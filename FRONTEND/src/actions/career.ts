@@ -19,7 +19,7 @@ export async function getResumeData(studentId: string) {
 export async function saveResumeData(studentId: string, skills: string, projects: string) {
   try {
     const db = getDb();
-    
+
     // Check if exists
     const existing = db.prepare("SELECT id FROM resumes WHERE student_id = ?").get(studentId);
     let info;

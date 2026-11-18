@@ -45,7 +45,7 @@ export const FeesView: React.FC<FeesViewProps> = ({ onAskHelpdesk }) => {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-foreground">{t.feesTitle || "Fees & Financial Ledger"}</h2>
-            
+
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {t.feesSubtitle || "Personal academic accounts and payment records."}

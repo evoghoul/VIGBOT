@@ -7,7 +7,7 @@ import { getDb } from "../lib/db-provider";
 export async function askAiKnowledgeBase(query: string) {
   try {
     const db = getDb();
-    
+
     // Very simple keyword matching for demonstration purposes.
     const normalizedQuery = query.toLowerCase();
     const faqs = db.prepare('SELECT * FROM ai_knowledge_base').all();
@@ -18,7 +18,7 @@ export async function askAiKnowledgeBase(query: string) {
     for (const faq of faqs) {
       let matches = 0;
       const questionWords = (faq as any).question.toLowerCase().split(' ');
-      
+
       // Check tags in metadata
       let tags = [];
       try {
@@ -46,14 +46,14 @@ export async function askAiKnowledgeBase(query: string) {
     }
 
     if (bestMatch && maxMatches > 0) {
-      return { 
-          success: true, 
-          answer: (bestMatch as any).answer, 
+      return {
+          success: true,
+          answer: (bestMatch as any).answer,
           category: (bestMatch as any).category,
           source: "VIGBOT (Knowledge Base Database)"
       };
     }
-    
+
     return { success: false, answer: null };
 
   } catch (error: any) {

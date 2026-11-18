@@ -344,23 +344,23 @@ export default function AdminDashboard() {
     (h.details && h.details.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const filteredGrievances = grievances.filter(g => 
-    g.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredGrievances = grievances.filter(g =>
+    g.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     g.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredClubApps = clubApps.filter(c => 
-    c.student_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredClubApps = clubApps.filter(c =>
+    c.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.club_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredBookings = bookings.filter(b => 
-    b.student_id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredBookings = bookings.filter(b =>
+    b.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.purpose.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredLostAndFound = lostAndFound.filter(l => 
-    l.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredLostAndFound = lostAndFound.filter(l =>
+    l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.student_id.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -601,7 +601,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Logout Button */}
-              <button 
+              <button
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl border border-transparent hover:border-rose-200 transition-all cursor-pointer"
                 title="Sign out of Command Center"
@@ -1047,8 +1047,8 @@ export default function AdminDashboard() {
                   </h2>
                   <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Search by ID, name, or description..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -1106,7 +1106,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
-                                    <select 
+                                    <select
                                       className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                                       value={s.status.toUpperCase()}
                                       onChange={(e) => handleStatusUpdate(s.id || s.request_no, 'service_request', e.target.value)}
@@ -1155,7 +1155,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
-                                    <select 
+                                    <select
                                       className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                                       value={h.status}
                                       onChange={(e) => handleStatusUpdate(h.id, 'hostel', e.target.value)}
@@ -1203,7 +1203,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
-                                    <select 
+                                    <select
                                       disabled={g.status === 'Withdrawn'}
                                       className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                                       value={g.status}
@@ -1257,7 +1257,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
-                                    <select 
+                                    <select
                                       disabled={c.status === 'Withdrawn'}
                                       className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                                       value={c.status}
@@ -1310,7 +1310,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
-                                    <select 
+                                    <select
                                       className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                       value={b.status}
                                       onChange={(e) => handleStatusUpdate(b.id, 'booking' as any, e.target.value)}
@@ -1354,7 +1354,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-6 py-4 align-top text-right">
                                   <div className="flex items-center justify-end gap-2">
-                                    <select 
+                                    <select
                                       className="text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 shadow-2xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                       value={l.status}
                                       onChange={(e) => handleStatusUpdate(l.id, 'lost_found' as any, e.target.value)}
@@ -1452,8 +1452,8 @@ function DistressTab() {
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 text-sm">{alert.student}</span>
                     <span className={`text-[10px] uppercase px-2 py-0.5 rounded-md font-bold ${
-                      alert.sentiment === 'Severe' ? 'bg-rose-600 text-white shadow-xs' : 
-                      alert.sentiment === 'Critical' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 
+                      alert.sentiment === 'Severe' ? 'bg-rose-600 text-white shadow-xs' :
+                      alert.sentiment === 'Critical' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
                       'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                     }`}>
                       {alert.sentiment}
@@ -1467,11 +1467,11 @@ function DistressTab() {
                 <div className="mt-2.5 bg-white p-3 rounded-xl border border-slate-200 text-xs italic text-slate-700 border-l-4 border-l-rose-500 shadow-2xs">
                   "{alert.transcript}"
                 </div>
-                
+
                 <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs">
                   <span className="font-medium text-slate-400">Status: <span className="text-slate-200">{alert.status}</span></span>
                   {alert.status === 'Unassigned' && (
-                    <button 
+                    <button
                       onClick={() => handleRoute(alert.id)}
                       className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                     >
@@ -1490,7 +1490,7 @@ function DistressTab() {
             <Activity className="w-5 h-5 text-indigo-400" /> Campus Stress Index
           </h3>
           <p className="text-xs text-slate-400 mb-4">Sentiment telemetry aggregated from AI interactions.</p>
-          
+
           <div className="flex-1 min-h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sentimentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -1503,14 +1503,14 @@ function DistressTab() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748b' }} />
-                <RechartsTooltip 
+                <RechartsTooltip
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a' }}
                 />
                 <Area type="monotone" dataKey="stress" stroke="#f43f5e" strokeWidth={2.5} fillOpacity={1} fill="url(#colorStressDark)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          
+
           <div className="mt-4 p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-start gap-2.5">
             <Bell className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-200">
@@ -1558,7 +1558,7 @@ function AnalyticsTab({ analytics }: { analytics: any }) {
             </ResponsiveContainer>
           </div>
         </div>
-        
+
         <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
           <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">Facility Bookings Volume</h3>
           <div className="h-64">
@@ -1642,7 +1642,7 @@ function ComplianceTab() {
             <FileText className="w-5 h-5 text-indigo-400" /> Statutory ATR Generator
           </h3>
           <p className="text-xs text-slate-400 mb-6">Generate standardized Action Taken Reports for UGC, NAAC, or statutory bodies.</p>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Report Period</label>
@@ -1662,7 +1662,7 @@ function ComplianceTab() {
             </div>
           </div>
         </div>
-        
+
         <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md">
           <Download className="w-4 h-4" /> Export Digitally Signed ATR PDF
         </button>
@@ -1673,7 +1673,7 @@ function ComplianceTab() {
 
 function LiveSessionsTab() {
   const [activeSession, setActiveSession] = React.useState<string | null>('SESS-102');
-  
+
   const sessions = [
     { id: 'SESS-102', student: '24CSE001', topic: 'Fee Payment Issue', status: 'High Friction', agent: 'VIGBOT' },
     { id: 'SESS-105', student: '22BME014', topic: 'Attendance Exemption', status: 'Normal', agent: 'VIGBOT' },
@@ -1699,12 +1699,12 @@ function LiveSessionsTab() {
         </div>
         <div className="overflow-y-auto flex-1 p-3 space-y-2">
           {sessions.map(s => (
-            <div 
-              key={s.id} 
+            <div
+              key={s.id}
               onClick={() => setActiveSession(s.id)}
               className={`p-3 rounded-xl cursor-pointer border transition-all ${
-                activeSession === s.id 
-                  ? 'bg-blue-50 border-blue-200 text-blue-800 shadow-2xs font-semibold' 
+                activeSession === s.id
+                  ? 'bg-blue-50 border-blue-200 text-blue-800 shadow-2xs font-semibold'
                   : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
               }`}
             >
@@ -1721,7 +1721,7 @@ function LiveSessionsTab() {
           ))}
         </div>
       </div>
-      
+
       <div className="flex-1 flex flex-col bg-white">
         {activeSession ? (
           <>
@@ -1734,7 +1734,7 @@ function LiveSessionsTab() {
                 <UserX className="w-3.5 h-3.5 text-slate-400" /> End Shadow
               </button>
             </div>
-            
+
             <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/50">
               {transcript.map((msg, i) => (
                 <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -1743,8 +1743,8 @@ function LiveSessionsTab() {
                     <span className="text-[10px] text-slate-500 font-mono">{msg.time}</span>
                   </div>
                   <div className={`p-3.5 rounded-2xl text-xs max-w-[80%] leading-relaxed ${
-                    msg.role === 'user' 
-                      ? 'bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-600/20' 
+                    msg.role === 'user'
+                      ? 'bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-600/20'
                       : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-2xs'
                   }`}>
                     {msg.content}
@@ -1752,7 +1752,7 @@ function LiveSessionsTab() {
                 </div>
               ))}
             </div>
-            
+
             <div className="p-4 border-t border-slate-200 bg-white">
               <div className="flex gap-3">
                 <button className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl py-2 text-xs font-semibold flex items-center justify-center gap-2 transition-colors">
@@ -1807,13 +1807,13 @@ function VerificationsTab() {
           </div>
         </div>
       </div>
-      
+
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5">
         <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-sm">
           <ShieldCheck className="w-5 h-5 text-blue-600" /> Cryptographic Verification
         </h3>
         <p className="text-xs text-slate-400 mb-4">Cryptographically verify authentic uploaded medical certificates or payment receipts.</p>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Document SHA-256 Hash</label>
@@ -1853,7 +1853,7 @@ function BroadcastsTab() {
           </button>
         </div>
       </div>
-      
+
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 border-l-4 border-l-amber-500 space-y-4">
         <h3 className="font-bold text-white flex items-center gap-2 text-sm">
           <ShieldAlert className="w-5 h-5 text-amber-600" /> Situational Guardrail Override
@@ -1966,7 +1966,7 @@ function KanbanTab({ grievances, handleStatusUpdate }: any) {
                   <div className="text-[11px] text-slate-400 flex justify-between items-center mt-3 pt-2 border-t border-slate-100">
                     <span className="font-mono">{g.student_id}</span>
                     {status !== 'Resolved' && (
-                      <button 
+                      <button
                         onClick={() => handleStatusUpdate(g.id, 'grievance', status === 'Pending' ? 'In Progress' : 'Resolved')}
                         className="text-blue-400 hover:text-blue-300 text-xs font-semibold cursor-pointer"
                       >
@@ -2053,7 +2053,7 @@ function KnowledgeTab() {
           ))}
         </div>
       </div>
-      
+
       <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-4">
         <h3 className="font-bold text-white text-sm border-b border-slate-100 pb-3">Vector Embedding Metrics</h3>
         <div className="space-y-3 text-xs">
@@ -2713,7 +2713,7 @@ function CognitiveRemediationTab() {
 
                   <div className="flex items-center gap-3 text-slate-400 text-[11px]">
                     <span className="font-mono">{rem.created_at ? new Date(rem.created_at).toLocaleString() : ''}</span>
-                    
+
                     {!isMissingData && (
                       <button
                         onClick={() => handleToggleStatus(rem.remediation_id, rem.status)}

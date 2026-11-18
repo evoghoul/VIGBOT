@@ -27,17 +27,17 @@ export async function fetchLostAndFoundItems(filterType: 'all' | 'lost' | 'found
     if (!db) return { success: true, items: [] };
     let query = `SELECT * FROM lost_and_found WHERE status = 'open'`;
     const params = [];
-    
+
     if (filterType !== 'all') {
       query += ` AND type = ?`;
       params.push(filterType);
     }
-    
+
     query += ` ORDER BY date_posted DESC`;
-    
+
     const items = db.prepare(query).all(...params);
     db.close();
-    
+
     return { success: true, items };
   } catch (error) {
     console.error("Error fetching lost and found items:", error);
@@ -46,11 +46,11 @@ export async function fetchLostAndFoundItems(filterType: 'all' | 'lost' | 'found
 }
 
 export async function reportLostAndFoundItem(
-  studentId: string, 
-  type: 'lost' | 'found', 
-  title: string, 
-  description: string, 
-  tags: string, 
+  studentId: string,
+  type: 'lost' | 'found',
+  title: string,
+  description: string,
+  tags: string,
   contactInfo: string,
   imageUrl?: string
 ) {
@@ -93,7 +93,7 @@ export async function reportLostAndFoundItem(
       INSERT INTO lost_and_found (student_id, type, title, description, tags, contact_info, status, date_posted, image_url)
       VALUES (?, ?, ?, ?, ?, ?, 'open', ?, ?)
     `).run(studentId, type, title, description, tags, contactInfo, datePosted, imageUrl || null);
-    
+
     db.close();
     return { success: true, id: result.lastInsertRowid };
   } catch (error) {
@@ -126,18 +126,18 @@ export async function claimLostAndFoundItem(itemId: number, studentId: string) {
     const db = getDb();
     if (!db) return { success: false, error: "Database unavailable" };
     const item: any = db.prepare(`SELECT * FROM lost_and_found WHERE id = ?`).get(itemId);
-    
+
     if (!item) {
       db.close();
       return { success: false, error: "Item not found" };
     }
 
     db.prepare(`
-      UPDATE lost_and_found 
-      SET status = 'claimed' 
+      UPDATE lost_and_found
+      SET status = 'claimed'
       WHERE id = ?
     `).run(itemId);
-    
+
     db.close();
     return { success: true };
   } catch (error) {

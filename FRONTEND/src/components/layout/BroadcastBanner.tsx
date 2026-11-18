@@ -15,7 +15,7 @@ export function BroadcastBanner() {
         setBroadcasts(result.broadcasts);
       }
     };
-    
+
     fetchBroadcasts();
     // Poll every 30 seconds
     const interval = setInterval(fetchBroadcasts, 30000);
@@ -33,11 +33,11 @@ export function BroadcastBanner() {
   return (
     <div className="w-full flex flex-col z-50 sticky top-0">
       {activeBroadcasts.map((broadcast) => (
-        <div 
-          key={broadcast.id} 
+        <div
+          key={broadcast.id}
           className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium
-            ${broadcast.type === 'emergency' ? 'bg-red-500 text-white' : 
-              broadcast.type === 'warning' ? 'bg-yellow-500 text-white' : 
+            ${broadcast.type === 'emergency' ? 'bg-red-500 text-white' :
+              broadcast.type === 'warning' ? 'bg-yellow-500 text-white' :
               'bg-blue-600 text-white'}
           `}
         >
@@ -45,10 +45,10 @@ export function BroadcastBanner() {
             {broadcast.type === 'emergency' && <AlertCircle className="h-5 w-5 flex-shrink-0" />}
             {broadcast.type === 'warning' && <AlertTriangle className="h-5 w-5 flex-shrink-0" />}
             {broadcast.type === 'info' && <Info className="h-5 w-5 flex-shrink-0" />}
-            
+
             <p className="truncate">{broadcast.message}</p>
           </div>
-          <button 
+          <button
             onClick={() => dismiss(broadcast.id)}
             className="p-1 hover:bg-white/20 rounded-full transition-colors"
           >

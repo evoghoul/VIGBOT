@@ -51,8 +51,8 @@ export const HostelManagementView = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">Request Type</label>
-                <select 
-                  value={newType} 
+                <select
+                  value={newType}
                   onChange={(e) => setNewType(e.target.value)}
                   className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -63,7 +63,7 @@ export const HostelManagementView = () => {
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">Details</label>
-                <textarea 
+                <textarea
                   value={newDetails}
                   onChange={(e) => setNewDetails(e.target.value)}
                   rows={3}
@@ -71,8 +71,8 @@ export const HostelManagementView = () => {
                   className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors shadow-sm"
               >
                 Submit Request

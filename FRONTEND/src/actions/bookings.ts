@@ -114,9 +114,9 @@ export async function createBooking(data: {
     if (!db) return { success: false, message: "Database unavailable" };
     // Check for double booking
     const checkStmt = db.prepare(`
-      SELECT * FROM bookings 
-      WHERE facility_id = ? 
-      AND date = ? 
+      SELECT * FROM bookings
+      WHERE facility_id = ?
+      AND date = ?
       AND status = 'confirmed'
       AND (
         (start_time <= ? AND end_time > ?) OR
@@ -124,10 +124,10 @@ export async function createBooking(data: {
         (start_time >= ? AND end_time <= ?)
       )
     `);
-    
+
     const existing = checkStmt.get(
-      data.facility_id, 
-      data.date, 
+      data.facility_id,
+      data.date,
       data.start_time, data.start_time,
       data.end_time, data.end_time,
       data.start_time, data.end_time

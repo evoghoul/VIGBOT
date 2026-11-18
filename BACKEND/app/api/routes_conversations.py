@@ -47,7 +47,7 @@ async def get_conversation(
     if not conv:
         # Row-level check: Return 404/403 if it does not belong to the student
         raise HTTPException(status_code=404, detail="Conversation not found or access denied.")
-    
+
     messages = DataRepository.get_conversation_messages(session, conversation_id)
     return ConversationDetailResponse(
         **conv,
@@ -111,7 +111,7 @@ async def submit_message_feedback(
     current_student: dict = Depends(get_current_student)
 ):
     session = DatabaseSession(student_id=current_student["student_id"], user_id=current_student["user_id"])
-    
+
     # 1. Record feedback in database
     feedback_record = None
     try:
@@ -168,7 +168,7 @@ async def submit_message_feedback(
     if fb.rating.lower() in ["down", "thumbs_down", "thumbsdown", "-1", "negative"]:
         from app.agent.feedback_remediator import FeedbackRemediationService
         fb_id = (feedback_record.get("feedback_id") if feedback_record else None) or f"fb-{message_id}"
-        
+
         background_tasks.add_task(
             FeedbackRemediationService.evaluate_and_remediate,
             feedback_id=fb_id,
@@ -209,7 +209,7 @@ async def submit_message_feedback(
                     if m.get("message_id") == message_id:
                         target_idx = idx
                         break
-                
+
                 if target_idx != -1:
                     for m in history[:target_idx]:
                         role = "user" if m.get("sender_role") == "STUDENT" else "assistant"

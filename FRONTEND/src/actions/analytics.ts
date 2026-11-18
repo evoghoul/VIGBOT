@@ -9,7 +9,7 @@ import { mockAnalyticsData } from '../data/adminMockData';
 export async function getAnalyticsData() {
   try {
     const db = getDb();
-    
+
     // Grievances by status
     const grievanceStatusCounts = db.prepare(`
       SELECT status as name, COUNT(*) as value
@@ -41,8 +41,8 @@ export async function getAnalyticsData() {
     };
   } catch (error: any) {
     console.error("Analytics Error:", error);
-    console.log("Falling back to static mock data");
-    
+    console.warn("Falling back to static mock data");
+
     return {
       success: true,
       data: {
