@@ -91,7 +91,3 @@ BACKEND/data/vigbot_research/locks/
 BACKEND/data/vigbot_research/*.tmp*
 BACKEND/data/vigbot_research/cache/
 
-# Repomix & Vibe Simplifier packed outputs
-tools/vibe-simplifier/output/*.md
-tools/vibe-simplifier/output/*.xml
-
